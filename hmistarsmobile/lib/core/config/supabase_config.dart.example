@@ -1,0 +1,6 @@
+/// Supabase project configuration.
+/// These are the public/anon keys — safe to ship in the client.
+class SupabaseConfig {
+  static const String url = 'YOUR_SUPABASE_URL';
+  static const String anonKey = 'YOUR_ANON_KEY';
+}

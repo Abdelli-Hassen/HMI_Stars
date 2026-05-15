@@ -1,0 +1,437 @@
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../supabase_config.dart';
+import '../../features/entreprises/domain/models/entreprise.dart';
+import '../../features/entreprises/domain/models/salarie.dart';
+import '../../features/entreprises/domain/models/document_entreprise.dart';
+import '../../features/entreprises/domain/models/note_entreprise.dart';
+import '../../features/entreprises/domain/models/template_avertissement.dart';
+import '../../features/urgents/domain/models/tache_urgente.dart';
+import '../../features/auth/domain/models/platform_user.dart';
+
+/// Service de données Supabase pour la plateforme admin.
+/// Utilise adminClient (clé service_role) pour contourner les politiques RLS.
+class PlatformDataService {
+  final _client = SupabaseConfig.adminClient;
+
+  // ─── UTILISATEURS PLATEFORME ───────────────────────────────────────────────
+
+  Future<UtilisateurPlateforme?> recupererUtilisateur(String userId) async {
+    try {
+      final data = await _client
+          .from('utilisateurs_plateforme')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+      if (data == null) return null;
+      return UtilisateurPlateforme.fromJson(data);
+    } catch (e) {
+      debugPrint('[DataService] Error fetching user: $e');
+      return null;
+    }
+  }
+
+  Future<UtilisateurPlateforme> mettreAJourUtilisateur(UtilisateurPlateforme user) async {
+    final data = await _client
+        .from('utilisateurs_plateforme')
+        .update(user.toJson())
+        .eq('id', user.id)
+        .select()
+        .single();
+    return UtilisateurPlateforme.fromJson(data);
+  }
+
+  Future<List<UtilisateurPlateforme>> recupererTousUtilisateurs() async {
+    final data = await _client
+        .from('utilisateurs_plateforme')
+        .select()
+        .order('cree_le', ascending: true);
+    return (data as List)
+        .map((row) => UtilisateurPlateforme.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> supprimerUtilisateurAuth(String uid) async {
+    try {
+      await _client.auth.admin.deleteUser(uid);
+    } catch (e) {
+      debugPrint('[DataService] Error deleting user: $e');
+      rethrow;
+    }
+  }
+
+  // ─── ENTREPRISES ──────────────────────────────────────────────────────────
+
+  Future<List<Entreprise>> fetchEntreprises() async {
+    final data = await _client
+        .from('entreprises')
+        .select()
+        .order('cree_le', ascending: false);
+    return (data as List)
+        .map((row) => Entreprise.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<Entreprise> createEntreprise(Entreprise entreprise) async {
+    // 1. Créer ou réutiliser l'utilisateur Supabase Auth
+    // Si l'email existe déjà, on réutilise le compte (un gérant peut avoir plusieurs entreprises)
+    if (entreprise.email.isNotEmpty && entreprise.motDePasse.isNotEmpty) {
+      try {
+        await SupabaseConfig.adminClient.auth.admin.createUser(
+          AdminUserAttributes(
+            email: entreprise.email,
+            password: entreprise.motDePasse,
+            emailConfirm: true,
+            userMetadata: {'user_type': 'client'},
+          ),
+        );
+        debugPrint('[DataService] Auth user created for ${entreprise.email}');
+      } catch (e) {
+        final msg = e.toString();
+        if (msg.contains('email_exists') || msg.contains('already been registered')) {
+          // L'email existe déjà dans Auth — pas de problème,
+          // l'entreprise sera quand même créée avec son propre UUID.
+          debugPrint('[DataService] Auth user already exists for ${entreprise.email} — continuing');
+        } else {
+          // Erreur inattendue — on logue mais on ne bloque pas la création
+          debugPrint('[DataService] Auth user creation failed: $e');
+        }
+      }
+    }
+
+    // 2. Insérer l'entreprise — l'id UUID est généré automatiquement par Supabase
+    final data = await _client
+        .from('entreprises')
+        .insert(entreprise.toJson())
+        .select()
+        .single();
+    return Entreprise.fromJson(data);
+  }
+
+  Future<Entreprise> updateEntreprise(Entreprise entreprise) async {
+    final data = await _client
+        .from('entreprises')
+        .update(entreprise.toJson())
+        .eq('id', entreprise.id)
+        .select()
+        .single();
+    return Entreprise.fromJson(data);
+  }
+
+  Future<void> archiveEntreprise(String id) async {
+    await _client
+        .from('entreprises')
+        .update({'statut': 'ARCHIVÉ'})
+        .eq('id', id);
+  }
+
+  // ─── SALARIÉS ─────────────────────────────────────────────────────────────
+
+  Future<List<Salarie>> fetchSalariesForEntreprise(
+      String entrepriseId) async {
+    final data = await _client
+        .from('salaries')
+        .select()
+        .eq('entreprise_id', entrepriseId)
+        .order('nom', ascending: true);
+    return (data as List)
+        .map((row) => Salarie.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<Salarie> createSalarie(Salarie salarie) async {
+    final data = await _client
+        .from('salaries')
+        .insert(salarie.toJson())
+        .select()
+        .single();
+    return Salarie.fromJson(data);
+  }
+
+  Future<Salarie> updateSalarie(Salarie salarie) async {
+    final data = await _client
+        .from('salaries')
+        .update(salarie.toJson())
+        .eq('id', salarie.id)
+        .select()
+        .single();
+    return Salarie.fromJson(data);
+  }
+
+  Future<void> archiveSalarie(String id) async {
+    await _client
+        .from('salaries')
+        .update({'est_archive': true})
+        .eq('id', id);
+  }
+
+  Future<void> unarchiveSalarie(String id) async {
+    await _client
+        .from('salaries')
+        .update({'est_archive': false})
+        .eq('id', id);
+  }
+
+  Future<void> deleteSalarie(String id) async {
+    await _client.from('salaries').delete().eq('id', id);
+  }
+
+  // ─── DOCUMENTS ────────────────────────────────────────────────────────────
+
+  /// Les documents sont stockés comme messages de type fichier.
+  Future<List<DocumentEntreprise>> fetchDocumentsForEntreprise(
+      String entrepriseId) async {
+    final data = await _client
+        .from('messages')
+        .select()
+        .eq('entreprise_id', entrepriseId)
+        .eq('est_fichier', true)
+        .order('date_envoi', ascending: false);
+    return (data as List)
+        .map((row) =>
+            DocumentEntreprise.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  // ─── NOTES / RAPPELS ─────────────────────────────────────────────────────
+
+  Future<List<NoteEntreprise>> fetchNotesForEntreprise(
+      String entrepriseId) async {
+    final data = await _client
+        .from('notes_entreprises')
+        .select()
+        .eq('entreprise_id', entrepriseId)
+        .order('cree_le', ascending: false);
+    return (data as List)
+        .map((row) => NoteEntreprise.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<NoteEntreprise> createNote(NoteEntreprise note) async {
+    final data = await _client
+        .from('notes_entreprises')
+        .insert(note.toJson())
+        .select()
+        .single();
+    return NoteEntreprise.fromJson(data);
+  }
+
+  Future<NoteEntreprise> updateNote(NoteEntreprise note) async {
+    final data = await _client
+        .from('notes_entreprises')
+        .update(note.toJson())
+        .eq('id', note.id)
+        .select()
+        .single();
+    return NoteEntreprise.fromJson(data);
+  }
+
+  Future<void> deleteNote(String id) async {
+    await _client.from('notes_entreprises').delete().eq('id', id);
+  }
+
+  /// Récupérer toutes les notes de toutes les entreprises (page globale).
+  Future<List<NoteEntreprise>> fetchAllNotes() async {
+    final data = await _client
+        .from('notes_entreprises')
+        .select()
+        .order('cree_le', ascending: false);
+    return (data as List)
+        .map((row) => NoteEntreprise.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  // ─── TÂCHES URGENTES ──────────────────────────────────────────────────────
+
+  Future<List<TacheUrgente>> fetchTachesUrgentes() async {
+    final data = await _client
+        .from('taches_urgentes')
+        .select()
+        .order('date_echeance', ascending: true);
+    return (data as List)
+        .map((row) => TacheUrgente.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<TacheUrgente>> fetchTachesForEntreprise(
+      String entrepriseId) async {
+    final data = await _client
+        .from('taches_urgentes')
+        .select()
+        .eq('entreprise_id', entrepriseId)
+        .order('date_echeance', ascending: true);
+    return (data as List)
+        .map((row) => TacheUrgente.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<TacheUrgente> createTacheUrgente(TacheUrgente tache) async {
+    final data = await _client
+        .from('taches_urgentes')
+        .insert(tache.toJson())
+        .select()
+        .single();
+    return TacheUrgente.fromJson(data);
+  }
+
+  Future<TacheUrgente> updateTacheUrgente(TacheUrgente tache) async {
+    final data = await _client
+        .from('taches_urgentes')
+        .update(tache.toJson())
+        .eq('id', tache.id)
+        .select()
+        .single();
+    return TacheUrgente.fromJson(data);
+  }
+
+  Future<void> basculerTacheAccomplie(String id, bool accomplie) async {
+    await _client
+        .from('taches_urgentes')
+        .update({'accomplie': accomplie})
+        .eq('id', id);
+  }
+
+  Future<void> supprimerTacheUrgente(String id) async {
+    await _client.from('taches_urgentes').delete().eq('id', id);
+  }
+
+  // ─── MODÈLES D'AVERTISSEMENTS ────────────────────────────────────────────
+
+  Future<List<ModeleAvertissement>> fetchModeles() async {
+    final data = await _client
+        .from('modeles_avertissements')
+        .select()
+        .order('cree_le', ascending: false);
+    return (data as List)
+        .map((row) =>
+            ModeleAvertissement.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<ModeleAvertissement>> fetchModelesForEntreprise(
+      String entrepriseId) async {
+    final data = await _client
+        .from('modeles_avertissements')
+        .select()
+        .or('entreprise_id.is.null,entreprise_id.eq.$entrepriseId')
+        .order('cree_le', ascending: false);
+    return (data as List)
+        .map((row) =>
+            ModeleAvertissement.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<ModeleAvertissement> createModele(
+      ModeleAvertissement modele) async {
+    final data = await _client
+        .from('modeles_avertissements')
+        .insert(modele.toJson())
+        .select()
+        .single();
+    return ModeleAvertissement.fromJson(data);
+  }
+
+  Future<ModeleAvertissement> updateModele(
+      ModeleAvertissement modele) async {
+    final data = await _client
+        .from('modeles_avertissements')
+        .update(modele.toJson())
+        .eq('id', modele.id)
+        .select()
+        .single();
+    return ModeleAvertissement.fromJson(data);
+  }
+
+  Future<void> supprimerModele(String id) async {
+    await _client.from('modeles_avertissements').delete().eq('id', id);
+  }
+
+  // ─── MESSAGERIE ────────────────────────────────────────────────────────────
+
+  /// Récupère les messages d'une conversation entreprise, avec pagination.
+  Future<List<Map<String, dynamic>>> fetchMessagesForEntreprise(
+      String entrepriseId, {int? offset, int? limit}) async {
+    var query = _client
+        .from('messages')
+        .select('*, est_lu')
+        .eq('entreprise_id', entrepriseId)
+        .order('date_envoi', ascending: false);
+
+    if (offset != null && limit != null) {
+      query = query.range(offset, offset + limit - 1);
+    } else if (limit != null) {
+      query = query.limit(limit);
+    }
+
+    final data = await query;
+    return List<Map<String, dynamic>>.from(data as List);
+  }
+
+  /// Marque tous les messages d'une entreprise comme lus.
+  Future<void> marquerMessagesCommeLus(String entrepriseId) async {
+    await _client
+        .from('messages')
+        .update({'est_lu': true})
+        .eq('entreprise_id', entrepriseId)
+        .eq('est_envoye_par_user', true)
+        .eq('est_lu', false);
+  }
+
+  /// Envoie un message depuis la plateforme (est_envoye_par_user = false).
+  Future<Map<String, dynamic>> envoyerMessagePlateforme({
+    required String entrepriseId,
+    required String contenu,
+  }) async {
+    final data = await _client
+        .from('messages')
+        .insert({
+          'entreprise_id': entrepriseId,
+          'contenu': contenu,
+          'est_envoye_par_user': false,
+          'est_fichier': false,
+        })
+        .select()
+        .single();
+    return Map<String, dynamic>.from(data as Map);
+  }
+
+  /// Récupère le dernier message + nombre de messages non lus pour chaque entreprise.
+  /// Utilisé pour peupler la barre latérale de la messagerie.
+  Future<Map<String, Map<String, dynamic>>> fetchApercuMessages() async {
+    final data = await _client
+        .from('messages')
+        .select('entreprise_id, contenu, date_envoi, est_envoye_par_user, est_lu')
+        .order('date_envoi', ascending: false);
+
+    final List<Map<String, dynamic>> rows = List<Map<String, dynamic>>.from(data as List);
+    
+    // Tri manuel de sécurité en Dart pour s'assurer du DESC
+    rows.sort((a, b) {
+      final dateA = DateTime.tryParse(a['date_envoi']?.toString() ?? '') ?? DateTime(0);
+      final dateB = DateTime.tryParse(b['date_envoi']?.toString() ?? '') ?? DateTime(0);
+      return dateB.compareTo(dateA);
+    });
+
+    final Map<String, Map<String, dynamic>> apercu = {};
+    for (final row in rows) {
+      final eid = row['entreprise_id'] as String;
+      final estDeUser = row['est_envoye_par_user'] as bool;
+      final estLu = row['est_lu'] as bool? ?? false;
+
+      if (!apercu.containsKey(eid)) {
+        apercu[eid] = {
+          'dernier_message': row['contenu'] as String,
+          'date_envoi': row['date_envoi'] as String,
+          'est_envoye_par_user': estDeUser,
+          'a_des_non_lus': false, // Initialisation
+        };
+      }
+      
+      // Si un message du client n'est pas lu, on marque la conversation comme "non lue"
+      if (estDeUser && !estLu) {
+        apercu[eid]!['a_des_non_lus'] = true;
+      }
+    }
+    return apercu;
+  }
+}
