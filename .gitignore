@@ -3,7 +3,7 @@
 # Folders to exclude as requested
 .agent/
 diary/
-
+Optimizing Real-Time Messaging Architecture.md
 # IDE and System files
 .vscode/
 .idea/
