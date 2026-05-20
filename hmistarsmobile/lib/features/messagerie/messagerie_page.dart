@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
+import 'package:file_picker/file_picker.dart' as fp;
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/document_type_picker.dart';
 import 'widgets/company_info_sheet.dart';
 import 'widgets/documents_sheet.dart';
+import 'widgets/document_scanner_view.dart';
+import 'package:image_picker/image_picker.dart';
 
 class MessageriePage extends StatefulWidget {
   const MessageriePage({super.key});
@@ -55,45 +56,79 @@ class _MessageriePageState extends State<MessageriePage> {
     });
   }
 
-  void _sendTextMessage() {
+  void _sendTextMessage() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
     final appState = context.read<AppState>();
     final entrepriseId = appState.entrepriseId ?? '';
-    appState.addMessage(
-      Message(
-        id: '',
-        entrepriseId: entrepriseId,
-        contenu: text,
-        dateEnvoi: DateTime.now(),
-        estEnvoyePar: true,
-      ),
-    );
     _textController.clear();
     _scrollToBottom();
+    try {
+      await appState.addMessage(
+        Message(
+          id: '',
+          entrepriseId: entrepriseId,
+          contenu: text,
+          dateEnvoi: DateTime.now(),
+          estEnvoyePar: true,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible d\'envoyer le message : $e')),
+        );
+      }
+    }
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.pickFiles(allowMultiple: false);
+    final result = await fp.FilePicker.pickFiles(allowMultiple: true);
     if (result == null || result.files.isEmpty) return;
+    
+    final filenames = result.files.map((f) => f.name).join(',');
+    final paths = result.files.map((f) => f.path ?? '').join(',');
+    
     await _promptDocumentType(
-      filename: result.files.first.name,
-      path: result.files.first.path,
+      filename: filenames,
+      path: paths,
     );
   }
 
   Future<void> _takePhoto() async {
-    // Camera requires image_picker — show a placeholder snackbar for now
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Appareil photo à activer dans une prochaine version')),
+    final option = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PhotoOptionsSheet(),
     );
-  }
 
-  void _showScanPreview(String imagePath) {
-    // Scan preview requires image_picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Scanner à activer dans une prochaine version')),
-    );
+    if (option == 'photo') {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        await _promptDocumentType(
+          filename: pickedFile.name,
+          path: pickedFile.path,
+        );
+      }
+    } else if (option == 'scan') {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DocumentScannerView(
+            onScanCompleted: (pdfPath) async {
+              final fileName = pdfPath.split('/').last;
+              await _promptDocumentType(
+                filename: fileName,
+                path: pdfPath,
+                isPdf: true,
+              );
+            },
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _promptDocumentType({
@@ -109,20 +144,32 @@ class _MessageriePageState extends State<MessageriePage> {
     if (type == null || !mounted) return;
     final appState = context.read<AppState>();
     final entrepriseId = appState.entrepriseId ?? '';
-    appState.addMessage(
-      Message(
-        id: '',
-        entrepriseId: entrepriseId,
-        contenu: filename,
-        dateEnvoi: DateTime.now(),
-        estEnvoyePar: true,
-        fichierNom: filename,
-        fichierUrl: path,
-        typeDocument: type,
-        estFichier: true,
-      ),
-    );
+    
     _scrollToBottom();
+    try {
+      await appState.addMessage(
+        Message(
+          id: '',
+          entrepriseId: entrepriseId,
+          contenu: filename,
+          dateEnvoi: DateTime.now(),
+          estEnvoyePar: true,
+          fichierNom: filename,
+          fichierUrl: path,
+          typeDocument: type,
+          estFichier: true,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Échec de l\'envoi du fichier : $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -503,160 +550,4 @@ class _PhotoOptionsSheet extends StatelessWidget {
   }
 }
 
-// Scan preview/process sheet
-class _ScanProcessSheet extends StatefulWidget {
-  final String imagePath;
-  final Function(String) onConfirm;
 
-  const _ScanProcessSheet({required this.imagePath, required this.onConfirm});
-
-  @override
-  State<_ScanProcessSheet> createState() => _ScanProcessSheetState();
-}
-
-class _ScanProcessSheetState extends State<_ScanProcessSheet> {
-  bool _processing = false;
-  String _filterMode = 'scan';
-
-  @override
-  Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      maxChildSize: 0.95,
-      minChildSize: 0.7,
-      builder: (ctx, sc) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Text(
-                    'Scanner Document',
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            // Image preview
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.file(
-                    File(widget.imagePath),
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-            ),
-            // Filter options
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _filterChip('scan', 'Scan N&B'),
-                  const SizedBox(width: 8),
-                  _filterChip('couleur', 'Couleur'),
-                  const SizedBox(width: 8),
-                  _filterChip('original', 'Original'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Confirm button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _processing ? null : _confirm,
-                  icon: _processing
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Icon(Icons.picture_as_pdf),
-                  label: Text(
-                    _processing
-                        ? 'Traitement...'
-                        : 'Convertir & Envoyer en PDF',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _filterChip(String value, String label) {
-    final isActive = _filterMode == value;
-    return GestureDetector(
-      onTap: () => setState(() => _filterMode = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isActive
-                ? Colors.white
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _confirm() async {
-    setState(() => _processing = true);
-    // Simulate processing (in production: image processing + PDF creation)
-    await Future.delayed(const Duration(seconds: 1));
-    widget.onConfirm(widget.imagePath);
-  }
-}

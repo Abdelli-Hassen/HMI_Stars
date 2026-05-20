@@ -1,0 +1,12 @@
+﻿ðŸ¤– **Applying knowledge of `@[frontend-specialist]` and `@[mobile-developer]`...**
+
+---
+
+### ðŸ” Decrypting the `.webp` Image Upload Bug
+
+You are absolutely right! The platform and the mobile application are designed to support **any file format** (including `.webp`, `.pdf`, `.png`, `.jpg`, `.doc`, etc.). The issue you encountered was **not** caused by the `.webp` extension itself, but rather by a database constraint mismatch on the **document category type**!
+
+#### ðŸ› ï¸ What Happened Behind the Scenes:
+1. **The Image Button Shortcut:** When you clicked the image button on the admin platform, the application correctly skipped the category selection prompt and hardcoded the document type as `"MEDIA"` (in uppercase).
+2. **Case-Sensitive DB Enums:** In our Supabase Postgres database, the `type_document` column is defined as a strict custom ENUM containing lowercase values: `'fournisseur'`, `'releve_bancaire'`, `'chiffre_affaires'`, `'autre'`, `'kbis'`, `'tva'`, `'siret'`, `'rib'`, `'statuts'`, `'media'`.
+<truncated 2407 bytes>

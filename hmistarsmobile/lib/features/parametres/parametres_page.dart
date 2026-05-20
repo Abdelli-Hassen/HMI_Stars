@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
-import '../../core/theme/app_theme.dart';
 
 class ParametresPage extends StatefulWidget {
   const ParametresPage({super.key});

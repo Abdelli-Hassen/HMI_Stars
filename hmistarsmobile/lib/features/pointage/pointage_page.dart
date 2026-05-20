@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
-import '../../core/theme/app_theme.dart';
 import 'widgets/employee_day_list.dart';
 
 class PointagePage extends StatefulWidget {
@@ -340,7 +339,21 @@ class _PointagePageState extends State<PointagePage> {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(12),
-              border: Border(left: BorderSide(color: color, width: 4)),
+              border: Border(
+                left: BorderSide(color: color, width: 4),
+                top: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  width: 1,
+                ),
+                right: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  width: 1,
+                ),
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  width: 1,
+                ),
+              ),
               boxShadow: [
                 BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8),
               ],

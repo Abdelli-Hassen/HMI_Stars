@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../../../features/entreprises/presentation/providers/entreprise_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -17,8 +16,6 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _barAnim;
-  late Animation<double> _donutAnim;
   late Animation<double> _fadeAnim;
   late Animation<double> _kpiAnim;
 
@@ -33,14 +30,6 @@ class _DashboardPageState extends State<DashboardPage>
     _kpiAnim = CurvedAnimation(
       parent: _controller,
       curve: const Interval(0.0, 0.35, curve: Curves.easeOutCubic),
-    );
-    _barAnim = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.15, 0.65, curve: Curves.easeOutCubic),
-    );
-    _donutAnim = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.25, 0.75, curve: Curves.easeOutCubic),
     );
     _fadeAnim = CurvedAnimation(
       parent: _controller,
@@ -135,46 +124,6 @@ class _DashboardPageState extends State<DashboardPage>
           ),
           const SizedBox(height: 24),
 
-          // ─── Charts Row (animated) ───
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Bar Chart
-              Expanded(
-                flex: 2,
-                child: AnimatedBuilder(
-                  animation: _barAnim,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _barAnim.value.clamp(0.0, 1.0),
-                      child: Transform.translate(
-                        offset: Offset(0, 30 * (1 - _barAnim.value)),
-                        child: _buildBarChartCard(_barAnim.value, context),
-                      ),
-                    );
-                  },
-                ),
-              ),
-                const SizedBox(width: 16),
-                // Donut Chart
-                Expanded(
-                  child: AnimatedBuilder(
-                    animation: _donutAnim,
-                    builder: (context, child) {
-                      return Opacity(
-                        opacity: _donutAnim.value.clamp(0.0, 1.0),
-                        child: Transform.translate(
-                          offset: Offset(0, 30 * (1 - _donutAnim.value)),
-                          child: _buildDonutChartCard(_donutAnim.value),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
             // ─── Actions & Calendar ───
             FadeTransition(
               opacity: _fadeAnim,
@@ -193,227 +142,6 @@ class _DashboardPageState extends State<DashboardPage>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildBarChartCard(double animProgress, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Statistiques RH', style: AppTextStyles.titleMedium),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    _chartToggle('Mensuel', true),
-                    _chartToggle('Annuel', false),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 200,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: 30,
-                barGroups: [
-                  _makeBarGroup(0, 22 * animProgress, 18 * animProgress),
-                  _makeBarGroup(1, 15 * animProgress, 20 * animProgress),
-                  _makeBarGroup(2, 25 * animProgress, 22 * animProgress),
-                  _makeBarGroup(3, 18 * animProgress, 16 * animProgress),
-                  _makeBarGroup(4, 20 * animProgress, 24 * animProgress),
-                  _makeBarGroup(5, 28 * animProgress, 20 * animProgress),
-                ],
-                barTouchData: BarTouchData(
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      return BarTooltipItem(
-                        rod.toY.round().toString(),
-                        AppTextStyles.labelSmall.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
-                      );
-                    },
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        const labels = ['JAN', 'FEV', 'MAR', 'AVR', 'MAI', 'JUIN'];
-                        if (value.toInt() >= labels.length) return const SizedBox();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(labels[value.toInt()],
-                              style: AppTextStyles.labelSmall.copyWith(fontSize: 10)),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                gridData: const FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-              ),
-              duration: const Duration(milliseconds: 600),
-              curve: Curves.easeOutCubic,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _chartLegend(AppColors.primary, 'Nouveaux Recrutements'),
-              const SizedBox(width: 24),
-              _chartLegend(AppColors.surfaceContainerHigh, 'Objectifs Atteints'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  BarChartGroupData _makeBarGroup(int x, double v1, double v2) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(toY: v1, color: AppColors.primary, width: 12, borderRadius: BorderRadius.circular(4)),
-        BarChartRodData(toY: v2, color: AppColors.surfaceContainerHigh, width: 12, borderRadius: BorderRadius.circular(4)),
-      ],
-    );
-  }
-
-  Widget _chartToggle(String label, bool active) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: active ? AppColors.surfaceContainerLowest : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(label,
-          style: AppTextStyles.labelMedium.copyWith(
-            color: active ? AppColors.onSurface : AppColors.onSurfaceVariant,
-            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-          )),
-    );
-  }
-
-  Widget _chartLegend(Color color, String text) {
-    return Row(
-      children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
-        const SizedBox(width: 6),
-        Text(text, style: AppTextStyles.bodySmall),
-      ],
-    );
-  }
-
-  Widget _buildDonutChartCard(double animProgress) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Répartition RH', style: AppTextStyles.titleMedium),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 180,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                PieChart(
-                  PieChartData(
-                    sections: [
-                      PieChartSectionData(
-                        value: 65 * animProgress,
-                        color: AppColors.primary,
-                        radius: 24,
-                        showTitle: false,
-                      ),
-                      PieChartSectionData(
-                        value: 25 * animProgress,
-                        color: AppColors.surfaceContainerHigh,
-                        radius: 24,
-                        showTitle: false,
-                      ),
-                      PieChartSectionData(
-                        value: 10 * animProgress,
-                        color: AppColors.tertiary,
-                        radius: 24,
-                        showTitle: false,
-                      ),
-                      if (animProgress < 1.0)
-                        PieChartSectionData(
-                          value: 100 * (1 - animProgress),
-                          color: AppColors.surfaceContainerLow,
-                          radius: 24,
-                          showTitle: false,
-                        ),
-                    ],
-                    centerSpaceRadius: 50,
-                    sectionsSpace: 2,
-                    startDegreeOffset: -90,
-                  ),
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TweenAnimationBuilder<int>(
-                      tween: IntTween(begin: 0, end: 150),
-                      duration: const Duration(milliseconds: 1500),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, child) => Text(
-                        '$value',
-                        style: AppTextStyles.headlineMedium,
-                      ),
-                    ),
-                    Text('TOTAL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          _donutLegend(AppColors.primary, 'CDI', '65%'),
-          const SizedBox(height: 8),
-          _donutLegend(AppColors.surfaceContainerHigh, 'CDD / Stage', '25%'),
-          const SizedBox(height: 8),
-          _donutLegend(AppColors.tertiary, 'Freelance', '10%'),
-        ],
-      ),
-    );
-  }
-
-  Widget _donutLegend(Color color, String label, String pct) {
-    return Row(
-      children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 8),
-        Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurface)),
-        const Spacer(),
-        Text(pct, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700)),
-      ],
     );
   }
 
@@ -548,7 +276,7 @@ class _DashboardPageState extends State<DashboardPage>
                       child: Center(
                           child: Text(d,
                               style: AppTextStyles.labelSmall.copyWith(
-                                fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w600,
                               ))),
                     ))
                 .toList(),

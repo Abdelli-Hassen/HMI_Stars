@@ -7,61 +7,68 @@ extension ThemeContextExt on BuildContext {
   ColorScheme get cs => Theme.of(this).colorScheme;
 }
 
+import '../providers/app_state.dart';
+
 class AppColors {
+  AppColors._();
+
+  static bool get _isDark => AppState.isDarkStatic;
+
   // Primary palette - HMI Stars brand colors from prototype
-  static const Color primary = Color(0xFF001E40);
-  static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color primaryContainer = Color(0xFF003366);
-  static const Color onPrimaryContainer = Color(0xFF799DD6);
-  static const Color primaryFixed = Color(0xFFD5E3FF);
-  static const Color primaryFixedDim = Color(0xFFA7C8FF);
+  static Color get primary => _isDark ? const Color(0xFFA7C8FF) : const Color(0xFF001E40);
+  static Color get onPrimary => _isDark ? const Color(0xFF002F65) : const Color(0xFFFFFFFF);
+  static Color get primaryContainer => _isDark ? const Color(0xFF00458E) : const Color(0xFF003366);
+  static Color get onPrimaryContainer => _isDark ? const Color(0xFFD4E3FF) : const Color(0xFF799DD6);
+  static Color get primaryFixed => const Color(0xFFD5E3FF);
+  static Color get primaryFixedDim => const Color(0xFFA7C8FF);
 
   // Secondary
-  static const Color secondary = Color(0xFF4C616C);
-  static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color secondaryContainer = Color(0xFFCFE6F2);
-  static const Color secondaryFixed = Color(0xFFCFE6F2);
-  static const Color secondaryFixedDim = Color(0xFFB4CAD6);
+  static Color get secondary => _isDark ? const Color(0xFFB4CAD6) : const Color(0xFF4C616C);
+  static Color get onSecondary => _isDark ? const Color(0xFF1E333D) : const Color(0xFFFFFFFF);
+  static Color get secondaryContainer => _isDark ? const Color(0xFF354A54) : const Color(0xFFCFE6F2);
+  static Color get secondaryFixed => const Color(0xFFCFE6F2);
+  static Color get secondaryFixedDim => const Color(0xFFB4CAD6);
 
   // Tertiary (Gold/Yellow - the accent)
-  static const Color tertiary = Color(0xFF745B00);
-  static const Color onTertiary = Color(0xFFFFFFFF);
-  static const Color tertiaryContainer = Color(0xFFCCA72F);
-  static const Color tertiaryFixed = Color(0xFFFFE08B);
-  static const Color tertiaryFixedDim = Color(0xFFEAC249);
+  static Color get tertiary => _isDark ? const Color(0xFFEAC249) : const Color(0xFF745B00);
+  static Color get onTertiary => _isDark ? const Color(0xFF3D2F00) : const Color(0xFFFFFFFF);
+  static Color get tertiaryContainer => _isDark ? const Color(0xFF584400) : const Color(0xFFCCA72F);
+  static Color get tertiaryFixed => const Color(0xFFFFE08B);
+  static Color get tertiaryFixedDim => const Color(0xFFEAC249);
 
   // Surface containers
-  static const Color surface = Color(0xFFF8F9FA);
-  static const Color surfaceBright = Color(0xFFF8F9FA);
-  static const Color surfaceDim = Color(0xFFD9DADB);
-  static const Color surfaceContainer = Color(0xFFEDEEEF);
-  static const Color surfaceContainerLow = Color(0xFFF3F4F5);
-  static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHigh = Color(0xFFE7E8E9);
-  static const Color surfaceContainerHighest = Color(0xFFE1E3E4);
+  static Color get surface => _isDark ? const Color(0xFF111416) : const Color(0xFFF8F9FA);
+  static Color get surfaceBright => _isDark ? const Color(0xFF37393B) : const Color(0xFFF8F9FA);
+  static Color get surfaceDim => _isDark ? const Color(0xFF111416) : const Color(0xFFD9DADB);
+  static Color get surfaceContainer => _isDark ? const Color(0xFF1D2022) : const Color(0xFFEDEEEF);
+  static Color get surfaceContainerLow => _isDark ? const Color(0xFF191C1E) : const Color(0xFFF3F4F5);
+  static Color get surfaceContainerLowest => _isDark ? const Color(0xFF0C0F10) : const Color(0xFFFFFFFF);
+  static Color get surfaceContainerHigh => _isDark ? const Color(0xFF272A2C) : const Color(0xFFE7E8E9);
+  static Color get surfaceContainerHighest => _isDark ? const Color(0xFF323537) : const Color(0xFFE1E3E4);
+  static Color get background => _isDark ? const Color(0xFF0D1117) : const Color(0xFFF8F9FA);
 
   // On-surface
-  static const Color onSurface = Color(0xFF191C1D);
-  static const Color onSurfaceVariant = Color(0xFF43474F);
+  static Color get onSurface => _isDark ? const Color(0xFFE1E2E4) : const Color(0xFF191C1D);
+  static Color get onSurfaceVariant => _isDark ? const Color(0xFFC3C6D1) : const Color(0xFF43474F);
 
   // Outline
-  static const Color outline = Color(0xFF737780);
-  static const Color outlineVariant = Color(0xFFC3C6D1);
+  static Color get outline => _isDark ? const Color(0xFF8D9199) : const Color(0xFF737780);
+  static Color get outlineVariant => _isDark ? const Color(0xFF43474F) : const Color(0xFFC3C6D1);
 
   // Error
-  static const Color error = Color(0xFFBA1A1A);
-  static const Color onError = Color(0xFFFFFFFF);
-  static const Color errorContainer = Color(0xFFFFDAD6);
+  static Color get error => _isDark ? const Color(0xFFFFB4AB) : const Color(0xFFBA1A1A);
+  static Color get onError => _isDark ? const Color(0xFF690005) : const Color(0xFFFFFFFF);
+  static Color get errorContainer => _isDark ? const Color(0xFF93000A) : const Color(0xFFFFDAD6);
 
   // Inverse
-  static const Color inverseSurface = Color(0xFF2E3132);
-  static const Color inverseOnSurface = Color(0xFFF0F1F2);
-  static const Color inversePrimary = Color(0xFFA7C8FF);
+  static Color get inverseSurface => _isDark ? const Color(0xFFE1E2E4) : const Color(0xFF2E3132);
+  static Color get inverseOnSurface => _isDark ? const Color(0xFF191C1D) : const Color(0xFFF0F1F2);
+  static Color get inversePrimary => _isDark ? const Color(0xFF00458E) : const Color(0xFFA7C8FF);
 
   // Status colors
-  static const Color statusGreen = Color(0xFF22C55E);
-  static const Color statusOrange = Color(0xFFF97316);
-  static const Color statusRed = Color(0xFFEF4444);
+  static Color get statusGreen => const Color(0xFF22C55E);
+  static Color get statusOrange => const Color(0xFFF97316);
+  static Color get statusRed => const Color(0xFFEF4444);
 }
 
 class AppTheme {
@@ -69,7 +76,7 @@ class AppTheme {
     final textTheme = GoogleFonts.interTextTheme();
     return ThemeData(
       useMaterial3: true,
-      colorScheme: const ColorScheme(
+      colorScheme: ColorScheme(
         brightness: Brightness.light,
         primary: AppColors.primary,
         onPrimary: AppColors.onPrimary,
@@ -82,11 +89,11 @@ class AppTheme {
         tertiary: AppColors.tertiary,
         onTertiary: AppColors.onTertiary,
         tertiaryContainer: AppColors.tertiaryContainer,
-        onTertiaryContainer: Color(0xFF4F3D00),
+        onTertiaryContainer: const Color(0xFF4F3D00),
         error: AppColors.error,
         onError: AppColors.onError,
         errorContainer: AppColors.errorContainer,
-        onErrorContainer: Color(0xFF93000A),
+        onErrorContainer: const Color(0xFF93000A),
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,
         onSurfaceVariant: AppColors.onSurfaceVariant,
@@ -95,7 +102,7 @@ class AppTheme {
         inverseSurface: AppColors.inverseSurface,
         onInverseSurface: AppColors.inverseOnSurface,
         inversePrimary: AppColors.inversePrimary,
-        surfaceTint: Color(0xFF3A5F94),
+        surfaceTint: const Color(0xFF3A5F94),
       ),
       scaffoldBackgroundColor: AppColors.surface,
       textTheme: textTheme.copyWith(
@@ -238,48 +245,111 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: const ColorScheme(
+      colorScheme: ColorScheme(
         brightness: Brightness.dark,
-        // Softer light blue for primary elements and text (easier on the eyes)
-        primary: Color(0xFFC4D7F5),
-        onPrimary: Color(0xFF00325A),
-        // Primary container - distinct but soft
-        primaryContainer: Color(0xFF1E4060),
-        onPrimaryContainer: Color(0xFFE2EDFF),
-        secondary: Color(0xFFB4CAD6),
-        onSecondary: Color(0xFF1F333E),
-        secondaryContainer: Color(0xFF354A54),
-        onSecondaryContainer: Color(0xFFCFE6F2),
-        tertiary: Color(0xFFF2D574), // Lighter yellow/gold for accents
-        onTertiary: Color(0xFF3D2F00),
-        tertiaryContainer: Color(0xFF574400),
-        onTertiaryContainer: Color(0xFFFFE08B),
-        error: Color(0xFFFFB4AB),
-        onError: Color(0xFF690005),
-        errorContainer: Color(0xFF93000A),
-        onErrorContainer: Color(0xFFFFDAD6),
-        // Softer dark grey backgrounds (not pure or near black)
-        surface: Color(0xFF1C2128),
-        onSurface: Color(0xFFF0F2F5), // Brighter text for clear writing
-        onSurfaceVariant: Color(0xFFC5CBD3), // Softer grey for subtitles
-        surfaceContainerLowest: Color(0xFF15191E),
-        surfaceContainerLow: Color(0xFF222831),
-        surfaceContainer: Color(0xFF2D3540),
-        surfaceContainerHigh: Color(0xFF384350),
-        surfaceContainerHighest: Color(0xFF44505F),
-        outline: Color(0xFF8D95A1),
-        outlineVariant: Color(0xFF555D68),
-        inverseSurface: Color(0xFFE1E3E5),
-        onInverseSurface: Color(0xFF2E3132),
-        inversePrimary: Color(0xFF001E40),
-        surfaceTint: Color(0xFFC4D7F5),
+        primary: AppColors.primary,
+        onPrimary: AppColors.onPrimary,
+        primaryContainer: AppColors.primaryContainer,
+        onPrimaryContainer: AppColors.onPrimaryContainer,
+        secondary: AppColors.secondary,
+        onSecondary: AppColors.onSecondary,
+        secondaryContainer: AppColors.secondaryContainer,
+        onSecondaryContainer: AppColors.onSurface,
+        tertiary: AppColors.tertiary,
+        onTertiary: AppColors.onTertiary,
+        tertiaryContainer: AppColors.tertiaryContainer,
+        onTertiaryContainer: AppColors.onSurface,
+        error: AppColors.error,
+        onError: AppColors.onError,
+        errorContainer: AppColors.errorContainer,
+        onErrorContainer: AppColors.onSurface,
+        surface: AppColors.surface,
+        onSurface: AppColors.onSurface,
+        onSurfaceVariant: AppColors.onSurfaceVariant,
+        surfaceContainerLowest: AppColors.surfaceContainerLowest,
+        surfaceContainerLow: AppColors.surfaceContainerLow,
+        surfaceContainer: AppColors.surfaceContainer,
+        surfaceContainerHigh: AppColors.surfaceContainerHigh,
+        surfaceContainerHighest: AppColors.surfaceContainerHighest,
+        outline: AppColors.outline,
+        outlineVariant: AppColors.outlineVariant,
+        inverseSurface: AppColors.inverseSurface,
+        onInverseSurface: AppColors.inverseOnSurface,
+        inversePrimary: AppColors.inversePrimary,
+        surfaceTint: AppColors.primary,
       ),
-      scaffoldBackgroundColor: const Color(
-        0xFF15191E,
-      ), // Comfortable dark background
+      scaffoldBackgroundColor: AppColors.background,
+      textTheme: GoogleFonts.interTextTheme().copyWith(
+        displayLarge: GoogleFonts.manrope(
+          fontSize: 57,
+          fontWeight: FontWeight.w800,
+          color: AppColors.onSurface,
+        ),
+        displayMedium: GoogleFonts.manrope(
+          fontSize: 45,
+          fontWeight: FontWeight.w800,
+          color: AppColors.onSurface,
+        ),
+        headlineLarge: GoogleFonts.manrope(
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          color: AppColors.onSurface,
+          letterSpacing: -0.5,
+        ),
+        headlineMedium: GoogleFonts.manrope(
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFFF0F2F5),
+        ),
+        headlineSmall: GoogleFonts.manrope(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFFF0F2F5),
+        ),
+        titleLarge: GoogleFonts.manrope(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFFF0F2F5),
+        ),
+        titleMedium: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFFF0F2F5),
+        ),
+        titleSmall: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFFF0F2F5),
+          letterSpacing: 0.1,
+        ),
+        bodyLarge: GoogleFonts.inter(fontSize: 16, color: const Color(0xFFF0F2F5)),
+        bodyMedium: GoogleFonts.inter(fontSize: 14, color: const Color(0xFFF0F2F5)),
+        bodySmall: GoogleFonts.inter(
+          fontSize: 12,
+          color: const Color(0xFFC5CBD3),
+        ),
+        labelLarge: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.1,
+          color: const Color(0xFFF0F2F5),
+        ),
+        labelMedium: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+          color: const Color(0xFFC5CBD3),
+        ),
+        labelSmall: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+          color: const Color(0xFFC5CBD3),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF222831),
+        fillColor: const Color(0xFF1F242C),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -317,7 +387,7 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF1C2128),
+        backgroundColor: const Color(0xFF161B22),
         elevation: 0,
         titleTextStyle: GoogleFonts.manrope(
           color: const Color(0xFFC4D7F5),
@@ -330,3 +400,4 @@ class AppTheme {
     );
   }
 }
+

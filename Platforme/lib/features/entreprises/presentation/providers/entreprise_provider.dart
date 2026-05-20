@@ -125,6 +125,14 @@ class EntrepriseProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> supprimerDocument(DocumentEntreprise doc, String entrepriseId) async {
+    try {
+      await _dataService.deleteDocument(doc.id, url: doc.url);
+      _documentsCache[entrepriseId]?.removeWhere((d) => d.id == doc.id || d.url == doc.url);
+      notifyListeners();
+    } catch (_) {}
+  }
+
   // ─── Notes ────────────────────────────────────────────────────────────────
 
   List<NoteEntreprise> notesPourEntreprise(String entrepriseId) =>

@@ -8,7 +8,7 @@ import '../services/pointage_service.dart';
 import '../services/message_service.dart';
 import '../services/avertissement_service.dart';
 import '../services/entreprise_service.dart';
-
+import '../services/service_notification.dart';
 class AppState extends ChangeNotifier {
   // ─── Services ────────────────────────────────────────────────────────────
   late final AuthService _authService;
@@ -22,6 +22,8 @@ class AppState extends ChangeNotifier {
   StreamSubscription<List<Map<String, dynamic>>>? _abonnementMessages;
 
   AppState() {
+    ServiceNotification().initialiser();
+    
     final client = Supabase.instance.client;
     _authService = AuthService(client);
     _salarieService = SalarieService(client);
@@ -135,8 +137,11 @@ class AppState extends ChangeNotifier {
   // ─── Theme ────────────────────────────────────────────────────────────────
   bool _isDarkMode = false;
   bool get isDarkMode => _isDarkMode;
+  static bool isDarkStatic = false;
+
   void toggleDarkMode() {
     _isDarkMode = !_isDarkMode;
+    isDarkStatic = _isDarkMode;
     notifyListeners();
   }
 
@@ -152,6 +157,9 @@ class AppState extends ChangeNotifier {
       final entreprises = await _entrepriseService.getEntreprisesForUser(userId);
 
       if (entreprises.isEmpty) return;
+
+      final ids = entreprises.map((e) => e.id).toList();
+      ServiceNotification().enregistrerJetonPourEntreprises(ids);
 
       if (entreprises.length == 1) {
         // Single company — load directly, no selector needed
@@ -404,21 +412,48 @@ class AppState extends ChangeNotifier {
       final fetched = await _messageService.getMessages(eid, offset: 0, limit: _messagePageSize);
       _messages = fetched;
       _hasMoreMessages = fetched.length >= _messagePageSize;
+      
+      // Marquer comme lus
+      _messageService.marquerMessagesCommeLus(eid);
     } finally {
       _isLoadingMessages = false;
       notifyListeners();
     }
 
-    // Ouvrir l'abonnement Realtime pour les réponses de la plateforme
+    // Ouvrir l'abonnement Realtime pour la messagerie
     _abonnementMessages?.cancel();
     _abonnementMessages = _messageService.abonnerNouveauxMessages(
       eid,
       (messageEntrant) {
-        // Dédupliquer : n'ajouter que si l'ID n'existe pas déjà
-        final existeDeja = _messages.any((m) => m.id == messageEntrant.id);
-        if (!existeDeja) {
-          _messages = [messageEntrant, ..._messages]
-            ..sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
+        final idx = _messages.indexWhere((m) => m.id == messageEntrant.id);
+        if (idx != -1) {
+          // Si le message existe déjà, mettre à jour son état de lecture
+          if (_messages[idx].estLu != messageEntrant.estLu) {
+            final updated = List<Message>.from(_messages);
+            updated[idx] = updated[idx].copyWith(estLu: messageEntrant.estLu);
+            _messages = updated;
+            notifyListeners();
+          }
+        } else {
+          // Rechercher s'il y a un message optimiste correspondant
+          final idxOptimiste = _messages.indexWhere(
+            (m) => m.id.startsWith('optimistic_') && m.contenu == messageEntrant.contenu
+          );
+
+          var msg = messageEntrant;
+          if (!msg.estEnvoyePar) {
+            msg = msg.copyWith(estLu: true);
+            _messageService.marquerMessagesCommeLus(eid);
+          }
+          
+          final updated = List<Message>.from(_messages);
+          if (idxOptimiste != -1) {
+            updated[idxOptimiste] = msg;
+          } else {
+            updated.add(msg);
+          }
+          updated.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
+          _messages = updated;
           notifyListeners();
         }
       },
@@ -468,7 +503,54 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final saved = await _messageService.sendMessage(msg);
+      Message saved;
+      if (msg.estFichier) {
+        final localPaths = msg.fichierUrl?.split(',') ?? [];
+        final nomsFichiers = msg.fichierNom?.split(',') ?? [];
+        
+        if (localPaths.isEmpty || localPaths.first.isEmpty) {
+          throw Exception('Local file paths are empty');
+        }
+
+        List<String> publicUrls = [];
+        
+        for (int i = 0; i < localPaths.length; i++) {
+          final localPath = localPaths[i];
+          final nomFichierOriginal = i < nomsFichiers.length ? nomsFichiers[i] : 'fichier';
+          
+          // 2. Upload file to Supabase Storage in an isolated subfolder
+          final publicUrl = await _messageService.uploadFichier(msg.entrepriseId, nomFichierOriginal, localPath);
+
+          // 3. Register in 'fichiers' table
+          final typeDocValue = msg.typeDocument?.value ?? 'autre';
+          await _messageService.enregistrerFichier(
+            entrepriseId: msg.entrepriseId,
+            nom: nomFichierOriginal,
+            url: publicUrl,
+            estEnvoyeParUser: true,
+            typeDocument: typeDocValue,
+          );
+          
+          publicUrls.add(publicUrl);
+        }
+
+        // 4. Build the final message object to insert in 'messages' table
+        final msgToSend = Message(
+          id: '',
+          entrepriseId: msg.entrepriseId,
+          contenu: nomsFichiers.length == 1 ? 'Fichier envoyé : ${nomsFichiers.first}' : '${nomsFichiers.length} fichiers envoyés',
+          dateEnvoi: DateTime.now(),
+          estEnvoyePar: true,
+          fichierUrl: publicUrls.join(','),
+          fichierNom: nomsFichiers.join(','),
+          typeDocument: msg.typeDocument,
+          estFichier: true,
+        );
+        saved = await _messageService.sendMessage(msgToSend);
+      } else {
+        saved = await _messageService.sendMessage(msg);
+      }
+
       // Let the stream or this response replace it
       final idx = _messages.indexWhere((m) => m.id == optimisticMessage.id);
       if (idx != -1) {
@@ -482,6 +564,19 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  String _sanitiserNomEntreprise(String nom) {
+    String cleaned = nom.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    cleaned = cleaned.replaceAll(RegExp(r'_{2,}'), '_');
+    cleaned = cleaned.trim().toLowerCase();
+    if (cleaned.startsWith('_')) {
+      cleaned = cleaned.substring(1);
+    }
+    if (cleaned.endsWith('_')) {
+      cleaned = cleaned.substring(0, cleaned.length - 1);
+    }
+    return cleaned.isEmpty ? 'entreprise' : cleaned;
   }
 
   // ─── Avertissements ───────────────────────────────────────────────────────

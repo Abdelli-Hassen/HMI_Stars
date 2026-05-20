@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
-import '../../core/theme/app_theme.dart';
 
 class AddSalariePage extends StatefulWidget {
   final Salarie? salarie;

@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'core/providers/theme_provider.dart';
+import 'core/providers/notification_provider.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
 import 'features/entreprises/presentation/providers/entreprise_provider.dart';
@@ -30,9 +32,15 @@ class HmiStarsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EntrepriseProvider()),
         ChangeNotifierProvider(create: (_) => MessagerieProvider()),
+        ChangeNotifierProxyProvider<EntrepriseProvider, NotificationProvider>(
+          create: (ctx) => NotificationProvider(ctx.read<EntrepriseProvider>()),
+          update: (ctx, entrepriseProvider, previous) =>
+              previous ?? NotificationProvider(entrepriseProvider),
+        ),
         ChangeNotifierProxyProvider<EntrepriseProvider, DashboardProvider>(
           create: (ctx) => DashboardProvider(
             ctx.read<EntrepriseProvider>(),
@@ -41,12 +49,14 @@ class HmiStarsApp extends StatelessWidget {
               DashboardProvider(entrepriseProvider),
         ),
       ],
-      child: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
+      child: Consumer2<AuthProvider, ThemeProvider>(
+        builder: (context, auth, themeProvider, _) {
           return MaterialApp(
             title: 'HMI Stars',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
             initialRoute: auth.isAuthenticated
                 ? AppRoutes.dashboard
                 : AppRoutes.login,

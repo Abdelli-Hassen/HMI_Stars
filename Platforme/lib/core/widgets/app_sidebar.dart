@@ -4,6 +4,7 @@ import '../theme/app_text_styles.dart';
 import '../router/app_router.dart';
 import 'package:provider/provider.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/messagerie/presentation/providers/messagerie_provider.dart';
 
 class SidebarItem {
   final IconData icon;
@@ -112,12 +113,25 @@ class AppSidebar extends StatelessWidget {
               child: ListView(
                 children: navItems.map((item) {
                   final isActive = currentRoute == item.route;
+                  
+                  // Check unread condition if this is Messagerie item
+                  bool hasUnread = false;
+                  if (item.label == 'Messagerie') {
+                    hasUnread = context.watch<MessagerieProvider>().hasUnreadForSidebar;
+                  }
+
                   return _SidebarNavItem(
                     icon: item.icon,
                     label: item.label,
                     isActive: isActive,
+                    hasUnread: hasUnread,
                     onTap: () {
                       if (currentRoute != item.route) {
+                        if (item.route == AppRoutes.messagerie) {
+                          context.read<MessagerieProvider>().clearSidebarUnread();
+                        } else if (currentRoute == AppRoutes.messagerie) {
+                          context.read<MessagerieProvider>().quitterMessagerie();
+                        }
                         Navigator.pushReplacementNamed(context, item.route);
                       }
                     },
@@ -150,8 +164,12 @@ class AppSidebar extends StatelessWidget {
                     label: 'Déconnexion',
                     isActive: false,
                     isDestructive: true,
-                    onTap: () =>
-                        Navigator.pushReplacementNamed(context, AppRoutes.login),
+                    onTap: () {
+                      if (currentRoute == AppRoutes.messagerie) {
+                        context.read<MessagerieProvider>().quitterMessagerie();
+                      }
+                      Navigator.pushReplacementNamed(context, AppRoutes.login);
+                    },
                   ),
                 ],
               ),
@@ -171,6 +189,7 @@ class _SidebarNavItem extends StatefulWidget {
   final String label;
   final bool isActive;
   final bool isDestructive;
+  final bool hasUnread;
   final VoidCallback onTap;
 
   const _SidebarNavItem({
@@ -178,6 +197,7 @@ class _SidebarNavItem extends StatefulWidget {
     required this.label,
     required this.isActive,
     this.isDestructive = false,
+    this.hasUnread = false,
     required this.onTap,
   });
 
@@ -259,14 +279,34 @@ class _SidebarNavItemState extends State<_SidebarNavItem>
             ),
             child: Row(
               children: [
-                Icon(widget.icon, size: 20, color: color),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(widget.icon, size: 20, color: color),
+                    if (widget.hasUnread)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppColors.error,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(width: 12),
-                Text(
-                  widget.label,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: color,
-                    fontWeight:
-                        widget.isActive ? FontWeight.w700 : FontWeight.w500,
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: color,
+                      fontWeight:
+                          widget.isActive ? FontWeight.w700 : FontWeight.w500,
+                    ),
                   ),
                 ),
               ],

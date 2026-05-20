@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -16,13 +17,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String _selectedDevice = 'EUR (€)';
-  String _selectedTimezone = 'Paris (GMT+1)';
   String _selectedLangue = 'Français (FR)';
-  bool _emailNewDocs = true;
-  bool _emailAlertes = true;
-  bool _emailConnexions = false;
-  bool _emailSupport = true;
+  bool _uploadingAvatar = false;
 
   late TextEditingController _nomController;
   late TextEditingController _emailController;
@@ -54,13 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _cinController.text = auth.userCin;
       
       final prefs = auth.utilisateur!.preferences;
-      _selectedDevice = prefs['devise'] ?? 'EUR (€)';
-      _selectedTimezone = prefs['timezone'] ?? 'Paris (GMT+1)';
       _selectedLangue = prefs['langue'] ?? 'Français (FR)';
-      _emailNewDocs = prefs['emailNewDocs'] ?? true;
-      _emailAlertes = prefs['emailAlertes'] ?? true;
-      _emailConnexions = prefs['emailConnexions'] ?? false;
-      _emailSupport = prefs['emailSupport'] ?? true;
     }
   }
 
@@ -90,13 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _sauvegarderWorkspace() {
     final prefs = context.read<AuthProvider>().utilisateur?.preferences ?? {};
-    prefs['devise'] = _selectedDevice;
-    prefs['timezone'] = _selectedTimezone;
     prefs['langue'] = _selectedLangue;
-    prefs['emailNewDocs'] = _emailNewDocs;
-    prefs['emailAlertes'] = _emailAlertes;
-    prefs['emailConnexions'] = _emailConnexions;
-    prefs['emailSupport'] = _emailSupport;
     
     context.read<AuthProvider>().mettreAJourProfil(
       preferences: prefs,
@@ -107,10 +91,43 @@ class _SettingsPageState extends State<SettingsPage> {
     ));
   }
 
-  void _modifierPhoto() {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Fonctionnalité en cours de développement.'),
-    ));
+  Future<void> _modifierPhoto() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final auth = context.read<AuthProvider>();
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.first;
+      if (file.bytes == null || file.name.isEmpty) return;
+
+      setState(() => _uploadingAvatar = true);
+
+      final success = await auth.uploadAvatar(file.bytes!, file.name);
+
+      if (!mounted) return;
+      setState(() => _uploadingAvatar = false);
+
+      messenger.showSnackBar(SnackBar(
+        content: Text(success
+            ? 'Photo de profil mise à jour avec succès !'
+            : 'Erreur lors de la mise à jour de la photo.'),
+        backgroundColor: success ? AppColors.success : AppColors.error,
+      ));
+    } catch (e) {
+      if (mounted) {
+        setState(() => _uploadingAvatar = false);
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Erreur lors de la sélection du fichier.'),
+          backgroundColor: AppColors.error,
+        ));
+      }
+    }
   }
 
   @override
@@ -138,10 +155,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
             // ─── Security Section ───
             _buildSecuritySection(),
-            const SizedBox(height: 24),
-
-            // ─── Notifications Section ───
-            _buildNotificationsSection(),
           ],
         ),
       ),
@@ -149,6 +162,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildProfileSection() {
+    final auth = context.watch<AuthProvider>();
+    final avatarUrl = auth.userAvatarUrl;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -160,17 +176,55 @@ class _SettingsPageState extends State<SettingsPage> {
         Text('PROFIL UTILISATEUR', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
         const SizedBox(height: 20),
         Row(children: [
-          CircleAvatar(radius: 32, backgroundColor: AppColors.surfaceContainerHigh, child: const Icon(Icons.person, size: 32, color: AppColors.onSurfaceVariant)),
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: AppColors.surfaceContainerHigh,
+                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                    ? NetworkImage(avatarUrl)
+                    : null,
+                child: avatarUrl == null || avatarUrl.isEmpty
+                    ? const Icon(Icons.person, size: 32, color: AppColors.onSurfaceVariant)
+                    : null,
+              ),
+              if (_uploadingAvatar)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(width: 16),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(_nomController.text.isNotEmpty ? _nomController.text : 'Utilisateur Actuel', style: AppTextStyles.titleSmall),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: _modifierPhoto,
+              onTap: _uploadingAvatar ? null : _modifierPhoto,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(border: Border.all(color: AppColors.outlineVariant), borderRadius: BorderRadius.circular(8)),
-                child: Text('MODIFIER LA PHOTO', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.w700)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.camera_alt_outlined, size: 14, color: _uploadingAvatar ? AppColors.outline : AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      _uploadingAvatar ? 'ENVOI EN COURS...' : 'MODIFIER LA PHOTO',
+                      style: AppTextStyles.labelSmall.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
               ),
             ),
           ]),
@@ -180,9 +234,9 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 16),
         _textField('Adresse E-mail', _emailController, Icons.email_outlined),
         const SizedBox(height: 16),
-
-        const SizedBox(height: 16),
         _textField('Téléphone', _phoneController, Icons.phone_outlined),
+        const SizedBox(height: 16),
+        _textField('N° Carte d\'Identité (CIN)', _cinController, Icons.badge_outlined),
         const SizedBox(height: 20),
         _saveButton(_sauvegarderProfil),
       ]),
@@ -201,20 +255,13 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _lockedTextField("Organisation", 'HMI Stars Consulting', Icons.corporate_fare),
         const SizedBox(height: 16),
-        _textField('N° Carte d\'Identité (CIN)', _cinController, Icons.badge_outlined),
-        const SizedBox(height: 16),
-        Row(children: [
-          Expanded(child: _staticDropdownField('Devise', _selectedDevice, ['EUR (€)', 'USD (\$)'], (v) => setState(() => _selectedDevice = v!))),
-          const SizedBox(width: 12),
-          Expanded(child: _staticDropdownField('Fuseau horaire', _selectedTimezone, ['Paris (GMT+1)', 'London (GMT)', 'New York (GMT-5)'], (v) => setState(() => _selectedTimezone = v!))),
-        ]),
-        const SizedBox(height: 16),
         _staticDropdownField('Langue par défaut', _selectedLangue, ['Français (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
         const SizedBox(height: 20),
         _saveButton(_sauvegarderWorkspace),
       ]),
     );
   }
+
 
   void _modifierMotDePasse() {
     bool obscureAncien = true;
@@ -308,8 +355,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-
-
   Widget _buildSecuritySection() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -317,95 +362,60 @@ class _SettingsPageState extends State<SettingsPage> {
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Icon(Icons.shield_outlined, size: 18, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text('SÉCURITÉ & ACCÈS', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
-        ]),
-        const SizedBox(height: 20),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Mot de passe', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text('Dernière modification il y a 30 jours', style: AppTextStyles.bodySmall),
-          const SizedBox(height: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.lock_outline, size: 20, color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Sécurité', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Mot de passe',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
           GestureDetector(
             onTap: _modifierMotDePasse,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(border: Border.all(color: AppColors.outlineVariant), borderRadius: BorderRadius.circular(8)),
-              child: Text('Modifier le mot de passe', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.outlineVariant),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.lock_reset, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
+                ],
+              ),
             ),
           ),
-        ]),
-      ]),
-    );
-  }
-
-  Widget _buildNotificationsSection() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.secondary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.notifications_outlined, color: AppColors.secondary, size: 20)),
-          const SizedBox(width: 16),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Préférences de Notification', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
-            Text('Gérez les notifications par email.', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-          ])),
-        ]),
-        const SizedBox(height: 24),
-        Row(children: [
-          Expanded(flex: 3, child: Text('Type de Notification', style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant, letterSpacing: 1.1))),
-          Expanded(child: Center(child: Text('Email', style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant, letterSpacing: 1.1)))),
-        ]),
-        const SizedBox(height: 12),
-        const Divider(),
-        _notifRow('Nouveaux Documents', _emailNewDocs, (v) => setState(() => _emailNewDocs = v)),
-        const Divider(),
-        _notifRow('Alertes de Paie', _emailAlertes, (v) => setState(() => _emailAlertes = v)),
-        const Divider(),
-        _notifRow('Nouvelles Connexions', _emailConnexions, (v) => setState(() => _emailConnexions = v)),
-        const Divider(),
-        _notifRow('Mises à jour Support', _emailSupport, (v) => setState(() => _emailSupport = v)),
-        const SizedBox(height: 20),
-        _saveButton(_sauvegarderWorkspace),
-      ]),
-    );
-  }
-
-  Widget _notifRow(String label, bool value, ValueChanged<bool> onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(children: [
-        Expanded(flex: 3, child: Text(label, style: AppTextStyles.bodyMedium)),
-        Expanded(child: Center(child: _toggle(value, onChanged))),
-      ]),
-    );
-  }
-
-  Widget _toggle(bool active, ValueChanged<bool> onChanged) {
-    return GestureDetector(
-      onTap: () => onChanged(!active),
-      child: Container(
-        width: 40, height: 22,
-        decoration: BoxDecoration(
-          color: active ? AppColors.primary : AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Align(
-          alignment: active ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 18, height: 18, margin: const EdgeInsets.symmetric(horizontal: 2),
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-          ),
-        ),
+        ],
       ),
     );
   }
-
-
 
   Widget _textField(String label, TextEditingController controller, IconData icon) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

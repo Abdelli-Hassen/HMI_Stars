@@ -4,6 +4,10 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../router/app_router.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/notification_provider.dart';
+import '../../features/messagerie/presentation/providers/messagerie_provider.dart';
+import '../../features/entreprises/presentation/providers/entreprise_provider.dart';
 
 class AppTopBar extends StatelessWidget {
   final String title;
@@ -99,6 +103,32 @@ class AppTopBar extends StatelessWidget {
 
           const SizedBox(width: 16),
 
+          // ─── Dark Mode Toggle Icon ───
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              return MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(
+                      themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                      size: 20,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+
           // ─── Notification Bell ───
           const _NotificationBell(),
 
@@ -158,7 +188,6 @@ class _NotificationBellState extends State<_NotificationBell>
   OverlayEntry? _overlayEntry;
   bool _isOpen = false;
   bool _hovered = false;
-  int _unreadCount = 4;
 
   late AnimationController _animController;
   late Animation<double> _scaleAnim;
@@ -183,7 +212,6 @@ class _NotificationBellState extends State<_NotificationBell>
 
   @override
   void dispose() {
-    // Remove overlay immediately without animation during dispose
     _overlayEntry?.remove();
     _overlayEntry = null;
     _animController.dispose();
@@ -199,6 +227,10 @@ class _NotificationBellState extends State<_NotificationBell>
   }
 
   void _showOverlay() {
+    final provider = context.read<NotificationProvider>();
+    final entrepriseProv = context.read<EntrepriseProvider>();
+    final messagerieProv = context.read<MessagerieProvider>();
+
     _overlayEntry = OverlayEntry(builder: (context) {
       return Stack(
         children: [
@@ -224,12 +256,19 @@ class _NotificationBellState extends State<_NotificationBell>
                   alignment: Alignment.topRight,
                   child: Material(
                     color: Colors.transparent,
-                    child: _NotificationPanel(
-                      onClose: _removeOverlay,
-                      onMarkAllRead: () {
-                        if (mounted) setState(() => _unreadCount = 0);
-                        _overlayEntry?.markNeedsBuild();
-                      },
+                    child: MultiProvider(
+                      providers: [
+                        ChangeNotifierProvider.value(value: provider),
+                        ChangeNotifierProvider.value(value: entrepriseProv),
+                        ChangeNotifierProvider.value(value: messagerieProv),
+                      ],
+                      child: _NotificationPanel(
+                        onClose: _removeOverlay,
+                        onMarkAllRead: () {
+                          provider.marquerToutCommeLu();
+                          _overlayEntry?.markNeedsBuild();
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -257,6 +296,9 @@ class _NotificationBellState extends State<_NotificationBell>
 
   @override
   Widget build(BuildContext context) {
+    final notifProvider = context.watch<NotificationProvider>();
+    final unreadCount = notifProvider.notifications.where((n) => !n.estLu).length;
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: MouseRegion(
@@ -285,7 +327,7 @@ class _NotificationBellState extends State<_NotificationBell>
                   color: _isOpen || _hovered ? AppColors.primary : AppColors.onSurfaceVariant,
                 ),
               ),
-              if (_unreadCount > 0)
+              if (unreadCount > 0)
                 Positioned(
                   right: 6,
                   top: 4,
@@ -299,7 +341,7 @@ class _NotificationBellState extends State<_NotificationBell>
                     ),
                     child: Center(
                       child: Text(
-                        '$_unreadCount',
+                        '$unreadCount',
                         style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -327,76 +369,21 @@ class _NotificationPanel extends StatefulWidget {
 }
 
 class _NotificationPanelState extends State<_NotificationPanel> {
-  String _activeTab = 'Toutes';
-  final List<_NotifData> _notifications = [
-    _NotifData(
-      icon: Icons.file_present,
-      iconColor: Color(0xFFE53935),
-      title: 'Facture Fournisseur (Mai)',
-      body: 'Document reçu de Entreprise Alpha. Veuillez vérifier.',
-      time: 'Il y a 5 min',
-      badge: 'NOUVEAU',
-      badgeColor: Color(0xFFE53935),
-      isUnread: true,
-      category: 'urgent',
-    ),
-    _NotifData(
-      icon: Icons.insert_drive_file_outlined,
-      iconColor: Color(0xFF1A237E),
-      title: 'Contrat Signé',
-      body: 'Nouveau contrat ajouté par Entreprise Beta.',
-      time: 'Il y a 30 min',
-      isUnread: true,
-      category: 'document',
-    ),
-    _NotifData(
-      icon: Icons.receipt_long,
-      iconColor: Color(0xFF2E7D32),
-      title: 'Relevé Bancaire',
-      body: 'Relevé mensuel soumis par Entreprise Gamma.',
-      time: 'Il y a 1h',
-      isUnread: true,
-      category: 'document',
-    ),
-    _NotifData(
-      icon: Icons.description_outlined,
-      iconColor: Color(0xFF1A237E),
-      title: 'Document Expiré',
-      body: 'Le document de Kbis de Delta SARL a expiré.',
-      time: 'Il y a 2h',
-      badge: 'ACTION',
-      badgeColor: Color(0xFFE65100),
-      isUnread: true,
-      category: 'urgent',
-    ),
-    _NotifData(
-      icon: Icons.payments_outlined,
-      iconColor: Color(0xFF2E7D32),
-      title: 'Paie Générée',
-      body: 'Les fiches de paie de Mai 2026 sont disponibles.',
-      time: 'Hier',
-      isUnread: false,
-      category: 'rh',
-    ),
-    _NotifData(
-      icon: Icons.update,
-      iconColor: Color(0xFF757575),
-      title: 'Mise à Jour Système',
-      body: 'La plateforme sera mise à jour le 30 Juin à 02h00.',
-      time: 'Il y a 2j',
-      isUnread: false,
-      category: 'system',
-    ),
-  ];
-
-  List<_NotifData> get _filtered {
-    if (_activeTab == 'Toutes') return _notifications;
-    if (_activeTab == 'Urgentes') return _notifications.where((n) => n.category == 'urgent').toList();
-    return _notifications.where((n) => !n.isUnread).toList();
-  }
+  String _activeTab = 'Tous';
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<NotificationProvider>();
+    final list = provider.notifications;
+
+    final filtered = _activeTab == 'Tous'
+        ? list
+        : _activeTab == 'Urgents'
+            ? list.where((n) => !n.estLu).toList()
+            : list.where((n) => n.estLu).toList();
+
+    final unreadCount = list.where((n) => !n.estLu).length;
+
     return Container(
       constraints: const BoxConstraints(maxHeight: 520),
       decoration: BoxDecoration(
@@ -424,29 +411,23 @@ class _NotificationPanelState extends State<_NotificationPanel> {
               children: [
                 Text('Documents non vus', style: AppTextStyles.titleMedium),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.error,
-                    borderRadius: BorderRadius.circular(10),
+                if (unreadCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$unreadCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
                   ),
-                  child: Text(
-                    '${_notifications.where((n) => n.isUnread).length}',
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-                  ),
-                ),
                 const Spacer(),
                 MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        for (final n in _notifications) {
-                          n.isUnread = false;
-                        }
-                      });
-                      widget.onMarkAllRead();
-                    },
+                    onTap: widget.onMarkAllRead,
                     child: Text(
                       'Tout marquer comme lu',
                       style: AppTextStyles.labelSmall.copyWith(
@@ -511,13 +492,13 @@ class _NotificationPanelState extends State<_NotificationPanel> {
 
           // ─── Notification List ───
           Flexible(
-            child: _filtered.isEmpty
+            child: filtered.isEmpty
                 ? Padding(
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.notifications_off_outlined, size: 40, color: AppColors.outline),
+                        const Icon(Icons.notifications_off_outlined, size: 40, color: AppColors.outline),
                         const SizedBox(height: 8),
                         Text('Aucun fichier non vu', style: AppTextStyles.bodySmall.copyWith(color: AppColors.outline)),
                       ],
@@ -526,24 +507,20 @@ class _NotificationPanelState extends State<_NotificationPanel> {
                 : ListView.builder(
                     shrinkWrap: true,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    itemCount: _filtered.length,
+                    itemCount: filtered.length,
                     itemBuilder: (context, index) {
+                      final item = filtered[index];
                       return _NotificationItem(
-                        data: _filtered[index],
+                        data: item,
                         onTap: () {
-                          setState(() => _filtered[index].isUnread = false);
-                          widget.onClose(); // Close the panel first
-                          
-                          final cat = _filtered[index].category;
-                          if (cat == 'urgent') {
-                            Navigator.pushReplacementNamed(context, AppRoutes.urgents);
-                          } else if (cat == 'document' || cat == 'rh') {
-                            Navigator.pushReplacementNamed(context, AppRoutes.documentsEntreprise);
-                          } else if (cat == 'system') {
-                            Navigator.pushReplacementNamed(context, AppRoutes.settings);
-                          } else {
-                            Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
-                          }
+                          // 1. Mark as read
+                          provider.marquerCommeLu(item.id);
+                          // 2. Close overlay
+                          widget.onClose();
+                          // 3. Selection enterprise in MessagerieProvider
+                          context.read<MessagerieProvider>().selectionnerEntreprise(item.entrepriseId);
+                          // 4. Redirect to messagerie page
+                          Navigator.pushReplacementNamed(context, AppRoutes.messagerie);
                         },
                       );
                     },
@@ -560,7 +537,10 @@ class _NotificationPanelState extends State<_NotificationPanel> {
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
-                  onTap: widget.onClose,
+                  onTap: () {
+                    widget.onClose();
+                    Navigator.pushReplacementNamed(context, AppRoutes.messagerie);
+                  },
                   child: Text(
                     'Voir tous les documents',
                     style: AppTextStyles.labelMedium.copyWith(
@@ -582,7 +562,7 @@ class _NotificationPanelState extends State<_NotificationPanel> {
 // Notification Item
 // ─────────────────────────────────────────────────────────
 class _NotificationItem extends StatefulWidget {
-  final _NotifData data;
+  final NotificationDocument data;
   final VoidCallback onTap;
 
   const _NotificationItem({required this.data, required this.onTap});
@@ -596,7 +576,73 @@ class _NotificationItemState extends State<_NotificationItem> {
 
   @override
   Widget build(BuildContext context) {
-    final d = widget.data;
+    final n = widget.data;
+    
+    // Map document type to icon and color
+    IconData icon;
+    Color iconColor;
+    String docTitle;
+    
+    switch (n.typeDocument.toLowerCase()) {
+      case 'fournisseur':
+        icon = Icons.receipt_long;
+        iconColor = const Color(0xFF2E7D32); // Green
+        docTitle = 'Facture Fournisseur';
+        break;
+      case 'banque':
+        icon = Icons.account_balance;
+        iconColor = const Color(0xFF1565C0); // Blue
+        docTitle = 'Relevé Bancaire';
+        break;
+      case 'chiffre_affaires':
+        icon = Icons.monetization_on_outlined;
+        iconColor = const Color(0xFFE65100); // Orange
+        docTitle = 'Déclaration CA';
+        break;
+      case 'kbis':
+        icon = Icons.business_center;
+        iconColor = const Color(0xFFC62828); // Red
+        docTitle = 'Extrait KBIS';
+        break;
+      case 'tva':
+        icon = Icons.percent;
+        iconColor = const Color(0xFF00695C); // Teal instead of purple (Purple Ban)
+        docTitle = 'Déclaration TVA';
+        break;
+      case 'siret':
+        icon = Icons.info_outline;
+        iconColor = const Color(0xFF37474F); // Blue grey
+        docTitle = 'Fiche SIRET';
+        break;
+      case 'rib':
+        icon = Icons.credit_card;
+        iconColor = const Color(0xFF283593); // Indigo
+        docTitle = 'RIB';
+        break;
+      case 'statuts':
+        icon = Icons.gavel;
+        iconColor = const Color(0xFF4E342E); // Brown
+        docTitle = 'Statuts';
+        break;
+      case 'media':
+        icon = Icons.image;
+        iconColor = const Color(0xFF0277BD); // Light blue
+        docTitle = 'Fichier Média';
+        break;
+      default:
+        icon = Icons.description_outlined;
+        iconColor = const Color(0xFF1E88E5);
+        docTitle = 'Nouveau Document';
+    }
+
+    final entreprises = context.watch<EntrepriseProvider>().entreprises;
+    final ent = entreprises.where((e) => e.id == n.entrepriseId).isNotEmpty
+        ? entreprises.firstWhere((e) => e.id == n.entrepriseId)
+        : null;
+    final entName = ent?.nom ?? 'Entreprise Inconnue';
+
+    String relativeTime = formatRelativeTime(n.dateEnvoi);
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -610,7 +656,7 @@ class _NotificationItemState extends State<_NotificationItem> {
           decoration: BoxDecoration(
             color: _hovered
                 ? AppColors.primary.withValues(alpha: 0.04)
-                : d.isUnread
+                : !n.estLu
                     ? AppColors.primaryFixed.withValues(alpha: 0.15)
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
@@ -623,10 +669,10 @@ class _NotificationItemState extends State<_NotificationItem> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: d.iconColor.withValues(alpha: 0.1),
+                  color: iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(d.icon, size: 18, color: d.iconColor),
+                child: Icon(icon, size: 18, color: iconColor),
               ),
               const SizedBox(width: 12),
               // Content
@@ -638,26 +684,26 @@ class _NotificationItemState extends State<_NotificationItem> {
                       children: [
                         Expanded(
                           child: Text(
-                            d.title,
+                            docTitle,
                             style: AppTextStyles.labelMedium.copyWith(
-                              fontWeight: d.isUnread ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: !n.estLu ? FontWeight.w700 : FontWeight.w500,
                             ),
                           ),
                         ),
-                        if (d.badge != null) ...[
+                        if (!n.estLu) ...[
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: d.badgeColor?.withValues(alpha: 0.1) ?? AppColors.primary.withValues(alpha: 0.1),
+                              color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: Text(
-                              d.badge!,
+                            child: const Text(
+                              'NOUVEAU',
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
-                                color: d.badgeColor ?? AppColors.primary,
+                                color: AppColors.error,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -667,7 +713,7 @@ class _NotificationItemState extends State<_NotificationItem> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      d.body,
+                      'Fichier : ${n.nomFichier} reçu de $entName.',
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 11,
                         color: AppColors.onSurfaceVariant,
@@ -677,7 +723,7 @@ class _NotificationItemState extends State<_NotificationItem> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      d.time,
+                      relativeTime,
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 10,
                         color: AppColors.outline,
@@ -687,7 +733,7 @@ class _NotificationItemState extends State<_NotificationItem> {
                 ),
               ),
               // Unread dot
-              if (d.isUnread)
+              if (!n.estLu)
                 Container(
                   width: 8,
                   height: 8,
@@ -705,32 +751,15 @@ class _NotificationItemState extends State<_NotificationItem> {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// Notification Data Model
-// ─────────────────────────────────────────────────────────
-class _NotifData {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String body;
-  final String time;
-  final String? badge;
-  final Color? badgeColor;
-  bool isUnread;
-  final String category;
-
-  _NotifData({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.body,
-    required this.time,
-    this.badge,
-    this.badgeColor,
-    required this.isUnread,
-    required this.category,
-  });
+String formatRelativeTime(DateTime date) {
+  final diff = DateTime.now().difference(date);
+  if (diff.inSeconds < 60) return 'À l\'instant';
+  if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
+  if (diff.inHours < 24) return 'Il y a ${diff.inHours}h';
+  if (diff.inDays == 1) return 'Hier';
+  return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
 }
+
 
 // ─────────────────────────────────────────────────────────
 // Animated Search Bar

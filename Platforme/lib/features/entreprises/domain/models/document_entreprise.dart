@@ -29,9 +29,11 @@ class DocumentEntreprise {
       categorie: _mapTypeToCategorie(json['type_document'] as String?),
       dateAjout: json['date_envoi'] != null
           ? DateTime.parse(json['date_envoi'] as String)
-          : DateTime.now(),
+          : (json['cree_le'] != null
+              ? DateTime.parse(json['cree_le'] as String)
+              : DateTime.now()),
       format: ext,
-      url: json['fichier_url'] as String?,
+      url: json['fichier_url'] as String? ?? json['url'] as String?,
     );
   }
 

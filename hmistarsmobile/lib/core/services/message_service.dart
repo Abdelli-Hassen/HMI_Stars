@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' as io;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
@@ -36,8 +37,75 @@ class MessageService {
     return Message.fromJson(data);
   }
 
+  String _sanitizeForStoragePath(String filename) {
+    var result = filename
+        .replaceAll(RegExp(r'[éèêë]'), 'e')
+        .replaceAll(RegExp(r'[àâä]'), 'a')
+        .replaceAll(RegExp(r'[ùûü]'), 'u')
+        .replaceAll(RegExp(r'[îï]'), 'i')
+        .replaceAll(RegExp(r'[ôö]'), 'o')
+        .replaceAll(RegExp(r'[ç]'), 'c')
+        .replaceAll(RegExp(r'[ÉÈÊË]'), 'E')
+        .replaceAll(RegExp(r'[ÀÂÄ]'), 'A')
+        .replaceAll(RegExp(r'[ÙÛÜ]'), 'U')
+        .replaceAll(RegExp(r'[ÎÏ]'), 'I')
+        .replaceAll(RegExp(r'[ÔÖ]'), 'O')
+        .replaceAll(RegExp(r'[Ç]'), 'C');
+    return result.replaceAll(RegExp(r'[^\x00-\x7F]'), '_');
+  }
+
+  /// Téléverse un fichier physique local sur Supabase Storage dans un dossier horodaté.
+  Future<String> uploadFichier(String entrepriseId, String nomFichier, String localFilePath) async {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final nomSain = _sanitizeForStoragePath(nomFichier);
+    final path = 'entreprises/$entrepriseId/$timestamp/$nomSain';
+    final file = io.File(localFilePath);
+    
+    await _client.storage
+        .from('documents')
+        .upload(path, file);
+        
+    return _client.storage.from('documents').getPublicUrl(path);
+  }
+
+  /// Récupère le prochain numéro d'index de document pour une entreprise et un type de document donné.
+  Future<int> getProchainNumeroFichier(String entrepriseId, String typeDocument) async {
+    final typeDocLower = typeDocument.toLowerCase();
+    
+    final response = await _client
+        .from('fichiers')
+        .select('id')
+        .eq('entreprise_id', entrepriseId)
+        .eq('type_document', typeDocLower);
+        
+    final count = (response as List).length;
+    return count + 1;
+  }
+
+  /// Enregistre le fichier dans la table 'fichiers'.
+  Future<Map<String, dynamic>> enregistrerFichier({
+    required String entrepriseId,
+    required String nom,
+    required String url,
+    required bool estEnvoyeParUser,
+    String? typeDocument,
+  }) async {
+    final data = await _client
+        .from('fichiers')
+        .insert({
+          'entreprise_id': entrepriseId,
+          'nom': nom,
+          'url': url,
+          'est_envoye_par_user': estEnvoyeParUser,
+          'type_document': typeDocument?.toLowerCase(),
+        })
+        .select()
+        .single();
+    return data;
+  }
+
   /// Ouvre un canal Supabase Realtime et appelle [onNouveauMessage]
-  /// à chaque nouveau message reçu de la plateforme (est_envoye_par_user = false).
+  /// pour chaque message mis à jour ou nouveau dans la conversation.
   StreamSubscription<List<Map<String, dynamic>>> abonnerNouveauxMessages(
     String entrepriseId,
     void Function(Message message) onNouveauMessage,
@@ -48,15 +116,23 @@ class MessageService {
         .eq('entreprise_id', entrepriseId)
         .order('date_envoi')
         .listen((rows) {
-      // Le stream retourne TOUS les messages à chaque changement.
-      // On ne traite que les messages entrants de la plateforme
-      // (est_envoye_par_user = false) pour les pousser dans l'état.
-      // L'AppState se charge de la déduplication par ID.
       for (final row in rows) {
-        if (row['est_envoye_par_user'] == false) {
-          onNouveauMessage(Message.fromJson(row));
-        }
+        onNouveauMessage(Message.fromJson(row));
       }
     });
+  }
+
+  /// Marque tous les messages reçus de la plateforme comme lus pour l'entreprise.
+  Future<void> marquerMessagesCommeLus(String entrepriseId) async {
+    try {
+      await _client
+          .from('messages')
+          .update({'est_lu': true})
+          .eq('entreprise_id', entrepriseId)
+          .eq('est_envoye_par_user', false)
+          .eq('est_lu', false);
+    } catch (_) {
+      // Ignorer l'erreur silencieusement
+    }
   }
 }

@@ -1,4 +1,4 @@
-# 🌟 HMI Stars - Enterprise Messaging Ecosystem
+..# 🌟 HMI Stars - Enterprise Messaging Ecosystem
 
 ![HMI Stars Banner](https://img.shields.io/badge/Status-Restored_&_Secured-brightgreen?style=for-the-badge)
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)

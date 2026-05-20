@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/platform_data_service.dart';
+import '../../../../core/supabase_config.dart';
 import '../../../entreprises/domain/models/entreprise.dart';
 
 /// Un message de la messagerie plateforme.
@@ -100,8 +103,10 @@ class MessagerieProvider extends ChangeNotifier {
   bool _envoi = false;
   bool _hasMore = true;
   bool _isLoadingMore = false;
+  bool _hasUnreadForSidebar = false;
   static const int _pageSize = 20;
   StreamSubscription<List<Map<String, dynamic>>>? _abonnementTempsReel;
+  List<String> _favorisIds = [];
 
   // --- Getters -------------------------------------------------------------
   List<ApercuConversation> get conversations => _conversations;
@@ -111,13 +116,38 @@ class MessagerieProvider extends ChangeNotifier {
   bool get envoi => _envoi;
   bool get hasMore => _hasMore;
   bool get isLoadingMore => _isLoadingMore;
+  bool get hasUnreadForSidebar => _hasUnreadForSidebar;
 
   ApercuConversation? get conversationSelectionnee =>
       _conversations.where((c) => c.entreprise.id == _entrepriseSelectionneeId).isNotEmpty
           ? _conversations.firstWhere((c) => c.entreprise.id == _entrepriseSelectionneeId)
           : null;
 
+  MessagerieProvider() {
+    _chargerFavoris();
+    _verifierNonLusInitial();
+    _abonnerTempsReelGlobal();
+  }
+
   // --- Chargement ----------------------------------------------------------
+
+  /// Vérifie rapidement s'il y a des messages non lus au démarrage.
+  Future<void> _verifierNonLusInitial() async {
+    try {
+      final res = await _supabase
+          .from('messages')
+          .select('id')
+          .eq('est_envoye_par_user', true)
+          .eq('est_lu', false)
+          .limit(1);
+      if (res.isNotEmpty) {
+        _hasUnreadForSidebar = true;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[MessagerieProvider] Erreur verifierNonLusInitial : $e');
+    }
+  }
 
   /// Charge la liste de toutes les entreprises avec leur dernier message.
   Future<void> chargerConversations(List<Entreprise> entreprises) async {
@@ -159,6 +189,8 @@ class MessagerieProvider extends ChangeNotifier {
     }
 
     _chargement = false;
+    // Recalculer l'état global unread
+    _hasUnreadForSidebar = _conversations.any((c) => c.aDesMessagesNonLus && c.entreprise.id != _entrepriseSelectionneeId);
     notifyListeners();
 
     // S'abonner aux messages de TOUTES les entreprises pour la sidebar
@@ -197,12 +229,24 @@ class MessagerieProvider extends ChangeNotifier {
         final updated = _mettreAJourApercuDirect(eid, content, parsedDate, isFromClient, estLu);
         if (updated) aChangeGlobal = true;
 
+        if (isFromClient && !estLu && eid != _entrepriseSelectionneeId) {
+          _hasUnreadForSidebar = true;
+          aChangeGlobal = true;
+        }
+
         // 2. Si c'est l'entreprise actuellement ouverte, mettre à jour le chat
         if (eid == _entrepriseSelectionneeId) {
           final m = MessagePlateforme.fromJson(row);
           final exists = _messagesActuels.any((existing) => existing.id == m.id);
           if (!exists) {
-            _messagesActuels.insert(0, m); // Insert at top for reverse list
+            final indexOptimiste = _messagesActuels.indexWhere(
+              (existing) => existing.id.startsWith('optimistic_') && existing.contenu == m.contenu
+            );
+            if (indexOptimiste != -1) {
+              _messagesActuels[indexOptimiste] = m;
+            } else {
+              _messagesActuels.insert(0, m); // Insert at top for reverse list
+            }
             _messagesActuels.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
             aChangeGlobal = true;
 
@@ -219,6 +263,8 @@ class MessagerieProvider extends ChangeNotifier {
       if (aChangeGlobal) {
         notifyListeners();
       }
+    }, onError: (error) {
+      debugPrint('[MessagerieProvider] Erreur de connexion temps réel (flux global) : $error');
     });
   }
 
@@ -267,6 +313,9 @@ class MessagerieProvider extends ChangeNotifier {
     if (idx != -1 && _conversations[idx].aDesMessagesNonLus) {
       _conversations[idx] = _conversations[idx].copyWith(aDesMessagesNonLus: false);
     }
+
+    // Recalculer l'état unread de la sidebar
+    _hasUnreadForSidebar = _conversations.any((c) => c.aDesMessagesNonLus && c.entreprise.id != entrepriseId);
 
     _messagesActuels = [];
     _hasMore = true;
@@ -350,12 +399,122 @@ class MessagerieProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _dataService.envoyerMessagePlateforme(
+      final res = await _dataService.envoyerMessagePlateforme(
         entrepriseId: eid,
         contenu: texte,
       );
+      final realMessage = MessagePlateforme.fromJson(res);
+      final index = _messagesActuels.indexWhere((m) => m.id == optimisticMessage.id);
+      if (index != -1) {
+        _messagesActuels[index] = realMessage;
+      }
     } catch (_) {
       _messagesActuels.removeWhere((m) => m.id == optimisticMessage.id);
+    } finally {
+      _envoi = false;
+      notifyListeners();
+    }
+  }
+
+  // --- Actions de Navigation / Sidebar ------------------------------------
+
+  /// Désactive le témoin global sur la barre latérale.
+  void clearSidebarUnread() {
+    if (_hasUnreadForSidebar) {
+      _hasUnreadForSidebar = false;
+      notifyListeners();
+    }
+  }
+
+  /// Réinitialise l'entreprise sélectionnée quand on quitte la messagerie.
+  void quitterMessagerie() {
+    _entrepriseSelectionneeId = null;
+    _messagesActuels = [];
+    notifyListeners();
+  }
+
+  // --- Favoris et Envoi Fichiers -------------------------------------------
+
+  Future<void> _chargerFavoris() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _favorisIds = prefs.getStringList('entreprises_favorites') ?? [];
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[MessagerieProvider] Erreur chargement favoris : $e');
+    }
+  }
+
+  bool estFavori(String id) => _favorisIds.contains(id);
+
+  Future<void> toggleFavori(String id) async {
+    if (_favorisIds.contains(id)) {
+      _favorisIds.remove(id);
+    } else {
+      _favorisIds.add(id);
+    }
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('entreprises_favorites', _favorisIds);
+    } catch (e) {
+      debugPrint('[MessagerieProvider] Erreur sauvegarde favoris : $e');
+    }
+  }
+
+  /// Envoie un message avec un fichier attaché.
+  Future<void> envoyerMessageAvecFichier({
+    required String nomFichier,
+    required List<int> octets,
+    String contenu = '',
+  }) async {
+    final eid = _entrepriseSelectionneeId;
+    if (eid == null) return;
+
+    _envoi = true;
+    notifyListeners();
+
+    try {
+      // 1. Upload vers Supabase Storage
+      final path = 'messages/${DateTime.now().millisecondsSinceEpoch}_$nomFichier';
+      await SupabaseConfig.adminClient.storage.from('documents').uploadBinary(
+        path,
+        Uint8List.fromList(octets),
+      );
+
+      final urlFichier = SupabaseConfig.adminClient.storage.from('documents').getPublicUrl(path);
+
+      // Détecter le type_document
+      String typeDoc = 'autre';
+      final ext = nomFichier.toLowerCase();
+      if (ext.endsWith('.png') ||
+          ext.endsWith('.jpg') ||
+          ext.endsWith('.jpeg') ||
+          ext.endsWith('.webp') ||
+          ext.endsWith('.gif')) {
+        typeDoc = 'media';
+      }
+
+      // 2. Insérer le message
+      await _dataService.envoyerMessagePlateformeFichier(
+        entrepriseId: eid,
+        contenu: contenu,
+        fichierUrl: urlFichier,
+        fichierNom: nomFichier,
+        typeDocument: typeDoc,
+      );
+
+      // 3. Enregistrer également dans la table fichiers
+      await _dataService.enregistrerFichier(
+        entrepriseId: eid,
+        nom: nomFichier,
+        url: urlFichier,
+        estEnvoyeParUser: false,
+        typeDocument: typeDoc,
+      );
+    } catch (e) {
+      debugPrint('[MessagerieProvider] Erreur envoi fichier : $e');
+      rethrow;
     } finally {
       _envoi = false;
       notifyListeners();

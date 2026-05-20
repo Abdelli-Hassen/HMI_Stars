@@ -360,4 +360,21 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('[AuthProvider] Error updating profile: $e');
     }
   }
+
+  /// Upload un avatar et met à jour le profil local.
+  Future<bool> uploadAvatar(Uint8List fileBytes, String fileName) async {
+    if (_utilisateur == null) return false;
+    try {
+      final url = await _dataService.uploadAvatar(_utilisateur!.id, fileBytes, fileName);
+      if (url != null) {
+        _utilisateur = _utilisateur!.copyWith(avatarUrl: url);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('[AuthProvider] Error uploading avatar: $e');
+      return false;
+    }
+  }
 }

@@ -244,7 +244,7 @@ class PointageJour {
 }
 
 // ----- Message -----
-enum TypeDocument { fournisseur, releve_bancaire, chiffre_affaires, autre }
+enum TypeDocument { fournisseur, releve_bancaire, chiffre_affaires, autre, kbis, tva, siret, rib, statuts, media }
 
 extension TypeDocumentExtension on TypeDocument {
   String get value {
@@ -257,17 +257,41 @@ extension TypeDocumentExtension on TypeDocument {
         return 'chiffre_affaires';
       case TypeDocument.autre:
         return 'autre';
+      case TypeDocument.kbis:
+        return 'kbis';
+      case TypeDocument.tva:
+        return 'tva';
+      case TypeDocument.siret:
+        return 'siret';
+      case TypeDocument.rib:
+        return 'rib';
+      case TypeDocument.statuts:
+        return 'statuts';
+      case TypeDocument.media:
+        return 'media';
     }
   }
 
   static TypeDocument fromString(String s) {
-    switch (s) {
+    switch (s.toLowerCase()) {
       case 'fournisseur':
         return TypeDocument.fournisseur;
       case 'releve_bancaire':
         return TypeDocument.releve_bancaire;
       case 'chiffre_affaires':
         return TypeDocument.chiffre_affaires;
+      case 'kbis':
+        return TypeDocument.kbis;
+      case 'tva':
+        return TypeDocument.tva;
+      case 'siret':
+        return TypeDocument.siret;
+      case 'rib':
+        return TypeDocument.rib;
+      case 'statuts':
+        return TypeDocument.statuts;
+      case 'media':
+        return TypeDocument.media;
       default:
         return TypeDocument.autre;
     }
@@ -284,6 +308,7 @@ class Message {
   final String? fichierNom;
   final TypeDocument? typeDocument;
   final bool estFichier;
+  final bool estLu;
 
   const Message({
     required this.id,
@@ -295,6 +320,7 @@ class Message {
     this.fichierNom,
     this.typeDocument,
     this.estFichier = false,
+    this.estLu = false,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
@@ -315,6 +341,7 @@ class Message {
           ? TypeDocumentExtension.fromString(json['type_document'] as String)
           : null,
       estFichier: json['est_fichier'] as bool? ?? false,
+      estLu: json['est_lu'] as bool? ?? false,
     );
   }
 
@@ -327,7 +354,34 @@ class Message {
       'fichier_nom': fichierNom,
       'type_document': typeDocument?.value,
       'est_fichier': estFichier,
+      'est_lu': estLu,
     };
+  }
+
+  Message copyWith({
+    String? id,
+    String? entrepriseId,
+    String? contenu,
+    DateTime? dateEnvoi,
+    bool? estEnvoyePar,
+    String? fichierUrl,
+    String? fichierNom,
+    TypeDocument? typeDocument,
+    bool? estFichier,
+    bool? estLu,
+  }) {
+    return Message(
+      id: id ?? this.id,
+      entrepriseId: entrepriseId ?? this.entrepriseId,
+      contenu: contenu ?? this.contenu,
+      dateEnvoi: dateEnvoi ?? this.dateEnvoi,
+      estEnvoyePar: estEnvoyePar ?? this.estEnvoyePar,
+      fichierUrl: fichierUrl ?? this.fichierUrl,
+      fichierNom: fichierNom ?? this.fichierNom,
+      typeDocument: typeDocument ?? this.typeDocument,
+      estFichier: estFichier ?? this.estFichier,
+      estLu: estLu ?? this.estLu,
+    );
   }
 }
 

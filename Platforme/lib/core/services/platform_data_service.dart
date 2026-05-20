@@ -178,19 +178,44 @@ class PlatformDataService {
 
   // ─── DOCUMENTS ────────────────────────────────────────────────────────────
 
-  /// Les documents sont stockés comme messages de type fichier.
+  /// Les documents sont stockés comme messages de type fichier ou enregistrés dans la table fichiers.
   Future<List<DocumentEntreprise>> fetchDocumentsForEntreprise(
       String entrepriseId) async {
     final data = await _client
-        .from('messages')
+        .from('entreprise_documents_view')
         .select()
         .eq('entreprise_id', entrepriseId)
-        .eq('est_fichier', true)
-        .order('date_envoi', ascending: false);
+        .order('cree_le', ascending: false);
     return (data as List)
         .map((row) =>
             DocumentEntreprise.fromJson(row as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<DocumentEntreprise>> fetchDocumentsForEntreprisePaginated(
+      String entrepriseId, int offset, int limit) async {
+    final data = await _client
+        .from('entreprise_documents_view')
+        .select()
+        .eq('entreprise_id', entrepriseId)
+        .order('cree_le', ascending: false)
+        .range(offset, offset + limit - 1);
+    return (data as List)
+        .map((row) =>
+            DocumentEntreprise.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> deleteDocument(String id, {String? url}) async {
+    final List<Future> deletes = [
+      _client.from('messages').delete().eq('id', id),
+      _client.from('fichiers').delete().eq('id', id),
+    ];
+    if (url != null && url.isNotEmpty) {
+      deletes.add(_client.from('messages').delete().eq('fichier_url', url));
+      deletes.add(_client.from('fichiers').delete().eq('url', url));
+    }
+    await Future.wait(deletes);
   }
 
   // ─── NOTES / RAPPELS ─────────────────────────────────────────────────────
@@ -395,6 +420,30 @@ class PlatformDataService {
     return Map<String, dynamic>.from(data as Map);
   }
 
+  /// Envoie un message de type fichier depuis la plateforme (est_envoye_par_user = false).
+  Future<Map<String, dynamic>> envoyerMessagePlateformeFichier({
+    required String entrepriseId,
+    required String contenu,
+    required String fichierUrl,
+    required String fichierNom,
+    String? typeDocument,
+  }) async {
+    final data = await _client
+        .from('messages')
+        .insert({
+          'entreprise_id': entrepriseId,
+          'contenu': contenu,
+          'est_envoye_par_user': false,
+          'est_fichier': true,
+          'fichier_url': fichierUrl,
+          'fichier_nom': fichierNom,
+          'type_document': typeDocument,
+        })
+        .select()
+        .single();
+    return Map<String, dynamic>.from(data as Map);
+  }
+
   /// Récupère le dernier message + nombre de messages non lus pour chaque entreprise.
   /// Utilisé pour peupler la barre latérale de la messagerie.
   Future<Map<String, Map<String, dynamic>>> fetchApercuMessages() async {
@@ -433,5 +482,55 @@ class PlatformDataService {
       }
     }
     return apercu;
+  }
+
+  /// Enregistre un fichier partagé dans la table fichiers.
+  Future<Map<String, dynamic>> enregistrerFichier({
+    required String entrepriseId,
+    required String nom,
+    required String url,
+    required bool estEnvoyeParUser,
+    String? typeDocument,
+  }) async {
+    final data = await _client
+        .from('fichiers')
+        .insert({
+          'entreprise_id': entrepriseId,
+          'nom': nom,
+          'url': url,
+          'est_envoye_par_user': estEnvoyeParUser,
+          'type_document': typeDocument?.toLowerCase(),
+        })
+        .select()
+        .single();
+    return Map<String, dynamic>.from(data as Map);
+  }
+  /// Upload un avatar utilisateur dans Supabase Storage et met à jour le profil.
+  Future<String?> uploadAvatar(String userId, Uint8List fileBytes, String fileName) async {
+    try {
+      final ext = fileName.split('.').last.toLowerCase();
+      final storagePath = 'avatars/$userId.$ext';
+
+      // Upload vers le bucket 'avatars'
+      await _client.storage.from('avatars').uploadBinary(
+        storagePath,
+        fileBytes,
+        fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+      );
+
+      // Récupérer l'URL publique
+      final publicUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+
+      // Mettre à jour le profil utilisateur
+      await _client
+          .from('utilisateurs_plateforme')
+          .update({'avatar_url': publicUrl})
+          .eq('id', userId);
+
+      return publicUrl;
+    } catch (e) {
+      debugPrint('[DataService] Error uploading avatar: $e');
+      return null;
+    }
   }
 }

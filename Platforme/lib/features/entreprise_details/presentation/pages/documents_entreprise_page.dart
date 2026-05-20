@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
+import '../../../entreprises/presentation/providers/entreprise_provider.dart';
+import '../../../entreprises/domain/models/document_entreprise.dart';
 
 class DocumentsEntreprisePage extends StatefulWidget {
   const DocumentsEntreprisePage({super.key});
@@ -16,51 +20,350 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _staggerController;
   int _selectedFolder = 0;
-  bool _uploadHovered = false;
+  String? _selectedEntrepriseId;
+  String _searchQuery = '';
+  int _visibleCount = 15;
+  static const int _pageSize = 15;
+  String _currentSort = 'recent';
 
-  final _folders = [
-    _FolderData(Icons.folder, 'Tous les fichiers', 24),
-    _FolderData(Icons.history_edu, 'Contrats', 3),
-    _FolderData(Icons.payments, 'Fiches de Paie', 12),
-    _FolderData(Icons.school, 'Diplômes', 5),
-    _FolderData(Icons.account_balance, 'RIB & Admin', 4),
+  // Library folder structure definitions
+  static const _folderLabels = [
+    'Tous les fichiers',
+    'Comptabilité',
+    'Social & Paie',
+    'Fiscalité',
+    'Banque & Relevés',
+    'Juridique',
+    'Médias & Photos',
+    'Autres documents',
   ];
 
-  // Map folder index to document type for filtering
-  static const _folderTypeMap = {
-    1: 'Contrat',
-    2: 'Paie',
-    3: 'Diplômes',
-    4: 'Banque',
-  };
+  String _categorizeDocument(DocumentEntreprise doc) {
+    final nameLower = doc.nom.toLowerCase();
+    final catLower = doc.categorie.toLowerCase();
 
-  final _documents = const [
-    _DocData('Contrat de Travail - CDI.pdf', 'Mis à jour par Expert RH', 'Contrat', '12 Mai 2026', 'Signé', true),
-    _DocData('Avenant Contrat - Promotion.pdf', 'Mis à jour par Expert RH', 'Contrat', '05 Avril 2026', 'Signé', true),
-    _DocData('Attestation Employeur.pdf', 'Génération automatique', 'Contrat', '20 Jan 2026', 'Validé', true),
-    _DocData('Fiche de Paie - Juin 2026.pdf', 'Génération automatique', 'Paie', '30 Juin 2026', 'Signé', true),
-    _DocData('Fiche de Paie - Mai 2026.pdf', 'Génération automatique', 'Paie', '31 Mai 2026', 'Signé', true),
-    _DocData('Fiche de Paie - Avril 2026.pdf', 'Génération automatique', 'Paie', '30 Avril 2026', 'Signé', true),
-    _DocData('Master Management.jpg', 'Téléversé par Jean Dupont', 'Diplômes', '15 Mars 2026', 'À vérifier', false),
-    _DocData('Licence Économie.pdf', 'Téléversé par Jean Dupont', 'Diplômes', '15 Mars 2026', 'Validé', true),
-    _DocData('RIB - Compte Personnel.pdf', 'Téléversé par Jean Dupont', 'Banque', '02 Fév 2026', 'Validé', true),
-    _DocData('Mutuelle - Attestation.pdf', 'Téléversé par Expert RH', 'Banque', '10 Jan 2026', 'Signé', true),
-  ];
+    // 1. Social & Paie (contracts, payslips, hire declarations, etc.)
+    if (nameLower.contains('contrat') ||
+        nameLower.contains('cdi') ||
+        nameLower.contains('cdd') ||
+        nameLower.contains('paie') ||
+        nameLower.contains('bulletin') ||
+        nameLower.contains('salaire') ||
+        nameLower.contains('embauche') ||
+        nameLower.contains('social') ||
+        nameLower.contains('dsn') ||
+        catLower.contains('social') ||
+        catLower.contains('paie')) {
+      return 'Social & Paie';
+    }
 
-  List<_DocData> get _filteredDocuments {
-    if (_selectedFolder == 0) return _documents;
-    final type = _folderTypeMap[_selectedFolder];
-    if (type == null) return _documents;
-    return _documents.where((d) => d.type == type).toList();
+    // 2. Banque & Relevés
+    if (nameLower.contains('rib') ||
+        nameLower.contains('banque') ||
+        nameLower.contains('releve') ||
+        nameLower.contains('relevé') ||
+        nameLower.contains('bancaire') ||
+        nameLower.contains('bank') ||
+        catLower.contains('relevé') ||
+        catLower.contains('banque') ||
+        catLower.contains('finance')) {
+      return 'Banque & Relevés';
+    }
+
+    // 3. Fiscalité (TVA, Impôts, etc.)
+    if (nameLower.contains('fiscal') ||
+        nameLower.contains('impot') ||
+        nameLower.contains('impôt') ||
+        nameLower.contains('tva') ||
+        nameLower.contains('liasse') ||
+        nameLower.contains('taxe') ||
+        catLower.contains('fiscal') ||
+        catLower.contains('impot')) {
+      return 'Fiscalité';
+    }
+
+    // 4. Juridique (KBis, statuts, PV, AG)
+    if (nameLower.contains('statut') ||
+        nameLower.contains('kbis') ||
+        nameLower.contains('juridique') ||
+        nameLower.contains('pv') ||
+        nameLower.contains('assemblee') ||
+        nameLower.contains('assemblée') ||
+        nameLower.contains('greffe') ||
+        catLower.contains('juridique')) {
+      return 'Juridique';
+    }
+
+    // 5. Comptabilité (Sales, purchases, invoices: supplier, chiffre d'affaires, compta)
+    if (nameLower.contains('facture') ||
+        nameLower.contains('compta') ||
+        nameLower.contains('achat') ||
+        nameLower.contains('vente') ||
+        nameLower.contains('client') ||
+        nameLower.contains('fournisseur') ||
+        nameLower.contains('ca ') ||
+        nameLower.contains('chiffre d') ||
+        catLower.contains('comptable') ||
+        catLower.contains('client') ||
+        catLower.contains('fournisseur')) {
+      return 'Comptabilité';
+    }
+
+    // 6. Médias & Photos (images, photos, videos, etc.)
+    if (nameLower.contains('.jpg') ||
+        nameLower.contains('.jpeg') ||
+        nameLower.contains('.png') ||
+        nameLower.contains('.gif') ||
+        nameLower.contains('.webp') ||
+        nameLower.contains('.mp4') ||
+        nameLower.contains('.mov') ||
+        nameLower.contains('media') ||
+        nameLower.contains('photo') ||
+        nameLower.contains('image') ||
+        nameLower.contains('scan') ||
+        nameLower.contains('img_') ||
+        catLower.contains('média') ||
+        catLower.contains('media') ||
+        catLower.contains('image') ||
+        catLower.contains('photo')) {
+      return 'Médias & Photos';
+    }
+
+    return 'Autres documents';
   }
 
-  void _showUploadDialog() {
+  List<DocumentEntreprise> getFilteredDocuments(List<DocumentEntreprise> allDocs) {
+    List<DocumentEntreprise> filtered = allDocs;
+
+    // Search query filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((d) => d.nom.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+    }
+
+    // Sidebar Folder category filter
+    if (_selectedFolder != 0) {
+      final folderLabel = _folderLabels[_selectedFolder];
+      filtered = filtered.where((d) => _categorizeDocument(d) == folderLabel).toList();
+    }
+
+    // Apply sorting
+    switch (_currentSort) {
+      case 'ancien':
+        filtered.sort((a, b) => a.dateAjout.compareTo(b.dateAjout));
+        break;
+      case 'nom_asc':
+        filtered.sort((a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()));
+        break;
+      case 'nom_desc':
+        filtered.sort((a, b) => b.nom.toLowerCase().compareTo(a.nom.toLowerCase()));
+        break;
+      case 'recent':
+      default:
+        filtered.sort((a, b) => b.dateAjout.compareTo(a.dateAjout));
+        break;
+    }
+
+    return filtered;
+  }
+
+  String _getSortLabel(String sortKey) {
+    switch (sortKey) {
+      case 'ancien':
+        return 'Date (plus ancien)';
+      case 'nom_asc':
+        return 'Nom (A-Z)';
+      case 'nom_desc':
+        return 'Nom (Z-A)';
+      case 'recent':
+      default:
+        return 'Date (plus récent)';
+    }
+  }
+
+  void _showSortMenu(BuildContext context) async {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    final result = await showMenu<String>(
+      context: context,
+      position: position,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.outlineVariant, width: 1),
+      ),
+      color: AppColors.surfaceContainerLowest,
+      items: [
+        PopupMenuItem(
+          value: 'recent',
+          child: Text('Date (plus récent)', style: AppTextStyles.bodyMedium),
+        ),
+        PopupMenuItem(
+          value: 'ancien',
+          child: Text('Date (plus ancien)', style: AppTextStyles.bodyMedium),
+        ),
+        PopupMenuItem(
+          value: 'nom_asc',
+          child: Text('Nom (A-Z)', style: AppTextStyles.bodyMedium),
+        ),
+        PopupMenuItem(
+          value: 'nom_desc',
+          child: Text('Nom (Z-A)', style: AppTextStyles.bodyMedium),
+        ),
+      ],
+      initialValue: _currentSort,
+    );
+
+    if (result != null) {
+      setState(() {
+        _currentSort = result;
+      });
+    }
+  }
+
+  void _showEntrepriseSearchDialog(BuildContext context, EntrepriseProvider provider) {
     showDialog(
       context: context,
-      barrierColor: Colors.black54,
-      builder: (ctx) => _UploadDialog(),
+      builder: (BuildContext context) {
+        String dialogSearchQuery = '';
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final filteredEntreprises = provider.entreprises
+                .where((e) => e.nom.toLowerCase().contains(dialogSearchQuery.toLowerCase()))
+                .toList();
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(
+                  maxWidth: 480,
+                  maxHeight: 560,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.outlineVariant, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 16, 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Sélectionner une entreprise',
+                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(context).pop(),
+                            color: AppColors.outline,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: TextField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: "Cherchez votre entreprise",
+                          prefixIcon: Icon(Icons.search, color: AppColors.outline),
+                          filled: true,
+                          fillColor: AppColors.surfaceContainerLow,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onChanged: (value) {
+                          setDialogState(() {
+                            dialogSearchQuery = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: filteredEntreprises.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Aucune entreprise trouvée',
+                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              itemCount: filteredEntreprises.length,
+                              itemBuilder: (context, index) {
+                                final ent = filteredEntreprises[index];
+                                final isSelected = ent.id == (_selectedEntrepriseId ?? provider.entreprises.first.id);
+
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primary.withValues(alpha: 0.08)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ListTile(
+                                    hoverColor: AppColors.surfaceContainerLow,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    title: Text(
+                                      ent.nom,
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                        color: isSelected ? AppColors.primary : AppColors.onSurface,
+                                      ),
+                                    ),
+                                    trailing: isSelected
+                                        ? Icon(Icons.check_circle, color: AppColors.primary, size: 20)
+                                        : null,
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedEntrepriseId = ent.id;
+                                        _visibleCount = _pageSize;
+                                      });
+                                      provider.fetchDocumentsForEntreprise(ent.id);
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
+
+
 
   @override
   void initState() {
@@ -72,6 +375,25 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = Provider.of<EntrepriseProvider>(context);
+    
+    if (provider.entreprises.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.fetchEntreprises();
+      });
+    } else if (_selectedEntrepriseId == null) {
+      final routeArg = ModalRoute.of(context)?.settings.arguments as String?;
+      final initialId = routeArg ?? provider.entreprises.first.id;
+      _selectedEntrepriseId = initialId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.fetchDocumentsForEntreprise(initialId);
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _staggerController.dispose();
     super.dispose();
@@ -79,6 +401,61 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<EntrepriseProvider>(context);
+
+    if (provider.entreprises.isEmpty) {
+      return const MainShell(
+        currentRoute: AppRoutes.documentsEntreprise,
+        title: 'Documents RH',
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final activeId = _selectedEntrepriseId ?? provider.entreprises.first.id;
+    final allDocs = provider.documentsPourEntreprise(activeId);
+    
+    // Count per category (for Accountant/Comptable use case)
+    int totalCount = allDocs.length;
+    int comptaCount = 0;
+    int socialPaieCount = 0;
+    int fiscaliteCount = 0;
+    int banqueCount = 0;
+    int juridiqueCount = 0;
+    int mediaCount = 0;
+    int autresCount = 0;
+
+    for (var doc in allDocs) {
+      final category = _categorizeDocument(doc);
+      if (category == 'Comptabilité') {
+        comptaCount++;
+      } else if (category == 'Social & Paie') {
+        socialPaieCount++;
+      } else if (category == 'Fiscalité') {
+        fiscaliteCount++;
+      } else if (category == 'Banque & Relevés') {
+        banqueCount++;
+      } else if (category == 'Juridique') {
+        juridiqueCount++;
+      } else if (category == 'Médias & Photos') {
+        mediaCount++;
+      } else if (category == 'Autres documents') {
+        autresCount++;
+      }
+    }
+
+    final folders = [
+      _FolderData(Icons.folder, 'Tous les fichiers', totalCount),
+      _FolderData(Icons.receipt_long, 'Comptabilité', comptaCount),
+      _FolderData(Icons.supervised_user_circle, 'Social & Paie', socialPaieCount),
+      _FolderData(Icons.gavel, 'Fiscalité', fiscaliteCount),
+      _FolderData(Icons.account_balance, 'Banque & Relevés', banqueCount),
+      _FolderData(Icons.business_center, 'Juridique', juridiqueCount),
+      _FolderData(Icons.photo_library, 'Médias & Photos', mediaCount),
+      _FolderData(Icons.more_horiz, 'Autres documents', autresCount),
+    ];
+
+    final filteredDocs = getFilteredDocuments(allDocs);
+
     return MainShell(
       currentRoute: AppRoutes.documentsEntreprise,
       title: 'Documents RH',
@@ -88,7 +465,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ─── Page Header ───
-            _buildHeader(),
+            _buildHeader(provider),
             const SizedBox(height: 28),
 
             // ─── Bento Grid: Sidebar + Table ───
@@ -96,23 +473,25 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Library Sidebar
-                SizedBox(width: 260, child: _buildLibrarySidebar()),
+                SizedBox(width: 260, child: _buildLibrarySidebar(folders)),
                 const SizedBox(width: 24),
                 // Documents Table
-                Expanded(child: _buildDocumentsTable()),
+                Expanded(child: _buildDocumentsTable(filteredDocs, filteredDocs.length)),
               ],
             ),
-            const SizedBox(height: 24),
-
-            // ─── Conformity + Upload Zone ───
-            _buildConformityFooter(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(EntrepriseProvider provider) {
+    final activeId = _selectedEntrepriseId ?? provider.entreprises.first.id;
+    final currentEntreprise = provider.entreprises.firstWhere(
+      (e) => e.id == activeId,
+      orElse: () => provider.entreprises.first,
+    );
+
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(0, -0.3), end: Offset.zero).animate(
         CurvedAnimation(parent: _staggerController, curve: const Interval(0, 0.4, curve: Curves.easeOutCubic)),
@@ -127,23 +506,54 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
               children: [
                 Text('Documents RH', style: AppTextStyles.headlineLarge.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                 const SizedBox(height: 4),
-                Text('Gérez les documents contractuels et administratifs de Jean Dupont.',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                Row(
+                  children: [
+                    Text('Gérez les documents contractuels et administratifs de ',
+                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                    GestureDetector(
+                      onTap: () => _showEntrepriseSearchDialog(context, provider),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: IntrinsicWidth(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.24)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  currentEntreprise.nom,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 18),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             Row(children: [
-              _HoverButton(
-                label: 'Filtrer',
-                icon: Icons.filter_list,
-                filled: false,
-                onTap: () {},
-              ),
-              const SizedBox(width: 10),
-              _HoverButton(
-                label: 'Nouveau Document',
-                icon: Icons.upload,
-                filled: true,
-                onTap: _showUploadDialog,
+              Builder(
+                builder: (buttonContext) {
+                  return _HoverButton(
+                    label: _getSortLabel(_currentSort),
+                    icon: Icons.sort,
+                    filled: false,
+                    onTap: () => _showSortMenu(buttonContext),
+                  );
+                },
               ),
             ]),
           ],
@@ -152,94 +562,46 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     );
   }
 
-  Widget _buildLibrarySidebar() {
+  Widget _buildLibrarySidebar(List<_FolderData> folders) {
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(-0.3, 0), end: Offset.zero).animate(
         CurvedAnimation(parent: _staggerController, curve: const Interval(0.15, 0.6, curve: Curves.easeOutCubic)),
       ),
       child: FadeTransition(
         opacity: CurvedAnimation(parent: _staggerController, curve: const Interval(0.15, 0.6)),
-        child: Column(children: [
-          // Folder list
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(16),
-              border: const Border(left: BorderSide(color: AppColors.primary, width: 4)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('BIBLIOTHÈQUE', style: AppTextStyles.labelSmall.copyWith(
-                  letterSpacing: 1.5, fontWeight: FontWeight.w800, color: AppColors.primary,
-                )),
-                const SizedBox(height: 16),
-                ...List.generate(_folders.length, (i) => _FolderItem(
-                  data: _folders[i],
-                  isActive: _selectedFolder == i,
-                  onTap: () => setState(() => _selectedFolder = i),
-                )),
-              ],
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border(left: BorderSide(color: AppColors.primary, width: 4)),
           ),
-          const SizedBox(height: 16),
-
-          // Storage usage
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('STOCKAGE UTILISÉ', style: AppTextStyles.labelSmall.copyWith(
-                  letterSpacing: 1.5, fontWeight: FontWeight.w800, color: AppColors.onSurfaceVariant,
-                )),
-                const SizedBox(height: 16),
-                TweenAnimationBuilder(
-                  tween: Tween<double>(begin: 0, end: 0.45),
-                  duration: const Duration(milliseconds: 1200),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: value,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text('450 Mo sur 1 Go (${(value * 100).round()}%)',
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('BIBLIOTHÈQUE', style: AppTextStyles.labelSmall.copyWith(
+                letterSpacing: 1.5, fontWeight: FontWeight.w800, color: AppColors.primary,
+              )),
+              const SizedBox(height: 16),
+              ...List.generate(folders.length, (i) => _FolderItem(
+                data: folders[i],
+                isActive: _selectedFolder == i,
+                onTap: () => setState(() {
+                  _selectedFolder = i;
+                  _visibleCount = _pageSize;
+                }),
+              )),
+            ],
           ),
-        ]),
+        ),
       ),
     );
   }
 
-  Widget _buildDocumentsTable() {
+  Widget _buildDocumentsTable(List<DocumentEntreprise> filteredDocs, int totalDocsCount) {
+    final displayedDocs = filteredDocs.take(_visibleCount).toList();
+    final hasMore = _visibleCount < filteredDocs.length;
+
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(0.1, 0), end: Offset.zero).animate(
         CurvedAnimation(parent: _staggerController, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
@@ -249,6 +611,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
+            border: Border.all(color: AppColors.outlineVariant, width: 1),
             borderRadius: BorderRadius.circular(16),
           ),
           clipBehavior: Clip.antiAlias,
@@ -266,10 +629,16 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                       width: 240,
                       height: 36,
                       child: TextField(
+                        onChanged: (val) {
+                          setState(() {
+                            _searchQuery = val;
+                            _visibleCount = _pageSize;
+                          });
+                        },
                         decoration: InputDecoration(
                           hintText: 'Rechercher un document...',
                           hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
-                          prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.outline),
+                          prefixIcon: Icon(Icons.search, size: 18, color: AppColors.outline),
                           filled: true,
                           fillColor: AppColors.surfaceContainerLow,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
@@ -290,14 +659,14 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                 child: Row(children: [
                   Expanded(flex: 3, child: Text('NOM DU DOCUMENT', style: _colHeader())),
                   Expanded(child: Text('TYPE', style: _colHeader())),
-                  Expanded(child: Text('DERNIÈRE MODIFICATION', style: _colHeader())),
+                  Expanded(child: Text('DATE AJOUTÉ', style: _colHeader())),
                   SizedBox(width: 100, child: Center(child: Text('STATUT', style: _colHeader()))),
                   const SizedBox(width: 40),
                 ]),
               ),
 
               // Document Rows (filtered + staggered)
-              ...List.generate(_filteredDocuments.length, (i) {
+              ...List.generate(displayedDocs.length, (i) {
                 final start = 0.25 + (i * 0.08);
                 final end = (start + 0.3).clamp(0.0, 1.0);
                 return SlideTransition(
@@ -306,11 +675,13 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                   ),
                   child: FadeTransition(
                     opacity: CurvedAnimation(parent: _staggerController, curve: Interval(start, end)),
-                    child: _DocumentRow(data: _filteredDocuments[i]),
+                    child: _DocumentRow(
+                      doc: displayedDocs[i],
+                    ),
                   ),
                 );
               }),
-              if (_filteredDocuments.isEmpty)
+              if (displayedDocs.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(40),
                   child: Center(
@@ -325,23 +696,57 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                   ),
                 ),
 
-              // Pagination
+              // Pagination info / Charger plus
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 color: AppColors.surfaceContainerLow.withValues(alpha: 0.3),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Affichage de ${_filteredDocuments.length} sur ${_documents.length} fichiers', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-                    Row(children: [
-                      _PaginationBtn(icon: Icons.chevron_left, isActive: false),
-                      const SizedBox(width: 4),
-                      _PaginationBtn(number: '1', isActive: true),
-                      const SizedBox(width: 4),
-                      _PaginationBtn(number: '2', isActive: false),
-                      const SizedBox(width: 4),
-                      _PaginationBtn(icon: Icons.chevron_right, isActive: false),
-                    ]),
+                    Text(
+                      'Affichage de ${displayedDocs.length} sur ${filteredDocs.length} documents',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                    ),
+                    if (hasMore)
+                      MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _visibleCount += _pageSize;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.add, size: 14, color: Colors.white),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Charger plus',
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Text(
+                        'Tous les documents affichés',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.outline,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -352,134 +757,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     );
   }
 
-  Widget _buildConformityFooter() {
-    return SlideTransition(
-      position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-        CurvedAnimation(parent: _staggerController, curve: const Interval(0.5, 0.9, curve: Curves.easeOutCubic)),
-      ),
-      child: FadeTransition(
-        opacity: CurvedAnimation(parent: _staggerController, curve: const Interval(0.5, 0.9)),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(children: [
-            // Conformity card
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(32),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(left: BorderSide(color: AppColors.primary, width: 4)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      const Icon(Icons.task_alt, color: AppColors.primary, size: 22),
-                      const SizedBox(width: 8),
-                      Text('Conformité du dossier', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
-                    ]),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        TweenAnimationBuilder(
-                          tween: IntTween(begin: 0, end: 85),
-                          duration: const Duration(milliseconds: 1500),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, child) => Text(
-                            '$value%',
-                            style: AppTextStyles.displaySmall.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFA33500).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text('ACTION REQUISE', style: AppTextStyles.labelSmall.copyWith(
-                            fontSize: 9, fontWeight: FontWeight.w700, color: const Color(0xFFA33500),
-                            letterSpacing: 0.5,
-                          )),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Il manque encore 3 documents pour que le dossier administratif de Jean Dupont soit complet à 100%.',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant, height: 1.5),
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
-            // Upload Drop Zone
-            Expanded(
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                onEnter: (_) => setState(() => _uploadHovered = true),
-                onExit: (_) => setState(() => _uploadHovered = false),
-                child: GestureDetector(
-                  onTap: _showUploadDialog,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: _uploadHovered ? Colors.white : AppColors.surfaceContainerLow,
-                      border: Border(left: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.1))),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _uploadHovered ? AppColors.primary : AppColors.outlineVariant,
-                          width: 2,
-                          style: BorderStyle.solid,
-                        ),
-                        color: _uploadHovered ? Colors.white : AppColors.surfaceContainerLowest.withValues(alpha: 0.5),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            transform: Matrix4.translationValues(0, _uploadHovered ? -4 : 0, 0),
-                            child: Icon(
-                              Icons.cloud_upload_outlined,
-                              size: 40,
-                              color: _uploadHovered ? AppColors.primary : AppColors.outline,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text('Glissez vos fichiers ici',
-                              style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 4),
-                          Text('Format PDF, JPG ou PNG (max 10Mo)',
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
 
   TextStyle _colHeader() => AppTextStyles.labelSmall.copyWith(
         letterSpacing: 1.2,
@@ -495,12 +773,6 @@ class _FolderData {
   final String label;
   final int count;
   const _FolderData(this.icon, this.label, this.count);
-}
-
-class _DocData {
-  final String name, subtitle, type, date, status;
-  final bool isVerified;
-  const _DocData(this.name, this.subtitle, this.type, this.date, this.status, this.isVerified);
 }
 
 // ─── Animated Folder Item ───
@@ -574,8 +846,8 @@ class _FolderItemState extends State<_FolderItem> {
 // ─── Animated Document Row ───
 
 class _DocumentRow extends StatefulWidget {
-  final _DocData data;
-  const _DocumentRow({required this.data});
+  final DocumentEntreprise doc;
+  const _DocumentRow({required this.doc});
 
   @override
   State<_DocumentRow> createState() => _DocumentRowState();
@@ -585,17 +857,39 @@ class _DocumentRowState extends State<_DocumentRow> {
   bool _hovered = false;
 
   IconData get _docIcon {
-    switch (widget.data.type) {
-      case 'Contrat': return Icons.description;
-      case 'Paie': return Icons.picture_as_pdf;
-      case 'Diplômes': return Icons.school;
-      case 'Banque': return Icons.credit_card;
-      default: return Icons.insert_drive_file;
+    final format = widget.doc.format.toLowerCase();
+    if (format.contains('pdf')) return Icons.picture_as_pdf;
+    if (format.contains('png') || format.contains('jpg') || format.contains('jpeg') || format.contains('webp')) return Icons.image;
+    return Icons.description;
+  }
+
+  bool get _isVerified {
+    final nameLower = widget.doc.nom.toLowerCase();
+    return !nameLower.contains('vérifier') && !nameLower.contains('attente');
+  }
+
+  String get _statusLabel {
+    final nameLower = widget.doc.nom.toLowerCase();
+    if (nameLower.contains('contrat') || widget.doc.categorie.toLowerCase().contains('contrat')) {
+      return 'Signé';
+    }
+    return _isVerified ? 'Validé' : 'À vérifier';
+  }
+
+  Future<void> _viewDocument() async {
+    final url = widget.doc.url;
+    if (url != null) {
+      final uri = Uri.tryParse(url);
+      if (uri != null && await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final formattedDate = "${widget.doc.dateAjout.day}/${widget.doc.dateAjout.month}/${widget.doc.dateAjout.year}";
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -625,22 +919,23 @@ class _DocumentRowState extends State<_DocumentRow> {
                       color: _hovered ? Colors.white : AppColors.primary),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.data.name, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
-                    Text(widget.data.subtitle, style: AppTextStyles.bodySmall.copyWith(fontSize: 11, color: AppColors.onSurfaceVariant)),
-                  ],
+                Expanded(
+                  child: Text(
+                    widget.doc.nom,
+                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ]),
             ),
             // Type
             Expanded(
-              child: Text(widget.data.type, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              child: Text(widget.doc.categorie, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
             ),
             // Date
             Expanded(
-              child: Text(widget.data.date, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              child: Text(formattedDate, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
             ),
             // Status badge
             SizedBox(
@@ -649,26 +944,26 @@ class _DocumentRowState extends State<_DocumentRow> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: widget.data.isVerified
+                    color: _isVerified
                         ? AppColors.secondaryContainer
-                        : const Color(0xFFA33500),
+                        : const Color(0xFFA33500).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(width: 6, height: 6, decoration: BoxDecoration(
-                        color: widget.data.isVerified ? AppColors.secondary : Colors.white,
+                        color: _isVerified ? AppColors.secondary : const Color(0xFFA33500),
                         shape: BoxShape.circle,
                       )),
                       const SizedBox(width: 6),
-                      Text(widget.data.status, style: AppTextStyles.labelSmall.copyWith(
+                      Text(_statusLabel, style: AppTextStyles.labelSmall.copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
-                        color: widget.data.isVerified
+                        color: _isVerified
                             ? AppColors.onSecondaryContainer
-                            : Colors.white,
+                            : const Color(0xFFA33500),
                       )),
                     ],
                   ),
@@ -684,7 +979,37 @@ class _DocumentRowState extends State<_DocumentRow> {
                 child: IconButton(
                   icon: const Icon(Icons.more_vert, size: 18),
                   color: _hovered ? AppColors.primary : AppColors.outline,
-                  onPressed: () {},
+                  onPressed: () {
+                    final RenderBox button = context.findRenderObject() as RenderBox;
+                    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+                    final RelativeRect position = RelativeRect.fromRect(
+                      Rect.fromPoints(
+                        button.localToGlobal(Offset.zero, ancestor: overlay),
+                        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+                      ),
+                      Offset.zero & overlay.size,
+                    );
+                    showMenu<String>(
+                      context: context,
+                      position: position,
+                      items: [
+                        PopupMenuItem(
+                          value: 'view',
+                          child: Row(
+                            children: [
+                              Icon(Icons.open_in_new, size: 18, color: AppColors.primary),
+                              const SizedBox(width: 8),
+                              Text('Ouvrir / Voir', style: AppTextStyles.bodyMedium),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ).then((value) {
+                      if (value == 'view') {
+                        _viewDocument();
+                      }
+                    });
+                  },
                 ),
               ),
             ),
@@ -747,392 +1072,6 @@ class _HoverButtonState extends State<_HoverButton> {
           ]),
         ),
       ),
-    );
-  }
-}
-
-// ─── Pagination Button ───
-
-class _PaginationBtn extends StatefulWidget {
-  final IconData? icon;
-  final String? number;
-  final bool isActive;
-
-  const _PaginationBtn({this.icon, this.number, required this.isActive});
-
-  @override
-  State<_PaginationBtn> createState() => _PaginationBtnState();
-}
-
-class _PaginationBtnState extends State<_PaginationBtn> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: widget.isActive
-              ? AppColors.primary
-              : _hovered
-                  ? AppColors.surfaceContainerHigh
-                  : AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: widget.isActive
-              ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 4)]
-              : null,
-        ),
-        child: Center(
-          child: widget.icon != null
-              ? Icon(widget.icon, size: 16,
-                  color: widget.isActive ? Colors.white : AppColors.onSurfaceVariant)
-              : Text(widget.number!, style: AppTextStyles.labelSmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: widget.isActive ? Colors.white : AppColors.onSurfaceVariant,
-                )),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Upload Dialog ───
-
-class _UploadDialog extends StatefulWidget {
-  @override
-  State<_UploadDialog> createState() => _UploadDialogState();
-}
-
-class _UploadDialogState extends State<_UploadDialog>
-    with SingleTickerProviderStateMixin {
-  String _selectedType = 'Contrat';
-  bool _dropHovered = false;
-  bool _fileAdded = false;
-  String? _fileName;
-  String? _fileSize;
-  double _uploadProgress = 0;
-  late AnimationController _progressController;
-
-  @override
-  void initState() {
-    super.initState();
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-    _progressController.addListener(() {
-      setState(() => _uploadProgress = _progressController.value);
-    });
-  }
-
-  @override
-  void dispose() {
-    _progressController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-      allowMultiple: false,
-    );
-    if (result != null && result.files.isNotEmpty) {
-      final file = result.files.first;
-      final sizeKb = (file.size / 1024).toStringAsFixed(1);
-      final sizeMb = (file.size / (1024 * 1024)).toStringAsFixed(2);
-      setState(() {
-        _fileAdded = true;
-        _fileName = file.name;
-        _fileSize = file.size > 1024 * 1024 ? '$sizeMb Mo' : '$sizeKb Ko';
-      });
-      _progressController.forward(from: 0).then((_) {
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) Navigator.pop(context);
-        });
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: 520,
-          constraints: const BoxConstraints(maxHeight: 560),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.onSurface.withValues(alpha: 0.12),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.cloud_upload, color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 14),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Téléverser un Document', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
-                            Text('Format PDF, JPG ou PNG (max 10Mo)',
-                                style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
-                          ],
-                        ),
-                      ]),
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.close, size: 16, color: AppColors.onSurfaceVariant),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Drop Zone
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    onEnter: (_) => setState(() => _dropHovered = true),
-                    onExit: (_) => setState(() => _dropHovered = false),
-                    child: GestureDetector(
-                      onTap: _fileAdded ? null : _pickFile,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 36),
-                        decoration: BoxDecoration(
-                          color: _dropHovered
-                              ? AppColors.primary.withValues(alpha: 0.04)
-                              : AppColors.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _dropHovered ? AppColors.primary : AppColors.outlineVariant,
-                            width: 2,
-                          ),
-                        ),
-                        child: _fileAdded
-                            ? _buildUploadProgress()
-                            : Column(
-                                children: [
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 250),
-                                    transform: Matrix4.translationValues(0, _dropHovered ? -4 : 0, 0),
-                                    child: Icon(
-                                      Icons.cloud_upload_outlined,
-                                      size: 44,
-                                      color: _dropHovered ? AppColors.primary : AppColors.outline,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text('Cliquez ou glissez vos fichiers ici',
-                                      style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600)),
-                                  const SizedBox(height: 4),
-                                  Text('Taille maximale : 10 Mo par fichier',
-                                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.outline, fontSize: 11)),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Document Type Dropdown
-                  Text('TYPE DE DOCUMENT',
-                      style: AppTextStyles.labelSmall.copyWith(
-                          letterSpacing: 1.2, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant)),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: DropdownButton<String>(
-                      value: _selectedType,
-                      isExpanded: true,
-                      underline: const SizedBox(),
-                      icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.outline),
-                      items: ['Contrat', 'Paie', 'Diplômes', 'Banque']
-                          .map((t) => DropdownMenuItem(value: t, child: Text(t, style: AppTextStyles.bodyMedium)))
-                          .toList(),
-                      onChanged: (v) => setState(() => _selectedType = v!),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Description field
-                  Text('DESCRIPTION (OPTIONNEL)',
-                      style: AppTextStyles.labelSmall.copyWith(
-                          letterSpacing: 1.2, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: 'Ajoutez une note ou une description...',
-                      hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
-                      filled: true,
-                      fillColor: AppColors.surfaceContainerLow,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    style: AppTextStyles.bodySmall,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Actions
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.outlineVariant),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text('Annuler', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: _fileAdded ? null : _pickFile,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.upload, size: 16, color: Colors.white),
-                                const SizedBox(width: 6),
-                                Text('Téléverser',
-                                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700, color: Colors.white)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUploadProgress() {
-    final done = _uploadProgress >= 1.0;
-    return Column(
-      children: [
-        Icon(
-          done ? Icons.check_circle : Icons.description,
-          size: 40,
-          color: done ? AppColors.success : AppColors.primary,
-        ),
-        const SizedBox(height: 8),
-        if (_fileName != null)
-          Text(
-            _fileName!,
-            style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        if (_fileSize != null)
-          Text(
-            _fileSize!,
-            style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: AppColors.outline),
-          ),
-        const SizedBox(height: 8),
-        Text(
-          done ? 'Téléversement terminé !' : 'Téléversement en cours...',
-          style: AppTextStyles.labelLarge.copyWith(
-            fontWeight: FontWeight.w700,
-            color: done ? AppColors.success : AppColors.onSurface,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          height: 6,
-          width: 280,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(3),
-          ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: _uploadProgress,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: done
-                    ? const LinearGradient(colors: [AppColors.success, Color(0xFF66BB6A)])
-                    : AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '${(_uploadProgress * 100).round()}%',
-          style: AppTextStyles.labelSmall.copyWith(
-            fontWeight: FontWeight.w700,
-            color: done ? AppColors.success : AppColors.primary,
-          ),
-        ),
-      ],
     );
   }
 }
