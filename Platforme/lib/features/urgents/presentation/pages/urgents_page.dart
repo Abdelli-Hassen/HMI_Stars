@@ -123,10 +123,11 @@ class _UrgentsPageState extends State<UrgentsPage> {
                         final note = urgentNotes[index];
                         final entreprise = provider.entreprises.where((e) => e.id == note.entrepriseId).firstOrNull;
                         final nom = entreprise?.nom ?? 'Entreprise Inconnue';
-                        return InkWell(
+                        return _UrgentNoteCard(
+                          note: note,
+                          entrepriseNom: nom,
+                          isList: true,
                           onTap: () => _navigateToSource(note),
-                          borderRadius: BorderRadius.circular(16),
-                          child: _buildUrgentCard(note, nom, isList: true),
                         );
                       },
                     )
@@ -139,10 +140,11 @@ class _UrgentsPageState extends State<UrgentsPage> {
                         final nom = entreprise?.nom ?? 'Entreprise Inconnue';
                         return ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 350),
-                          child: InkWell(
+                          child: _UrgentNoteCard(
+                            note: note,
+                            entrepriseNom: nom,
+                            isList: false,
                             onTap: () => _navigateToSource(note),
-                            borderRadius: BorderRadius.circular(16),
-                            child: _buildUrgentCard(note, nom, isList: false),
                           ),
                         );
                       }).toList(),
@@ -152,40 +154,100 @@ class _UrgentsPageState extends State<UrgentsPage> {
             ),
     );
   }
+}
 
-  Widget _buildUrgentCard(dynamic note, String entrepriseNom, {required bool isList}) {
-    return Container(
-      width: isList ? double.infinity : null,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text('Urgent', style: AppTextStyles.labelSmall.copyWith(color: AppColors.warning)),
-              ),
-              Text(formatRelativeTime(note.dateRappel ?? note.dateCreation), style: AppTextStyles.labelSmall.copyWith(color: AppColors.error)),
-            ],
+class _UrgentNoteCard extends StatefulWidget {
+  final dynamic note;
+  final String entrepriseNom;
+  final bool isList;
+  final VoidCallback onTap;
+
+  const _UrgentNoteCard({
+    required this.note,
+    required this.entrepriseNom,
+    required this.isList,
+    required this.onTap,
+  });
+
+  @override
+  State<_UrgentNoteCard> createState() => _UrgentNoteCardState();
+}
+
+class _UrgentNoteCardState extends State<_UrgentNoteCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = AppColors.warning;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        width: widget.isList ? double.infinity : null,
+        transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0, 0.0),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isHovered ? accentColor : accentColor.withValues(alpha: 0.4),
+            width: _isHovered ? 2 : 1,
           ),
-          const SizedBox(height: 12),
-          Text(entrepriseNom, style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
-          const SizedBox(height: 4),
-          Text(note.titre, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(note.contenu, style: AppTextStyles.bodyMedium, maxLines: isList ? 10 : 3, overflow: TextOverflow.ellipsis),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered
+                  ? accentColor.withValues(alpha: 0.2)
+                  : Colors.transparent,
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('Urgent', style: AppTextStyles.labelSmall.copyWith(color: AppColors.warning)),
+                      ),
+                      Text(
+                        formatRelativeTime(widget.note.dateRappel ?? widget.note.dateCreation),
+                        style: AppTextStyles.labelSmall.copyWith(color: AppColors.error),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(widget.entrepriseNom, style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
+                  const SizedBox(height: 4),
+                  Text(widget.note.titre, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.note.contenu,
+                    style: AppTextStyles.bodyMedium,
+                    maxLines: widget.isList ? 10 : 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

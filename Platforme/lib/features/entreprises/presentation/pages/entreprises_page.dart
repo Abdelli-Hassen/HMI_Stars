@@ -65,23 +65,55 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                         _Chip(label: "PORTEFEUILLE CLIENT", active: false),
                       ],
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showAddDialog(context),
-                        icon: const Icon(Icons.add_business, size: 18),
-                        label: const Text('Ajouter une Entreprise'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 14),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 280,
+                          child: TextField(
+                            onChanged: (val) => context.read<EntrepriseProvider>().setSearchQuery(val),
+                            style: AppTextStyles.bodyMedium,
+                            decoration: InputDecoration(
+                              hintText: 'Rechercher (nom, email)...',
+                              hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+                              prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.outline),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: AppColors.outlineVariant),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: AppColors.outlineVariant),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: AppColors.primary),
+                              ),
+                              filled: true,
+                              fillColor: AppColors.surfaceContainerLowest,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: () => _showAddDialog(context),
+                            icon: const Icon(Icons.add_business, size: 18),
+                            label: const Text('Ajouter une Entreprise'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 14),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -91,21 +123,30 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                 Row(
                   children: [
                     _StatCard(
-                        label: 'TOTAL ENTREPRISES',
+                        label: 'TOTAL (PORTEFEUILLE)',
                         value: ep.totalEntreprises.toString(),
                         icon: Icons.domain),
                     const SizedBox(width: 16),
                     _StatCard(
-                        label: 'MES DOSSIERS (EN COURS)',
-                        value: ep.dossiersEnCours.toString(),
-                        icon: Icons.work_history),
-                    const SizedBox(width: 16),
-                    _StatCard(
-                        label: 'EN ATTENTE (DOCUMENTS)',
+                        label: 'EN ATTENTE (BLOQUÉS)',
                         value: ep.dossiersEnAttente.toString(),
                         icon: Icons.hourglass_top,
+                        iconBg: AppColors.errorContainer,
+                        iconColor: AppColors.error),
+                    const SizedBox(width: 16),
+                    _StatCard(
+                        label: 'EN COURS (TRAITEMENT)',
+                        value: ep.dossiersEnCours.toString(),
+                        icon: Icons.work_history,
                         iconBg: AppColors.tertiaryFixed,
                         iconColor: AppColors.tertiary),
+                    const SizedBox(width: 16),
+                    _StatCard(
+                        label: 'TRAVAIL COMPLET',
+                        value: ep.dossiersComplets.toString(),
+                        icon: Icons.check_circle_outline,
+                        iconBg: AppColors.successLight,
+                        iconColor: AppColors.success),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -454,44 +495,106 @@ class _Chip extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _StatCard extends StatefulWidget {
   final String label, value;
   final IconData icon;
   final Color? iconBg;
   final Color? iconColor;
-  const _StatCard({required this.label, required this.value, required this.icon, this.iconBg, this.iconColor});
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.iconBg,
+    this.iconColor,
+  });
+
+  @override
+  State<_StatCard> createState() => _StatCardState();
+}
+
+class _StatCardState extends State<_StatCard> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = widget.iconColor ?? AppColors.primary;
+
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 8),
-                  Text(value, style: AppTextStyles.headlineMedium, overflow: TextOverflow.ellipsis),
-                ],
-              ),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCirc,
+          transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: effectiveColor.withValues(alpha: _hovered ? 0.3 : 0.1),
+              width: 1,
             ),
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: iconBg ?? AppColors.primaryFixed,
-                borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: effectiveColor.withValues(alpha: _hovered ? 0.15 : 0.0),
+                blurRadius: _hovered ? 16 : 0,
+                spreadRadius: _hovered ? 2 : 0,
+                offset: const Offset(0, 8),
               ),
-              child: Icon(icon, color: iconColor ?? AppColors.primary, size: 22),
-            ),
-          ],
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.label,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        letterSpacing: 1,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.value,
+                      style: AppTextStyles.headlineMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      effectiveColor.withValues(alpha: _hovered ? 0.25 : 0.15),
+                      effectiveColor.withValues(alpha: _hovered ? 0.1 : 0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: effectiveColor.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Icon(widget.icon, color: effectiveColor, size: 22),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -537,14 +640,21 @@ class _ViewToggle extends StatelessWidget {
   }
 }
 
-class _EntrepriseCard extends StatelessWidget {
+class _EntrepriseCard extends StatefulWidget {
   final Entreprise entreprise;
   const _EntrepriseCard({required this.entreprise});
 
+  @override
+  State<_EntrepriseCard> createState() => _EntrepriseCardState();
+}
+
+class _EntrepriseCardState extends State<_EntrepriseCard> {
+  bool _hovered = false;
+
   Color get _statusColor {
-    if (entreprise.statut == 'EN COURS') return AppColors.primary;
-    if (entreprise.statut == 'COMPLET') return AppColors.success;
-    if (entreprise.statut == 'ARCHIVÉ') return AppColors.outlineVariant;
+    if (widget.entreprise.statut == 'EN COURS') return AppColors.primary;
+    if (widget.entreprise.statut == 'COMPLET') return AppColors.success;
+    if (widget.entreprise.statut == 'ARCHIVÉ') return AppColors.outlineVariant;
     return AppColors.warning;
   }
 
@@ -552,32 +662,71 @@ class _EntrepriseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, AppRoutes.entrepriseDetails, arguments: entreprise.id),
-        child: Container(
+        onTap: () => Navigator.pushNamed(context, AppRoutes.entrepriseDetails, arguments: widget.entreprise.id),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCirc,
           width: 280,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
+          transform: Matrix4.translationValues(0.0, _hovered ? -6.0 : 0.0, 0.0),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.15)),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _hovered 
+                  ? AppColors.primary.withValues(alpha: 0.3)
+                  : AppColors.outlineVariant.withValues(alpha: 0.3),
+              width: 1,
+            ),
+            boxShadow: _hovered
+                ? [
+                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4)),
+                  ]
+                : [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 6)),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.surfaceContainerHigh,
-                    child: Icon(Icons.domain, size: 28, color: AppColors.onSurfaceVariant),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty ? EdgeInsets.zero : const EdgeInsets.all(12),
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      gradient: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty ? null : LinearGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: _hovered ? 0.25 : 0.15),
+                          AppColors.primary.withValues(alpha: _hovered ? 0.1 : 0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty
+                        ? Image.network(
+                            widget.entreprise.logoUrl!,
+                            width: 52,
+                            height: 52,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(Icons.domain, size: 28, color: AppColors.primary),
+                          )
+                        : Icon(Icons.domain, size: 28, color: AppColors.primary),
                   ),
                   const Spacer(),
                   PopupMenuButton<String>(
                     tooltip: 'Changer le statut',
                     offset: const Offset(0, 30),
                     onSelected: (newStatus) {
-                       final updated = entreprise.copyWith(statut: newStatus);
+                       final updated = widget.entreprise.copyWith(statut: newStatus);
                        Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(updated);
                     },
                     itemBuilder: (context) => [
@@ -595,7 +744,7 @@ class _EntrepriseCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(entreprise.statut, style: AppTextStyles.labelSmall.copyWith(
+                          Text(widget.entreprise.statut, style: AppTextStyles.labelSmall.copyWith(
                             fontSize: 9, fontWeight: FontWeight.w700, color: _statusColor, letterSpacing: 0.8,
                           )),
                           const SizedBox(width: 4),
@@ -606,21 +755,21 @@ class _EntrepriseCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Text(entreprise.nom, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 18),
+              Text(widget.entreprise.nom, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Row(
                 children: [
                   Icon(Icons.person, size: 14, color: AppColors.onSurfaceVariant),
                   const SizedBox(width: 4),
-                  Expanded(child: Text('Dirigeant: ${entreprise.nomGerant}', style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
+                  Expanded(child: Text('Dirigeant: ${widget.entreprise.nomGerant}', style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
+              Text(widget.entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.only(top: 14),
                 decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.15)))),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -638,14 +787,21 @@ class _EntrepriseCard extends StatelessWidget {
   }
 }
 
-class _EntrepriseListTile extends StatelessWidget {
+class _EntrepriseListTile extends StatefulWidget {
   final Entreprise entreprise;
   const _EntrepriseListTile({required this.entreprise});
 
+  @override
+  State<_EntrepriseListTile> createState() => _EntrepriseListTileState();
+}
+
+class _EntrepriseListTileState extends State<_EntrepriseListTile> {
+  bool _hovered = false;
+
   Color get _statusColor {
-    if (entreprise.statut == 'EN COURS') return AppColors.primary;
-    if (entreprise.statut == 'COMPLET') return AppColors.success;
-    if (entreprise.statut == 'ARCHIVÉ') return AppColors.outlineVariant;
+    if (widget.entreprise.statut == 'EN COURS') return AppColors.primary;
+    if (widget.entreprise.statut == 'COMPLET') return AppColors.success;
+    if (widget.entreprise.statut == 'ARCHIVÉ') return AppColors.outlineVariant;
     return AppColors.warning;
   }
 
@@ -653,22 +809,64 @@ class _EntrepriseListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, AppRoutes.entrepriseDetails, arguments: entreprise.id),
-        child: Container(
+        onTap: () => Navigator.pushNamed(context, AppRoutes.entrepriseDetails, arguments: widget.entreprise.id),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCirc,
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          transform: Matrix4.translationValues(0.0, _hovered ? -4.0 : 0.0, 0.0),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.15)),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _hovered 
+                  ? AppColors.primary.withValues(alpha: 0.3)
+                  : AppColors.outlineVariant.withValues(alpha: 0.3),
+              width: 1,
+            ),
+            boxShadow: _hovered
+                ? [
+                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.10), blurRadius: 24, offset: const Offset(0, 8)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 4)),
+                  ]
+                : [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.surfaceContainerHigh,
-                child: Icon(Icons.domain, size: 24, color: AppColors.onSurfaceVariant),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty ? EdgeInsets.zero : const EdgeInsets.all(12),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  gradient: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty ? null : LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: _hovered ? 0.25 : 0.15),
+                      AppColors.primary.withValues(alpha: _hovered ? 0.1 : 0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                ),
+                child: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty
+                    ? Image.network(
+                        widget.entreprise.logoUrl!,
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Icon(Icons.domain, size: 24, color: AppColors.primary),
+                        ),
+                      )
+                    : Icon(Icons.domain, size: 24, color: AppColors.primary),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -676,9 +874,9 @@ class _EntrepriseListTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(entreprise.nom, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
+                    Text(widget.entreprise.nom, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
-                    Text(entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(widget.entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
@@ -689,7 +887,7 @@ class _EntrepriseListTile extends StatelessWidget {
                   children: [
                     Icon(Icons.person, size: 16, color: AppColors.onSurfaceVariant),
                     const SizedBox(width: 6),
-                    Expanded(child: Text(entreprise.nomGerant, style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
+                    Expanded(child: Text(widget.entreprise.nomGerant, style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
                   ],
                 ),
               ),
@@ -698,7 +896,7 @@ class _EntrepriseListTile extends StatelessWidget {
                 tooltip: 'Changer le statut',
                 offset: const Offset(0, 30),
                 onSelected: (newStatus) {
-                   final updated = entreprise.copyWith(statut: newStatus);
+                   final updated = widget.entreprise.copyWith(statut: newStatus);
                    Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(updated);
                 },
                 itemBuilder: (context) => [
@@ -716,7 +914,7 @@ class _EntrepriseListTile extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(entreprise.statut, style: AppTextStyles.labelSmall.copyWith(
+                      Text(widget.entreprise.statut, style: AppTextStyles.labelSmall.copyWith(
                         fontSize: 10, fontWeight: FontWeight.w700, color: _statusColor, letterSpacing: 0.8,
                       )),
                       const SizedBox(width: 6),

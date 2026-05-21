@@ -25,17 +25,11 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
   bool _isReminderOn = false;
   bool _inputExpanded = false;
   bool _dataLoaded = false;
+  bool _showAllTodos = false;
 
 
   // Todos remain local (no DB table for them)
-  final List<_TodoItem> _todos = [
-    _TodoItem('Envoyer les attestations employeur', true),
-    _TodoItem('Commander les tickets restaurant', false),
-    _TodoItem('Mettre à jour le registre du personnel', false),
-    _TodoItem('Archiver les dossiers 2023', true),
-    _TodoItem('Planifier la réunion CSE de Mai', false),
-    _TodoItem('Vérifier les DPAE en cours', false),
-  ];
+  final List<_TodoItem> _todos = [];
 
   List<NoteEntreprise> _getFilteredNotes(List<NoteEntreprise> allNotes) {
     var list = allNotes;
@@ -83,6 +77,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
       contenu: _newNoteBodyCtrl.text.trim(),
       dateCreation: DateTime.now(),
       estRappel: _selectedCategory == 'Rappel',
+      tag: _selectedCategory,
     );
 
     try {
@@ -107,7 +102,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
   void _addTodo() {
     if (_newTodoCtrl.text.trim().isEmpty) return;
     setState(() {
-      _todos.add(_TodoItem(_newTodoCtrl.text.trim(), false));
+      _todos.insert(0, _TodoItem(_newTodoCtrl.text.trim(), false));
       _newTodoCtrl.clear();
     });
   }
@@ -184,7 +179,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(20),
-                border: Border(left: BorderSide(color: _currentCat.color, width: 4)),
+                border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
                 boxShadow: [
                   BoxShadow(color: AppColors.onSurface.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
                 ],
@@ -392,7 +387,16 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           runSpacing: 16,
                           children: filteredNotes.map((note) => _NoteCard(
                             data: note,
-                            onPin: () => setState(() => note.isPinned = !note.isPinned),
+                            onPin: () async {
+                              try {
+                                final updated = note.copyWith(isPinned: !note.isPinned);
+                                await provider.updateNote(updated);
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+                                }
+                              }
+                            },
                             onEdit: () => _editNote(note),
                             onDelete: () async {
                               try {
@@ -421,7 +425,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                       decoration: BoxDecoration(
                         color: AppColors.surfaceContainerLowest,
                         borderRadius: BorderRadius.circular(16),
-                        border: const Border(left: BorderSide(color: AppColors.primary, width: 4)),
+                        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,34 +452,32 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          ..._todos.map((todo) => _TodoRow(
-                            item: todo,
-                            onToggle: () => setState(() => todo.done = !todo.done),
-                            onDelete: () => setState(() => _todos.remove(todo)),
-                          )),
-                          const SizedBox(height: 12),
                           // ─── Add Todo Input ───
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
                               color: AppColors.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.add, size: 16, color: AppColors.outline),
-                                const SizedBox(width: 8),
+                                const Icon(Icons.add, size: 20, color: AppColors.outline),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: TextField(
                                     controller: _newTodoCtrl,
                                     onSubmitted: (_) => _addTodo(),
-                                    style: AppTextStyles.bodySmall,
+                                    style: AppTextStyles.bodyMedium,
                                     decoration: InputDecoration(
                                       hintText: 'Ajouter une tâche...',
-                                      hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
+                                      hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
                                       border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      errorBorder: InputBorder.none,
+                                      disabledBorder: InputBorder.none,
                                       isDense: true,
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
                                     ),
                                   ),
                                 ),
@@ -484,18 +486,37 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                   child: GestureDetector(
                                     onTap: _addTodo,
                                     child: Container(
-                                      padding: const EdgeInsets.all(4),
+                                      padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color: AppColors.primary,
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Icon(Icons.arrow_upward, size: 14, color: Colors.white),
+                                      child: const Icon(Icons.arrow_upward, size: 18, color: Colors.white),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          ...(_showAllTodos ? _todos : _todos.take(10)).map((todo) => _TodoRow(
+                            item: todo,
+                            onToggle: () => setState(() => todo.done = !todo.done),
+                            onDelete: () => setState(() => _todos.remove(todo)),
+                          )),
+                          if (_todos.length > 10)
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: TextButton(
+                                  onPressed: () => setState(() => _showAllTodos = !_showAllTodos),
+                                  child: Text(
+                                    _showAllTodos ? 'Voir moins' : 'Voir plus (${_todos.length - 10})',
+                                    style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -692,14 +713,22 @@ class _NoteCardState extends State<_NoteCard> {
         curve: Curves.easeOutCubic,
         width: 280,
         padding: const EdgeInsets.all(20),
-        transform: Matrix4.translationValues(0, _hovered ? -3 : 0, 0),
+        transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),
-          border: Border(left: BorderSide(color: color, width: 4)),
-          boxShadow: _hovered
-              ? [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 6))]
-              : [BoxShadow(color: AppColors.onSurface.withValues(alpha: 0.04), blurRadius: 4)],
+          border: Border.all(
+            color: _hovered ? color.withValues(alpha: 0.4) : AppColors.outlineVariant.withValues(alpha: 0.5),
+            width: _hovered ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _hovered ? color.withValues(alpha: 0.25) : AppColors.onSurface.withValues(alpha: 0.04),
+              blurRadius: _hovered ? 20 : 4,
+              spreadRadius: _hovered ? 3 : 0,
+              offset: _hovered ? const Offset(0, 8) : const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -381,19 +381,27 @@ class _KpiCardState extends State<_KpiCard> {
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.all(20),
-          transform: Matrix4.translationValues(0.0, _hovered ? -4.0 : 0.0, 0.0),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCirc,
+          padding: const EdgeInsets.all(24),
+          transform: Matrix4.translationValues(0.0, _hovered ? -6.0 : 0.0, 0.0),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border(
-              left: BorderSide(color: AppColors.primary, width: 3),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _hovered 
+                  ? widget.iconColor.withValues(alpha: 0.3)
+                  : AppColors.outlineVariant.withValues(alpha: 0.3),
+              width: 1,
             ),
             boxShadow: _hovered
-                ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 8))]
-                : [],
+                ? [
+                    BoxShadow(color: widget.iconColor.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4)),
+                  ]
+                : [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 6)),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,15 +410,21 @@ class _KpiCardState extends State<_KpiCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    padding: const EdgeInsets.all(8),
+                    duration: const Duration(milliseconds: 300),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: _hovered
-                          ? widget.iconColor.withValues(alpha: 0.15)
-                          : widget.iconColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.iconColor.withValues(alpha: _hovered ? 0.25 : 0.15),
+                          widget.iconColor.withValues(alpha: _hovered ? 0.1 : 0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: widget.iconColor.withValues(alpha: 0.2)),
                     ),
-                    child: Icon(widget.icon, color: widget.iconColor, size: 22),
+                    child: Icon(widget.icon, color: widget.iconColor, size: 24),
                   ),
                   Text(widget.badge,
                       style: AppTextStyles.labelSmall.copyWith(

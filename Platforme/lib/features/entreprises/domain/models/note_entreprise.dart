@@ -36,6 +36,8 @@ class NoteEntreprise {
       dateRappel: json['date_rappel'] != null
           ? DateTime.tryParse(json['date_rappel'] as String)
           : null,
+      isPinned: json['is_pinned'] as bool? ?? false,
+      tag: json['tag'] as String? ?? 'Note',
     );
   }
 
@@ -45,6 +47,8 @@ class NoteEntreprise {
         'contenu': contenu,
         'est_rappel': estRappel,
         'date_rappel': dateRappel?.toIso8601String(),
+        'is_pinned': isPinned,
+        'tag': tag,
       };
 
   NoteEntreprise copyWith({

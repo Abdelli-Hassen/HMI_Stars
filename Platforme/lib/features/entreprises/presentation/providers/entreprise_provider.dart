@@ -20,11 +20,13 @@ class EntrepriseProvider extends ChangeNotifier {
   LoadStatus _status = LoadStatus.initial;
   String? _error;
   String _filtreActif = 'Toutes les entreprises';
+  String _searchQuery = '';
 
   // ─── Getters ──────────────────────────────────────────────────────────────
   LoadStatus get status => _status;
   String? get error => _error;
   String get filtreActif => _filtreActif;
+  String get searchQuery => _searchQuery;
 
   List<Entreprise> get entreprises => _entreprises;
   int get totalEntreprises => _entreprises.length;
@@ -32,21 +34,39 @@ class EntrepriseProvider extends ChangeNotifier {
       _entreprises.where((e) => e.statut == 'EN COURS').length;
   int get dossiersEnAttente =>
       _entreprises.where((e) => e.statut == 'ATTENTE DOCS').length;
+  int get dossiersComplets =>
+      _entreprises.where((e) => e.statut == 'COMPLET').length;
 
   List<Entreprise> get entreprisesFiltrees {
-    final all = _entreprises;
+    var filtered = _entreprises;
     switch (_filtreActif) {
       case 'En cours de travail':
-        return all.where((e) => e.statut == 'EN COURS').toList();
+        filtered = filtered.where((e) => e.statut == 'EN COURS').toList();
+        break;
       case 'En attente des besoins':
-        return all.where((e) => e.statut == 'ATTENTE DOCS').toList();
+        filtered = filtered.where((e) => e.statut == 'ATTENTE DOCS').toList();
+        break;
       case 'Travail complet':
-        return all.where((e) => e.statut == 'COMPLET').toList();
+        filtered = filtered.where((e) => e.statut == 'COMPLET').toList();
+        break;
       case 'Archivées':
-        return all.where((e) => e.statut == 'ARCHIVÉ').toList();
+        filtered = filtered.where((e) => e.statut == 'ARCHIVÉ').toList();
+        break;
       default:
-        return all.where((e) => e.statut != 'ARCHIVÉ').toList();
+        filtered = filtered.where((e) => e.statut != 'ARCHIVÉ').toList();
+        break;
     }
+
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filtered = filtered.where((e) => 
+        e.nom.toLowerCase().contains(query) || 
+        e.email.toLowerCase().contains(query) || 
+        e.nomGerant.toLowerCase().contains(query)
+      ).toList();
+    }
+
+    return filtered;
   }
 
   List<Salarie> get salaries =>
@@ -207,6 +227,11 @@ class EntrepriseProvider extends ChangeNotifier {
 
   void setFiltre(String filtre) {
     _filtreActif = filtre;
+    notifyListeners();
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
     notifyListeners();
   }
 }
