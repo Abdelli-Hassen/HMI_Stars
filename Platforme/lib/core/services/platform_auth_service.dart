@@ -71,6 +71,13 @@ class PlatformAuthService {
     await _client.auth.resetPasswordForEmail(email);
   }
 
+  /// Updates the current user's password.
+  Future<void> updatePassword(String newPassword) async {
+    debugPrint('[Auth] Updating password');
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
+    debugPrint('[Auth] Password updated');
+  }
+
   Future<void> signOut() async {
     await _client.auth.signOut();
     debugPrint('[Auth] Signed out');

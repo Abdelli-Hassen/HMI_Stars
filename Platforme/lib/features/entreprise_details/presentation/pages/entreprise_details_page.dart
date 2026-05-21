@@ -4,11 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:file_saver/file_saver.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
+import '../../../../core/supabase_config.dart';
 import '../../../entreprises/domain/models/salarie.dart';
 import '../../../entreprises/domain/models/document_entreprise.dart';
 import '../../../entreprises/domain/models/note_entreprise.dart';
@@ -192,17 +195,17 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 _buildSectionTitle('Pièces jointes'),
                 Row(
                   children: [
-                    _docChip('Pièce d\'identité', true),
+                    _docChip('Pièce d\'identité', salarie.aPieceIdentite),
                     const SizedBox(width: 8),
-                    _docChip('Carte Vitale', true),
+                    _docChip('Carte Vitale', salarie.aCarteVitale),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _docChip('Justificatif domicile', true),
+                    _docChip('Justificatif domicile', salarie.aJustificatifDomicile),
                     const SizedBox(width: 8),
-                    _docChip('Contrat signé', true),
+                    _docChip('Contrat signé', salarie.aContratSigne),
                   ],
                 ),
               ],
@@ -1146,6 +1149,60 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
   String _genre = 'M';
   String _typeContrat = 'CDI';
   bool _isLoading = false;
+  DateTime? _dateNaissance;
+  DateTime? _dateEmbauche;
+  DateTime? _dateFinContrat;
+
+  // Pièces jointes
+  Map<String, Uint8List?> fichiers = {
+    'piece_identite': null,
+    'carte_vitale': null,
+    'justificatif_domicile': null,
+    'contrat_signe': null,
+  };
+  Map<String, String> fichiersNoms = {
+    'piece_identite': '',
+    'carte_vitale': '',
+    'justificatif_domicile': '',
+    'contrat_signe': '',
+  };
+
+  bool get _needsDateFin => _typeContrat == 'CDD' || _typeContrat == 'Stage';
+
+  Future<void> _pickDate(String field) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(1950),
+      lastDate: DateTime(2050),
+      locale: const Locale('fr'),
+    );
+    if (picked != null) {
+      setState(() {
+        if (field == 'naissance') _dateNaissance = picked;
+        if (field == 'embauche') _dateEmbauche = picked;
+        if (field == 'fin') _dateFinContrat = picked;
+      });
+    }
+  }
+
+  Future<void> _pickFile(String key) async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx'],
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      if (file.bytes != null) {
+        setState(() {
+          fichiers[key] = file.bytes;
+          fichiersNoms[key] = file.name;
+        });
+      }
+    }
+  }
 
   Future<void> _ajouter() async {
     if (_nomController.text.isEmpty || _prenomController.text.isEmpty) {
@@ -1153,10 +1210,17 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
       return;
     }
 
+    if (_needsDateFin && _dateFinContrat == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('La date de fin de contrat est obligatoire pour un contrat $_typeContrat.'), backgroundColor: AppColors.error),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final s = Salarie(
-      id: '', // DB generates UUID
+      id: '',
       entrepriseId: widget.entrepriseId,
       nom: _nomController.text,
       prenom: _prenomController.text,
@@ -1164,20 +1228,39 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
       nomNaissance: _nomNaissanceController.text.isEmpty ? _nomController.text : _nomNaissanceController.text,
       cin: _cinController.text,
       numeroSecuriteSociale: _nssController.text,
-      dateNaissance: DateTime(1990, 1, 1),
+      dateNaissance: _dateNaissance,
       lieuNaissance: _lieuNaissanceController.text,
       nationalite: _nationaliteController.text,
       adressePostale: _adressePostaleController.text,
       telephone: _telController.text,
       email: _emailController.text,
-      dateEmbauche: DateTime.now(),
+      dateEmbauche: _dateEmbauche ?? DateTime.now(),
       typeContrat: _typeContrat,
+      dateFinContrat: _dateFinContrat,
       emploiPoste: _emploiPosteController.text,
+      aPieceIdentite: fichiers['piece_identite'] != null,
+      aCarteVitale: fichiers['carte_vitale'] != null,
+      aJustificatifDomicile: fichiers['justificatif_domicile'] != null,
+      aContratSigne: fichiers['contrat_signe'] != null,
       estActif: true,
     );
 
     try {
-      await Provider.of<EntrepriseProvider>(context, listen: false).ajouterSalarie(s);
+      final created = await Provider.of<EntrepriseProvider>(context, listen: false).ajouterSalarie(s);
+
+      // Upload les fichiers si présents
+      final salarieId = created.id;
+      final storage = SupabaseConfig.adminClient.storage.from('documents');
+
+      for (final entry in fichiers.entries) {
+        if (entry.value != null) {
+          final fileName = fichiersNoms[entry.key]!;
+          final ext = fileName.split('.').last.toLowerCase();
+          final path = 'salaries/$salarieId/${entry.key}.$ext';
+          await storage.uploadBinary(path, entry.value!, fileOptions: FileOptions(upsert: true, contentType: _mimeType(ext)));
+        }
+      }
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Salarié ajouté avec succès !'), backgroundColor: AppColors.success));
@@ -1190,13 +1273,28 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
     }
   }
 
+  String _mimeType(String ext) {
+    switch (ext) {
+      case 'pdf': return 'application/pdf';
+      case 'jpg': case 'jpeg': return 'image/jpeg';
+      case 'png': return 'image/png';
+      case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default: return 'application/octet-stream';
+    }
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Non défini';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: AppColors.surfaceContainerLowest,
       child: Container(
-        width: 600,
+        width: 650,
         padding: const EdgeInsets.all(32),
         child: SingleChildScrollView(
           child: Column(
@@ -1205,77 +1303,121 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
             children: [
               Text('Ajouter un Salarié', style: AppTextStyles.headlineSmall),
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(child: TextField(controller: _nomController, decoration: const InputDecoration(labelText: 'Nom', border: OutlineInputBorder(), isDense: true))),
-                  const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: _prenomController, decoration: const InputDecoration(labelText: 'Prénom', border: OutlineInputBorder(), isDense: true))),
-                ],
-              ),
+
+              // Nom / Prénom
+              Row(children: [
+                Expanded(child: TextField(controller: _nomController, decoration: const InputDecoration(labelText: 'Nom *', border: OutlineInputBorder(), isDense: true))),
+                const SizedBox(width: 16),
+                Expanded(child: TextField(controller: _prenomController, decoration: const InputDecoration(labelText: 'Prénom *', border: OutlineInputBorder(), isDense: true))),
+              ]),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: TextField(controller: _nomNaissanceController, decoration: const InputDecoration(labelText: 'Nom de Naissance', border: OutlineInputBorder(), isDense: true))),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _genre,
-                      decoration: const InputDecoration(labelText: 'Genre', border: OutlineInputBorder(), isDense: true),
-                      items: const [
-                        DropdownMenuItem(value: 'M', child: Text('Masculin')),
-                        DropdownMenuItem(value: 'F', child: Text('Féminin')),
-                      ],
-                      onChanged: (v) => setState(() => _genre = v!),
-                    ),
-                  )
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: TextField(controller: _cinController, decoration: const InputDecoration(labelText: 'CIN', border: OutlineInputBorder(), isDense: true))),
-                  const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: _nssController, decoration: const InputDecoration(labelText: 'N° Sécurité Sociale', border: OutlineInputBorder(), isDense: true))),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: TextField(controller: _lieuNaissanceController, decoration: const InputDecoration(labelText: 'Lieu de naissance', border: OutlineInputBorder(), isDense: true))),
-                  const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: _nationaliteController, decoration: const InputDecoration(labelText: 'Nationalité', border: OutlineInputBorder(), isDense: true))),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(controller: _adressePostaleController, decoration: const InputDecoration(labelText: 'Adresse Postale', border: OutlineInputBorder(), isDense: true)),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: TextField(controller: _telController, decoration: const InputDecoration(labelText: 'Téléphone', border: OutlineInputBorder(), isDense: true))),
-                  const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder(), isDense: true))),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _typeContrat,
-                      decoration: const InputDecoration(labelText: 'Type Contrat', border: OutlineInputBorder(), isDense: true),
-                      items: const [
-                        DropdownMenuItem(value: 'CDI', child: Text('CDI')),
-                        DropdownMenuItem(value: 'CDD', child: Text('CDD')),
-                        DropdownMenuItem(value: 'Apprentissage', child: Text('Apprentissage')),
-                        DropdownMenuItem(value: 'Stage', child: Text('Stage')),
-                      ],
-                      onChanged: (v) => setState(() => _typeContrat = v!),
-                    ),
+
+              // Nom naissance / Genre
+              Row(children: [
+                Expanded(child: TextField(controller: _nomNaissanceController, decoration: const InputDecoration(labelText: 'Nom de Naissance', border: OutlineInputBorder(), isDense: true))),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _genre,
+                    decoration: const InputDecoration(labelText: 'Genre', border: OutlineInputBorder(), isDense: true),
+                    items: const [
+                      DropdownMenuItem(value: 'M', child: Text('Masculin')),
+                      DropdownMenuItem(value: 'F', child: Text('Féminin')),
+                    ],
+                    onChanged: (v) => setState(() => _genre = v!),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: _emploiPosteController, decoration: const InputDecoration(labelText: 'Poste Occupé', border: OutlineInputBorder(), isDense: true))),
+                )
+              ]),
+              const SizedBox(height: 16),
+
+              // CIN / NSS
+              Row(children: [
+                Expanded(child: TextField(controller: _cinController, decoration: const InputDecoration(labelText: 'CIN', border: OutlineInputBorder(), isDense: true))),
+                const SizedBox(width: 16),
+                Expanded(child: TextField(controller: _nssController, decoration: const InputDecoration(labelText: 'N° Sécurité Sociale', border: OutlineInputBorder(), isDense: true))),
+              ]),
+              const SizedBox(height: 16),
+
+              // Date naissance / Lieu naissance
+              Row(children: [
+                Expanded(child: _datePicker('Date de naissance', _dateNaissance, () => _pickDate('naissance'))),
+                const SizedBox(width: 16),
+                Expanded(child: TextField(controller: _lieuNaissanceController, decoration: const InputDecoration(labelText: 'Lieu de naissance', border: OutlineInputBorder(), isDense: true))),
+              ]),
+              const SizedBox(height: 16),
+
+              // Nationalité / Adresse
+              Row(children: [
+                Expanded(child: TextField(controller: _nationaliteController, decoration: const InputDecoration(labelText: 'Nationalité', border: OutlineInputBorder(), isDense: true))),
+                const SizedBox(width: 16),
+                Expanded(child: TextField(controller: _adressePostaleController, decoration: const InputDecoration(labelText: 'Adresse Postale', border: OutlineInputBorder(), isDense: true))),
+              ]),
+              const SizedBox(height: 16),
+
+              // Tel / Email
+              Row(children: [
+                Expanded(child: TextField(controller: _telController, decoration: const InputDecoration(labelText: 'Téléphone', border: OutlineInputBorder(), isDense: true))),
+                const SizedBox(width: 16),
+                Expanded(child: TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder(), isDense: true))),
+              ]),
+              const SizedBox(height: 16),
+
+              // Type contrat / Poste
+              Row(children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _typeContrat,
+                    decoration: const InputDecoration(labelText: 'Type Contrat', border: OutlineInputBorder(), isDense: true),
+                    items: const [
+                      DropdownMenuItem(value: 'CDI', child: Text('CDI')),
+                      DropdownMenuItem(value: 'CDD', child: Text('CDD')),
+                      DropdownMenuItem(value: 'Apprentissage', child: Text('Apprentissage')),
+                      DropdownMenuItem(value: 'Stage', child: Text('Stage')),
+                    ],
+                    onChanged: (v) => setState(() => _typeContrat = v!),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(child: TextField(controller: _emploiPosteController, decoration: const InputDecoration(labelText: 'Poste Occupé', border: OutlineInputBorder(), isDense: true))),
+              ]),
+              const SizedBox(height: 16),
+
+              // Date embauche / Date fin contrat
+              Row(children: [
+                Expanded(child: _datePicker('Date d\'embauche', _dateEmbauche, () => _pickDate('embauche'))),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _datePicker(
+                    'Date fin de contrat${_needsDateFin ? " *" : ""}',
+                    _dateFinContrat,
+                    () => _pickDate('fin'),
+                  ),
+                ),
+              ]),
+              if (_needsDateFin && _dateFinContrat == null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text('⚠ Obligatoire pour un contrat $_typeContrat', style: TextStyle(color: AppColors.error, fontSize: 11)),
+                ),
+
+              const SizedBox(height: 24),
+
+              // Pièces jointes
+              Text('Pièces jointes', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Text('Formats acceptés : PDF, JPG, PNG, DOCX', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  _fileChip('Pièce d\'identité', 'piece_identite'),
+                  _fileChip('Carte Vitale', 'carte_vitale'),
+                  _fileChip('Justificatif domicile', 'justificatif_domicile'),
+                  _fileChip('Contrat signé', 'contrat_signe'),
                 ],
               ),
+
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -1293,6 +1435,60 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
               )
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _datePicker(String label, DateTime? value, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          isDense: true,
+          suffixIcon: const Icon(Icons.calendar_today, size: 16),
+        ),
+        child: Text(
+          _formatDate(value),
+          style: AppTextStyles.bodyMedium.copyWith(color: value != null ? AppColors.onSurface : AppColors.outline),
+        ),
+      ),
+    );
+  }
+
+  Widget _fileChip(String label, String key) {
+    final hasFile = fichiers[key] != null;
+    final fileName = fichiersNoms[key] ?? '';
+    return InkWell(
+      onTap: () => _pickFile(key),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : AppColors.outlineVariant),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              hasFile ? Icons.check_circle : Icons.upload_file,
+              size: 16,
+              color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              hasFile ? fileName : label,
+              style: AppTextStyles.labelSmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );

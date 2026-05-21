@@ -49,6 +49,8 @@ dependencies:
   google_generative_ai: ^0.4.6
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.5
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

@@ -29,7 +29,7 @@ class AppTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: const EdgeInsets.only(left: 25, right: 25),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         border: Border(
@@ -39,7 +39,7 @@ class AppTopBar extends StatelessWidget {
       child: Row(
         children: [
           // ─── Branding (Logo & Title) ───
-          Flexible(
+          Expanded(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -93,8 +93,6 @@ class AppTopBar extends StatelessWidget {
             ),
           ),
 
-          const Spacer(),
-
           // ─── Search Bar ───
           if (searchBar != null)
             searchBar!
@@ -147,6 +145,7 @@ class AppTopBar extends StatelessWidget {
                 border: Border(left: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.2))),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -160,7 +159,10 @@ class AppTopBar extends StatelessWidget {
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: AppColors.surfaceContainerHigh,
-                    child: const Icon(Icons.person, size: 18, color: AppColors.onSurfaceVariant),
+                    backgroundImage: auth.userAvatarUrl != null && auth.userAvatarUrl!.isNotEmpty ? NetworkImage(auth.userAvatarUrl!) : null,
+                    child: (auth.userAvatarUrl == null || auth.userAvatarUrl!.isEmpty) 
+                        ? const Icon(Icons.person, size: 18, color: AppColors.onSurfaceVariant) 
+                        : null,
                   ),
                 ],
               ),
@@ -753,11 +755,30 @@ class _NotificationItemState extends State<_NotificationItem> {
 
 String formatRelativeTime(DateTime date) {
   final diff = DateTime.now().difference(date);
+  
+  if (diff.isNegative) {
+    final absDiff = diff.abs();
+    if (absDiff.inDays > 0) return 'Dans ${absDiff.inDays} jours';
+    if (absDiff.inHours > 0) {
+      final minutes = absDiff.inMinutes % 60;
+      if (minutes == 0) return 'Dans ${absDiff.inHours} h';
+      return 'Dans ${absDiff.inHours} h et $minutes min';
+    }
+    if (absDiff.inMinutes > 0) return 'Dans ${absDiff.inMinutes} min';
+    return 'À l\'instant';
+  }
+
   if (diff.inSeconds < 60) return 'À l\'instant';
   if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-  if (diff.inHours < 24) return 'Il y a ${diff.inHours}h';
+  if (diff.inHours < 24) {
+    final heures = diff.inHours;
+    final minutes = diff.inMinutes % 60;
+    if (minutes == 0) return 'Il y a $heures h';
+    return 'Il y a $heures h et $minutes min';
+  }
   if (diff.inDays == 1) return 'Hier';
-  return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
+  if (diff.inDays < 7) return 'Il y a ${diff.inDays} jours';
+  return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 }
 
 

@@ -212,12 +212,11 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: user.role,
+                        value: (user.role == 'admin' || user.role == 'secretaire') ? user.role : 'secretaire',
                         icon: const Icon(Icons.arrow_drop_down, size: 20),
                         style: AppTextStyles.bodyMedium,
                         items: const [
                           DropdownMenuItem(value: 'admin', child: Text('ADMIN')),
-                          DropdownMenuItem(value: 'moderateur', child: Text('MODÉRATEUR')),
                           DropdownMenuItem(value: 'secretaire', child: Text('SECRÉTAIRE')),
                         ],
                         onChanged: (newRole) {

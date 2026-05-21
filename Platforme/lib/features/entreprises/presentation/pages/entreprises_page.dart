@@ -62,13 +62,7 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                       children: [
                         Text('Entreprises', style: AppTextStyles.headlineMedium),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            _Chip(label: "PORTEFEUILLE CLIENT", active: false),
-                            const SizedBox(width: 8),
-                            _Chip(label: "MISE À JOUR : AUJOURD'HUI", active: true),
-                          ],
-                        ),
+                        _Chip(label: "PORTEFEUILLE CLIENT", active: false),
                       ],
                     ),
                     Container(

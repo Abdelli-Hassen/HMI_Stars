@@ -248,6 +248,11 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Change the current user's password via Supabase Auth.
+  Future<void> changePassword(String newPassword) async {
+    await _authService.updatePassword(newPassword);
+  }
+
   Future<void> signOut() async {
     await _authService.signOut();
     _user = null;

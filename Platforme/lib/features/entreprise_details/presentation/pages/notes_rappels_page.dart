@@ -57,7 +57,6 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
     _CategoryDef('Rappel', Icons.alarm, Color(0xFFE65100)),
     _CategoryDef('Contrats', Icons.history_edu, Color(0xFF00695C)),
     _CategoryDef('RH', Icons.people, Color(0xFF2E7D32)),
-    _CategoryDef('Formation', Icons.school, Color(0xFF6A1B9A)),
     _CategoryDef('Congés', Icons.event_available, Color(0xFF0277BD)),
     _CategoryDef('Recrutement', Icons.person_add, Color(0xFFC62828)),
   ];
@@ -83,7 +82,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
       titre: _newNoteCtrl.text.trim(),
       contenu: _newNoteBodyCtrl.text.trim(),
       dateCreation: DateTime.now(),
-      estRappel: _isReminderOn || _selectedCategory == 'Rappel',
+      estRappel: _selectedCategory == 'Rappel',
     );
 
     try {
@@ -211,13 +210,13 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           controller: _newNoteCtrl,
                           onTap: () { if (!_inputExpanded) setState(() => _inputExpanded = true); },
                           onSubmitted: (_) => _addNote(),
-                          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
                           decoration: InputDecoration(
                             hintText: 'Titre de la note...',
-                            hintStyle: AppTextStyles.bodyLarge.copyWith(color: AppColors.outline, fontWeight: FontWeight.w500),
+                            hintStyle: AppTextStyles.bodyLarge.copyWith(color: AppColors.outline, fontWeight: FontWeight.w500, fontSize: 16),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: EdgeInsets.zero,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
                           ),
                         ),
                       ),
@@ -253,20 +252,22 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                         children: [
                           // Description field
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
                               color: AppColors.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: TextField(
                               controller: _newNoteBodyCtrl,
-                              maxLines: 3,
-                              style: AppTextStyles.bodySmall,
+                              maxLines: 5,
+                              minLines: 3,
+                              style: AppTextStyles.bodyMedium,
                               decoration: InputDecoration(
                                 hintText: 'Description (optionnel)...',
-                                hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
+                                hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
                                 border: InputBorder.none,
-                                isDense: true,
+                                isDense: false,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 8),
                               ),
                             ),
                           ),
@@ -293,44 +294,9 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Reminder toggle + Submit
+                          // Submit row
                           Row(
                             children: [
-                              // Reminder toggle
-                              MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _isReminderOn = !_isReminderOn),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: _isReminderOn
-                                          ? AppColors.warning.withValues(alpha: 0.1)
-                                          : AppColors.surfaceContainerLow,
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: _isReminderOn ? AppColors.warning : AppColors.outlineVariant,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.alarm,
-                                          size: 16,
-                                          color: _isReminderOn ? AppColors.warning : AppColors.outline,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text('Rappel', style: AppTextStyles.labelSmall.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: _isReminderOn ? AppColors.warning : AppColors.outline,
-                                        )),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
                               const Spacer(),
                               // Cancel
                               MouseRegion(
@@ -427,6 +393,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           children: filteredNotes.map((note) => _NoteCard(
                             data: note,
                             onPin: () => setState(() => note.isPinned = !note.isPinned),
+                            onEdit: () => _editNote(note),
                             onDelete: () async {
                               try {
                                 await provider.supprimerNote(note.id, note.entrepriseId);
@@ -532,58 +499,137 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-
-                    // Upcoming Reminders
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('RAPPELS À VENIR', style: AppTextStyles.labelSmall.copyWith(
-                            letterSpacing: 1.5, fontWeight: FontWeight.w800, color: AppColors.onSurfaceVariant,
-                          )),
-                          const SizedBox(height: 16),
-                          ...allNotes.where((n) => n.estRappel).map((n) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36, height: 36,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.warning.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(Icons.alarm, size: 18, color: AppColors.warning),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(n.titre, style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w600),
-                                          maxLines: 1, overflow: TextOverflow.ellipsis),
-                                      Text(n.dateRappel != null ? '${n.dateRappel!.day}/${n.dateRappel!.month}/${n.dateRappel!.year}' : 'À définir',
-                                          style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: AppColors.outline)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )),
-                        ],
-                      ),
-                    ),
                   ]),
                 ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+  void _editNote(NoteEntreprise note) {
+    final titleCtrl = TextEditingController(text: note.titre);
+    final contentCtrl = TextEditingController(text: note.contenu);
+    String selectedTag = note.tag;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: AppColors.surfaceContainerLowest,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text('Modifier la note', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+            content: SizedBox(
+              width: 440,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Titre', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: titleCtrl,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        isDense: true,
+                      ),
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Contenu', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: contentCtrl,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('CATÉGORIE', style: AppTextStyles.labelSmall.copyWith(
+                      letterSpacing: 1.2, fontWeight: FontWeight.w800, color: AppColors.onSurfaceVariant,
+                    )),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _categories.map((cat) {
+                        final active = selectedTag == cat.label;
+                        return MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () => setDialogState(() => selectedTag = cat.label),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: active ? cat.color.withValues(alpha: 0.15) : AppColors.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: active ? cat.color : AppColors.outlineVariant,
+                                  width: active ? 2 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(cat.icon, size: 14, color: active ? cat.color : AppColors.outline),
+                                  const SizedBox(width: 6),
+                                  Text(cat.label, style: AppTextStyles.labelSmall.copyWith(
+                                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                                    color: active ? cat.color : AppColors.onSurfaceVariant,
+                                  )),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Annuler', style: AppTextStyles.labelMedium.copyWith(color: AppColors.outline)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final provider = Provider.of<EntrepriseProvider>(context, listen: false);
+                  final updatedNote = note.copyWith(
+                    titre: titleCtrl.text.trim(),
+                    contenu: contentCtrl.text.trim(),
+                    tag: selectedTag,
+                    estRappel: selectedTag == 'Rappel',
+                  );
+                  try {
+                    await provider.updateNote(updatedNote);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note modifiée.'), backgroundColor: AppColors.success));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Enregistrer'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -609,9 +655,10 @@ class _CategoryDef {
 class _NoteCard extends StatefulWidget {
   final NoteEntreprise data;
   final VoidCallback onPin;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _NoteCard({required this.data, required this.onPin, required this.onDelete});
+  const _NoteCard({required this.data, required this.onPin, required this.onEdit, required this.onDelete});
 
   @override
   State<_NoteCard> createState() => _NoteCardState();
@@ -625,7 +672,6 @@ class _NoteCardState extends State<_NoteCard> {
       case 'Rappel': return const Color(0xFFE65100);
       case 'Contrats': return const Color(0xFF00695C);
       case 'RH': return const Color(0xFF2E7D32);
-      case 'Formation': return const Color(0xFF6A1B9A);
       case 'Congés': return const Color(0xFF0277BD);
       case 'Recrutement': return const Color(0xFFC62828);
       default: return const Color(0xFF1A237E);
@@ -688,6 +734,11 @@ class _NoteCardState extends State<_NoteCard> {
                           d.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
                           size: 16, color: AppColors.onSurfaceVariant,
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: widget.onEdit,
+                        child: const Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(

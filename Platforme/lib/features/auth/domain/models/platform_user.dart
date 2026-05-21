@@ -1,10 +1,10 @@
-/// Modèle d'utilisateur de la plateforme — Admin, Modérateur, ou Secrétaire.
+/// Modèle d'utilisateur de la plateforme — Admin ou Secrétaire.
 /// Lié à Supabase auth.users via [id].
 class UtilisateurPlateforme {
   final String id;
   final String nom;
   final String email;
-  final String role; // 'admin', 'moderateur', 'secretaire'
+  final String role; // 'admin', 'secretaire'
   final String telephone;
   final String cin;
   final String? avatarUrl;
@@ -32,8 +32,6 @@ class UtilisateurPlateforme {
     switch (role) {
       case 'admin':
         return 'Admin';
-      case 'moderateur':
-        return 'Modérateur';
       case 'secretaire':
         return 'Secrétaire';
       default:

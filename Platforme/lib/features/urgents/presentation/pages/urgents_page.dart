@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
+import '../../../../core/widgets/app_top_bar.dart' show formatRelativeTime;
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 
 class UrgentsPage extends StatefulWidget {
@@ -15,6 +16,7 @@ class UrgentsPage extends StatefulWidget {
 
 class _UrgentsPageState extends State<UrgentsPage> {
   bool _isLoading = true;
+  bool _isListView = false;
 
   @override
   void initState() {
@@ -33,6 +35,11 @@ class _UrgentsPageState extends State<UrgentsPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _navigateToSource(dynamic note) {
+    // Navigate to the global Notes & Rappels page where all notes can be modified or deleted.
+    Navigator.pushNamed(context, AppRoutes.notesRappels);
   }
 
   @override
@@ -63,6 +70,27 @@ class _UrgentsPageState extends State<UrgentsPage> {
                               style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
                         ],
                       ),
+                      // View Toggle
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => setState(() => _isListView = false),
+                            icon: Icon(
+                              Icons.grid_view_rounded,
+                              color: !_isListView ? AppColors.primary : AppColors.outline,
+                            ),
+                            tooltip: 'Vue en blocs',
+                          ),
+                          IconButton(
+                            onPressed: () => setState(() => _isListView = true),
+                            icon: Icon(
+                              Icons.view_list_rounded,
+                              color: _isListView ? AppColors.primary : AppColors.outline,
+                            ),
+                            tooltip: 'Vue en liste',
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -85,6 +113,23 @@ class _UrgentsPageState extends State<UrgentsPage> {
                         ),
                       ),
                     )
+                  else if (_isListView)
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: urgentNotes.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final note = urgentNotes[index];
+                        final entreprise = provider.entreprises.where((e) => e.id == note.entrepriseId).firstOrNull;
+                        final nom = entreprise?.nom ?? 'Entreprise Inconnue';
+                        return InkWell(
+                          onTap: () => _navigateToSource(note),
+                          borderRadius: BorderRadius.circular(16),
+                          child: _buildUrgentCard(note, nom, isList: true),
+                        );
+                      },
+                    )
                   else
                     Wrap(
                       spacing: 16,
@@ -94,7 +139,11 @@ class _UrgentsPageState extends State<UrgentsPage> {
                         final nom = entreprise?.nom ?? 'Entreprise Inconnue';
                         return ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 350),
-                          child: _buildUrgentCard(note, nom),
+                          child: InkWell(
+                            onTap: () => _navigateToSource(note),
+                            borderRadius: BorderRadius.circular(16),
+                            child: _buildUrgentCard(note, nom, isList: false),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -104,8 +153,9 @@ class _UrgentsPageState extends State<UrgentsPage> {
     );
   }
 
-  Widget _buildUrgentCard(dynamic note, String entrepriseNom) {
+  Widget _buildUrgentCard(dynamic note, String entrepriseNom, {required bool isList}) {
     return Container(
+      width: isList ? double.infinity : null,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
@@ -126,8 +176,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                 ),
                 child: Text('Urgent', style: AppTextStyles.labelSmall.copyWith(color: AppColors.warning)),
               ),
-              if (note.dateRappel != null)
-                Text('${note.dateRappel!.day}/${note.dateRappel!.month}/${note.dateRappel!.year}', style: AppTextStyles.labelSmall.copyWith(color: AppColors.error)),
+              Text(formatRelativeTime(note.dateRappel ?? note.dateCreation), style: AppTextStyles.labelSmall.copyWith(color: AppColors.error)),
             ],
           ),
           const SizedBox(height: 12),
@@ -135,7 +184,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
           const SizedBox(height: 4),
           Text(note.titre, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text(note.contenu, style: AppTextStyles.bodyMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
+          Text(note.contenu, style: AppTextStyles.bodyMedium, maxLines: isList ? 10 : 3, overflow: TextOverflow.ellipsis),
         ],
       ),
     );

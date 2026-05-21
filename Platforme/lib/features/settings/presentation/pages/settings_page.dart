@@ -68,7 +68,7 @@ class _SettingsPageState extends State<SettingsPage> {
     auth.updateUser(
       _nomController.text, 
       auth.userRole, // keep current role
-      _emailController.text,
+      auth.userEmail, // email is read-only, keep current
       telephone: _phoneController.text,
       cin: _cinController.text,
     );
@@ -232,7 +232,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 28),
         _textField('Nom Complet', _nomController, Icons.person_outline),
         const SizedBox(height: 16),
-        _textField('Adresse E-mail', _emailController, Icons.email_outlined),
+        _disabledTextField('Adresse E-mail', _emailController, Icons.email_outlined),
         const SizedBox(height: 16),
         _textField('Téléphone', _phoneController, Icons.phone_outlined),
         const SizedBox(height: 16),
@@ -266,6 +266,9 @@ class _SettingsPageState extends State<SettingsPage> {
   void _modifierMotDePasse() {
     bool obscureAncien = true;
     bool obscureNouveau = true;
+    bool isLoading = false;
+    final ancienCtrl = TextEditingController();
+    final nouveauCtrl = TextEditingController();
     
     showDialog(
       context: context,
@@ -294,6 +297,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Text('Ancien mot de passe', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant)),
               const SizedBox(height: 8),
               TextField(
+                controller: ancienCtrl,
                 decoration: InputDecoration(
                   hintText: '••••••••', 
                   isDense: true,
@@ -312,6 +316,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Text('Nouveau mot de passe', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant)),
               const SizedBox(height: 8),
               TextField(
+                controller: nouveauCtrl,
                 decoration: InputDecoration(
                   hintText: '••••••••', 
                   isDense: true,
@@ -332,14 +337,40 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), 
+              onPressed: isLoading ? null : () => Navigator.pop(context), 
               style: TextButton.styleFrom(foregroundColor: AppColors.onSurfaceVariant),
               child: const Text('Annuler')
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mot de passe mis à jour.'), backgroundColor: AppColors.success));
+              onPressed: isLoading ? null : () async {
+                final nouveau = nouveauCtrl.text.trim();
+                if (nouveau.length < 8) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Le mot de passe doit contenir au moins 8 caractères.'),
+                    backgroundColor: AppColors.error,
+                  ));
+                  return;
+                }
+                setStateDialog(() => isLoading = true);
+                try {
+                  final auth = Provider.of<AuthProvider>(context, listen: false);
+                  await auth.changePassword(nouveau);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Mot de passe mis à jour avec succès.'),
+                      backgroundColor: AppColors.success,
+                    ));
+                  }
+                } catch (e) {
+                  setStateDialog(() => isLoading = false);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Erreur: $e'),
+                      backgroundColor: AppColors.error,
+                    ));
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary, 
@@ -347,7 +378,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: const Text('Mettre à jour'),
+              child: isLoading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Mettre à jour'),
             ),
           ],
         )
@@ -361,56 +394,52 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
+        border: const Border(left: BorderSide(color: AppColors.primary, width: 3)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
+          Text('SÉCURITÉ', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.lock_outline, size: 20, color: AppColors.primary),
                   ),
-                  child: const Icon(Icons.lock_outline, size: 20, color: AppColors.primary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(width: 12),
+                  Text(
+                    'Mot de passe',
+                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: _modifierMotDePasse,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.outlineVariant),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Sécurité', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Mot de passe',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
-                      ),
+                      const Icon(Icons.lock_reset, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          GestureDetector(
-            onTap: _modifierMotDePasse,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.outlineVariant),
-                borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.lock_reset, size: 16, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
+            ],
           ),
         ],
       ),
@@ -424,6 +453,26 @@ class _SettingsPageState extends State<SettingsPage> {
       TextFormField(
         controller: controller,
         style: AppTextStyles.bodyMedium,
+        decoration: InputDecoration(
+            isDense: true,
+            prefixIcon: Icon(icon, size: 18, color: AppColors.outline),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            filled: true,
+            fillColor: AppColors.surfaceContainerLow,
+        ),
+      ),
+    ]);
+  }
+
+  Widget _disabledTextField(String label, TextEditingController controller, IconData icon) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+      const SizedBox(height: 6),
+      TextFormField(
+        controller: controller,
+        readOnly: true,
+        enabled: false,
+        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
         decoration: InputDecoration(
             isDense: true,
             prefixIcon: Icon(icon, size: 18, color: AppColors.outline),

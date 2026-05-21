@@ -449,7 +449,7 @@ class PlatformDataService {
   Future<Map<String, Map<String, dynamic>>> fetchApercuMessages() async {
     final data = await _client
         .from('messages')
-        .select('entreprise_id, contenu, date_envoi, est_envoye_par_user, est_lu')
+        .select('entreprise_id, contenu, date_envoi, est_envoye_par_user, est_lu, est_fichier, fichier_nom')
         .order('date_envoi', ascending: false);
 
     final List<Map<String, dynamic>> rows = List<Map<String, dynamic>>.from(data as List);
@@ -468,8 +468,15 @@ class PlatformDataService {
       final estLu = row['est_lu'] as bool? ?? false;
 
       if (!apercu.containsKey(eid)) {
+        String content = row['contenu'] as String? ?? '';
+        final estFichier = row['est_fichier'] as bool? ?? false;
+        final fichierNom = row['fichier_nom'] as String?;
+        if (estFichier && content.trim().isEmpty) {
+          content = fichierNom ?? "Pièce jointe";
+        }
+
         apercu[eid] = {
-          'dernier_message': row['contenu'] as String,
+          'dernier_message': content,
           'date_envoi': row['date_envoi'] as String,
           'est_envoye_par_user': estDeUser,
           'a_des_non_lus': false, // Initialisation
@@ -518,8 +525,9 @@ class PlatformDataService {
         fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
       );
 
-      // Récupérer l'URL publique
-      final publicUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+      // Récupérer l'URL publique avec cache-busting
+      final baseUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+      final publicUrl = '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
 
       // Mettre à jour le profil utilisateur
       await _client

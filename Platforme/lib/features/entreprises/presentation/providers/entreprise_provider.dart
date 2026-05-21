@@ -88,11 +88,12 @@ class EntrepriseProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> ajouterSalarie(Salarie salarie) async {
+  Future<Salarie> ajouterSalarie(Salarie salarie) async {
     final created = await _dataService.createSalarie(salarie);
     final list = _salariesCache[salarie.entrepriseId] ?? [];
     _salariesCache[salarie.entrepriseId] = [...list, created];
     notifyListeners();
+    return created;
   }
 
   Future<void> archiverSalarie(String id, String entrepriseId) async {

@@ -211,8 +211,14 @@ class MessagerieProvider extends ChangeNotifier {
       for (final row in rows) {
         final eid = row['entreprise_id'] as String;
         final isFromClient = row['est_envoye_par_user'] as bool? ?? true;
-        final content = row['contenu'] as String? ?? '';
+        String content = row['contenu'] as String? ?? '';
         final estLu = row['est_lu'] as bool? ?? false;
+        final estFichier = row['est_fichier'] as bool? ?? false;
+        final fichierNom = row['fichier_nom'] as String?;
+
+        if (estFichier && content.trim().isEmpty) {
+          content = fichierNom ?? "Pièce jointe";
+        }
 
         // 1. Mettre à jour l'aperçu dans la sidebar
         final dateString = row['date_envoi']?.toString() ?? '';
