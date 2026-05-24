@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/app_state.dart';
+import '../../core/widgets/app_header.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -13,70 +14,21 @@ class DashboardPage extends StatelessWidget {
     final salariesActifs = appState.salaries.length;
     final params = appState.parametres;
 
+    final today = DateTime.now();
+    final todayKey = DateTime(today.year, today.month, today.day);
+    final congesAujourdhui = appState.conges.where((c) {
+      final start = DateTime(c.dateDebut.year, c.dateDebut.month, c.dateDebut.day);
+      final end = DateTime(c.dateFin.year, c.dateFin.month, c.dateFin.day);
+      return (c.statut == 'approuve') &&
+          (start.isBefore(todayKey) || start.isAtSameMomentAs(todayKey)) &&
+          (end.isAfter(todayKey) || end.isAtSameMomentAs(todayKey));
+    }).length;
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           // Top App Bar
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surface.withOpacity(0.9),
-            elevation: 0,
-            title: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/logo.jpeg',
-                    width: 70,
-                    height: 36,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'HMI Stars Consulting',
-                  style: GoogleFonts.manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).colorScheme.primary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer,
-                  backgroundImage:
-                      params?.logoUrl != null && params!.logoUrl!.isNotEmpty
-                          ? NetworkImage(params.logoUrl!)
-                          : null,
-                  child: (params?.logoUrl == null || params!.logoUrl!.isEmpty)
-                      ? Text(
-                          params?.raisonSociale.isNotEmpty == true
-                              ? params!.raisonSociale[0].toUpperCase()
-                              : 'H',
-                          style: GoogleFonts.manrope(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                        )
-                      : null,
-                ),
-              ),
-            ],
-          ),
+          AppHeader.sliver(context: context),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -128,7 +80,7 @@ class DashboardPage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Key Metrics Map
-                  _buildKPISection(context, salariesActifs),
+                  _buildKPISection(context, salariesActifs, congesAujourdhui),
                   const SizedBox(height: 24),
 
                   // Notifications & Alerts
@@ -143,7 +95,7 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKPISection(BuildContext context, int salariesActifs) {
+  Widget _buildKPISection(BuildContext context, int salariesActifs, int congesAujourdhui) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -180,10 +132,11 @@ class DashboardPage extends StatelessWidget {
               child: _buildKPICard(
                 context,
                 title: 'Absences',
-                value: salariesActifs > 2 ? '2' : '0',
+                value: '$congesAujourdhui',
                 icon: Icons.person_off_outlined,
                 color: Colors.redAccent,
                 subtitle: 'Aujourd\'hui',
+                onTap: () => context.go('/conges'),
               ),
             ),
             const SizedBox(width: 12),
@@ -210,8 +163,9 @@ class DashboardPage extends StatelessWidget {
     required IconData icon,
     required Color color,
     required String subtitle,
+    VoidCallback? onTap,
   }) {
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLowest,
@@ -272,6 +226,14 @@ class DashboardPage extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: card,
+      );
+    }
+    return card;
   }
 
   Widget _buildRecentAlerts(BuildContext context) {
@@ -409,10 +371,22 @@ class DashboardPage extends StatelessWidget {
         route: '/pointage',
       ),
       _QuickAction(
+        icon: Icons.beach_access_outlined,
+        label: 'Congés & Abs.',
+        color: Colors.deepOrange,
+        route: '/conges',
+      ),
+      _QuickAction(
         icon: Icons.group_outlined,
         label: 'Salariés',
         color: Colors.teal,
         route: '/salaries',
+      ),
+      _QuickAction(
+        icon: Icons.chat_bubble_outline,
+        label: 'Messagerie',
+        color: Colors.indigo,
+        route: '/messagerie',
       ),
       _QuickAction(
         icon: Icons.settings_outlined,

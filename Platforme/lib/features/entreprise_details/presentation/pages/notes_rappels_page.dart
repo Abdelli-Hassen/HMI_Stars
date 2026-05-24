@@ -22,7 +22,6 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
   final TextEditingController _searchCtrl = TextEditingController();
   final TextEditingController _newTodoCtrl = TextEditingController();
   String _selectedCategory = 'Note';
-  bool _isReminderOn = false;
   bool _inputExpanded = false;
   bool _dataLoaded = false;
   bool _showAllTodos = false;
@@ -86,7 +85,6 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
         setState(() {
           _newNoteCtrl.clear();
           _newNoteBodyCtrl.clear();
-          _isReminderOn = false;
           _selectedCategory = 'Note';
           _inputExpanded = false;
         });
@@ -302,7 +300,6 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                     _newNoteCtrl.clear();
                                     _newNoteBodyCtrl.clear();
                                     _selectedCategory = 'Note';
-                                    _isReminderOn = false;
                                   }),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

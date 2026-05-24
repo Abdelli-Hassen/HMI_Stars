@@ -541,4 +541,57 @@ class PlatformDataService {
       return null;
     }
   }
+
+  /// Upload un logo d'entreprise dans Supabase Storage et met à jour l'entreprise.
+  Future<String?> uploadEntrepriseLogo(String entrepriseId, Uint8List fileBytes, String fileName) async {
+    try {
+      final ext = fileName.split('.').last.toLowerCase();
+      final storagePath = 'logos/$entrepriseId.$ext';
+
+      // Upload vers le bucket 'avatars' (qui est public)
+      await _client.storage.from('avatars').uploadBinary(
+        storagePath,
+        fileBytes,
+        fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+      );
+
+      // Récupérer l'URL publique avec cache-busting
+      final baseUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+      final publicUrl = '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+      // Mettre à jour l'entreprise
+      await _client
+          .from('entreprises')
+          .update({'logo_url': publicUrl})
+          .eq('id', entrepriseId);
+
+      return publicUrl;
+    } catch (e) {
+      debugPrint('[DataService] Error uploading logo: $e');
+      return null;
+    }
+  }
+
+  /// Récupère les pointages d'un salarié pour un mois et une année donnés.
+  Future<List<Map<String, dynamic>>> fetchPointagesForSalarieAndMonth(
+      String salarieId, int year, int month) async {
+    final firstDay = '$year-${month.toString().padLeft(2, '0')}-01';
+    final nextMonth = month == 12 ? 1 : month + 1;
+    final nextYear = month == 12 ? year + 1 : year;
+    final lastDay = '$nextYear-${nextMonth.toString().padLeft(2, '0')}-01';
+
+    try {
+      final data = await _client
+          .from('pointages')
+          .select()
+          .eq('salarie_id', salarieId)
+          .gte('date', firstDay)
+          .lt('date', lastDay)
+          .order('date', ascending: true);
+      return List<Map<String, dynamic>>.from(data as List);
+    } catch (e) {
+      debugPrint('[DataService] Error fetching pointages: $e');
+      return [];
+    }
+  }
 }

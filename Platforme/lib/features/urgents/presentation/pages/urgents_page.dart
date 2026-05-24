@@ -187,7 +187,7 @@ class _UrgentNoteCardState extends State<_UrgentNoteCard> {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
         width: widget.isList ? double.infinity : null,
-        transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0, 0.0),
+        transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),

@@ -13,6 +13,7 @@ import '../../../../core/services/platform_data_service.dart';
 import '../../../../features/entreprises/domain/models/document_entreprise.dart';
 import '../providers/messagerie_provider.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
+import '../../../entreprises/domain/models/entreprise.dart';
 
 class MessageriePage extends StatefulWidget {
   const MessageriePage({super.key});
@@ -178,20 +179,27 @@ class _MessageriePageState extends State<MessageriePage> {
             });
           }
 
+          final liveEntreprise = messagerie.entrepriseSelectionneeId == null
+              ? null
+              : entreprises.entreprises.firstWhere(
+                  (e) => e.id == messagerie.entrepriseSelectionneeId,
+                  orElse: () => messagerie.conversationSelectionnee!.entreprise,
+                );
+
           return Row(
             children: [
-              _buildSidebar(messagerie),
+              _buildSidebar(messagerie, entreprises),
 
               if (messagerie.entrepriseSelectionneeId == null)
                 _buildPlaceholder()
               else
                 Expanded(
                   flex: 2,
-                  child: _buildZoneChat(messagerie),
+                  child: _buildZoneChat(messagerie, liveEntreprise!),
                 ),
 
               if (messagerie.conversationSelectionnee != null)
-                _buildPanneauInfo(messagerie),
+                _buildPanneauInfo(messagerie, liveEntreprise!),
             ],
           );
         },
@@ -199,7 +207,7 @@ class _MessageriePageState extends State<MessageriePage> {
     );
   }
 
-  Widget _buildSidebar(MessagerieProvider messagerie) {
+  Widget _buildSidebar(MessagerieProvider messagerie, EntrepriseProvider entreprises) {
     final list = messagerie.conversations.where((conv) {
       if (_activeFilter == 'Favoris') {
         return messagerie.estFavori(conv.entreprise.id);
@@ -282,8 +290,13 @@ class _MessageriePageState extends State<MessageriePage> {
                         itemBuilder: (_, i) {
                           final conv = list[i];
                           final selected = conv.entreprise.id == messagerie.entrepriseSelectionneeId;
+                          final ent = entreprises.entreprises.firstWhere(
+                            (e) => e.id == conv.entreprise.id,
+                            orElse: () => conv.entreprise,
+                          );
                           return _EntrepriseContactItem(
-                            raisonSociale: conv.entreprise.nom,
+                            raisonSociale: ent.nom,
+                            logoUrl: ent.logoUrl,
                             dernierMessage: conv.dernierMessage,
                             dateEnvoi: conv.dateEnvoi,
                             estEnvoyeParUser: conv.estEnvoyeParUser,
@@ -361,7 +374,7 @@ class _MessageriePageState extends State<MessageriePage> {
     );
   }
 
-  Widget _buildZoneChat(MessagerieProvider messagerie) {
+  Widget _buildZoneChat(MessagerieProvider messagerie, Entreprise liveEntreprise) {
     final conv = messagerie.conversationSelectionnee!;
     final messages = messagerie.messagesActuels;
 
@@ -384,26 +397,31 @@ class _MessageriePageState extends State<MessageriePage> {
               CircleAvatar(
                 radius: 20,
                 backgroundColor: AppColors.primaryFixed,
-                child: Text(
-                  conv.entreprise.nom.isNotEmpty
-                      ? conv.entreprise.nom[0].toUpperCase()
-                      : '?',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                backgroundImage: (liveEntreprise.logoUrl != null && liveEntreprise.logoUrl!.isNotEmpty)
+                    ? NetworkImage(liveEntreprise.logoUrl!)
+                    : null,
+                child: (liveEntreprise.logoUrl == null || liveEntreprise.logoUrl!.isEmpty)
+                    ? Text(
+                        liveEntreprise.nom.isNotEmpty
+                            ? liveEntreprise.nom[0].toUpperCase()
+                            : '?',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conv.entreprise.nom,
+                    liveEntreprise.nom,
                     style: AppTextStyles.titleSmall,
                   ),
                   Text(
-                    conv.entreprise.email,
+                    liveEntreprise.email,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.onSurfaceVariant,
                       fontSize: 11,
@@ -504,6 +522,7 @@ class _MessageriePageState extends State<MessageriePage> {
                             message: msg,
                             estMoi: !msg.estEnvoyeParUser,
                             heure: _formatHeure(msg.dateEnvoi),
+                            entrepriseLogoUrl: liveEntreprise.logoUrl,
                           ),
                           const SizedBox(height: 10),
                         ],
@@ -636,8 +655,7 @@ class _MessageriePageState extends State<MessageriePage> {
     );
   }
 
-  Widget _buildPanneauInfo(MessagerieProvider messagerie) {
-    final e = messagerie.conversationSelectionnee!.entreprise;
+  Widget _buildPanneauInfo(MessagerieProvider messagerie, Entreprise liveEntreprise) {
     return Container(
       width: 240,
       padding: const EdgeInsets.all(20),
@@ -656,62 +674,67 @@ class _MessageriePageState extends State<MessageriePage> {
             CircleAvatar(
               radius: 32,
               backgroundColor: AppColors.primaryFixed,
-              child: Text(
-                e.nom.isNotEmpty
-                    ? e.nom[0].toUpperCase()
-                    : '?',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              backgroundImage: (liveEntreprise.logoUrl != null && liveEntreprise.logoUrl!.isNotEmpty)
+                  ? NetworkImage(liveEntreprise.logoUrl!)
+                  : null,
+              child: (liveEntreprise.logoUrl == null || liveEntreprise.logoUrl!.isEmpty)
+                  ? Text(
+                      liveEntreprise.nom.isNotEmpty
+                          ? liveEntreprise.nom[0].toUpperCase()
+                          : '?',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: Text(e.nom, style: AppTextStyles.titleSmall),
+                  child: Text(liveEntreprise.nom, style: AppTextStyles.titleSmall),
                 ),
                 IconButton(
                   icon: Icon(
-                    messagerie.estFavori(e.id) ? Icons.star : Icons.star_border,
-                    color: messagerie.estFavori(e.id) ? Colors.amber : AppColors.outline,
+                    messagerie.estFavori(liveEntreprise.id) ? Icons.star : Icons.star_border,
+                    color: messagerie.estFavori(liveEntreprise.id) ? Colors.amber : AppColors.outline,
                   ),
-                  tooltip: messagerie.estFavori(e.id)
+                  tooltip: messagerie.estFavori(liveEntreprise.id)
                       ? 'Retirer des favoris'
                       : 'Ajouter aux favoris',
-                  onPressed: () => messagerie.toggleFavori(e.id),
+                  onPressed: () => messagerie.toggleFavori(liveEntreprise.id),
                 ),
               ],
             ),
-            if (e.nomGerant.isNotEmpty) ...[
+            if (liveEntreprise.nomGerant.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
-                e.nomGerant,
+                liveEntreprise.nomGerant,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
             ],
             const SizedBox(height: 20),
-            _infoLigne(Icons.email_outlined, e.email),
-            if (e.telephone.isNotEmpty)
-              _infoLigne(Icons.phone_outlined, e.telephone),
-            if (e.adressePhysique.isNotEmpty)
-              _infoLigne(Icons.location_on_outlined, e.adressePhysique),
+            _infoLigne(Icons.email_outlined, liveEntreprise.email),
+            if (liveEntreprise.telephone.isNotEmpty)
+              _infoLigne(Icons.phone_outlined, liveEntreprise.telephone),
+            if (liveEntreprise.adressePhysique.isNotEmpty)
+              _infoLigne(Icons.location_on_outlined, liveEntreprise.adressePhysique),
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: _couleurStatut(e.statut).withValues(alpha: 0.1),
+                color: _couleurStatut(liveEntreprise.statut).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: Text(
-                  e.statut,
+                  liveEntreprise.statut,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: _couleurStatut(e.statut),
+                    color: _couleurStatut(liveEntreprise.statut),
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                   ),
@@ -728,14 +751,14 @@ class _MessageriePageState extends State<MessageriePage> {
               ),
             ),
             const SizedBox(height: 8),
-            ..._buildFichiersRecents(messagerie),
+            ..._buildFichiersRecents(messagerie, liveEntreprise),
           ],
         ),
       ),
     );
   }
 
-  List<Widget> _buildFichiersRecents(MessagerieProvider messagerie) {
+  List<Widget> _buildFichiersRecents(MessagerieProvider messagerie, Entreprise liveEntreprise) {
     final fichiers = messagerie.messagesActuels.where((m) => m.estFichier && m.fichierUrl != null).toList();
     if (fichiers.isEmpty) {
       return [
@@ -798,8 +821,8 @@ class _MessageriePageState extends State<MessageriePage> {
           child: TextButton.icon(
             onPressed: () => _ouvrirPopupFichiers(
               context,
-              messagerie.conversationSelectionnee!.entreprise.id,
-              messagerie.conversationSelectionnee!.entreprise.nom,
+              liveEntreprise.id,
+              liveEntreprise.nom,
             ),
             icon: const Icon(Icons.grid_view_rounded, size: 14),
             label: Text(
@@ -886,6 +909,7 @@ class _MessageriePageState extends State<MessageriePage> {
 
 class _EntrepriseContactItem extends StatelessWidget {
   final String raisonSociale;
+  final String? logoUrl;
   final String? dernierMessage;
   final DateTime? dateEnvoi;
   final bool estEnvoyeParUser;
@@ -895,6 +919,7 @@ class _EntrepriseContactItem extends StatelessWidget {
 
   const _EntrepriseContactItem({
     required this.raisonSociale,
+    this.logoUrl,
     this.dernierMessage,
     this.dateEnvoi,
     this.estEnvoyeParUser = true,
@@ -938,16 +963,21 @@ class _EntrepriseContactItem extends StatelessWidget {
               backgroundColor: selected
                   ? AppColors.primary
                   : AppColors.surfaceContainerHighest,
-              child: Text(
-                raisonSociale.isNotEmpty
-                    ? raisonSociale[0].toUpperCase()
-                    : '?',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? Colors.white : AppColors.onSurfaceVariant,
-                ),
-              ),
+              backgroundImage: (logoUrl != null && logoUrl!.isNotEmpty)
+                  ? NetworkImage(logoUrl!)
+                  : null,
+              child: (logoUrl == null || logoUrl!.isEmpty)
+                  ? Text(
+                      raisonSociale.isNotEmpty
+                          ? raisonSociale[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: selected ? Colors.white : AppColors.onSurfaceVariant,
+                      ),
+                    )
+                  : null,
             ),
 
             const SizedBox(width: 10),
@@ -1010,27 +1040,20 @@ class _BubbleMessage extends StatelessWidget {
   final MessagePlateforme message;
   final bool estMoi;
   final String heure;
+  final String? entrepriseLogoUrl;
 
   const _BubbleMessage({
     required this.message,
     required this.estMoi,
     required this.heure,
+    this.entrepriseLogoUrl,
   });
 
   @override
   Widget build(BuildContext context) {
     final hasFile = message.estFichier && message.fichierUrl != null;
-    final isImage = hasFile &&
-        (message.fichierNom?.toLowerCase().endsWith('.png') == true ||
-            message.fichierNom?.toLowerCase().endsWith('.jpg') == true ||
-            message.fichierNom?.toLowerCase().endsWith('.jpeg') == true ||
-            message.fichierNom?.toLowerCase().endsWith('.webp') == true ||
-            message.fichierNom?.toLowerCase().endsWith('.gif') == true ||
-            message.fichierUrl?.toLowerCase().contains('.png') == true ||
-            message.fichierUrl?.toLowerCase().contains('.jpg') == true ||
-            message.fichierUrl?.toLowerCase().contains('.jpeg') == true ||
-            message.fichierUrl?.toLowerCase().contains('.webp') == true ||
-            message.fichierUrl?.toLowerCase().contains('.gif') == true);
+    final List<String> fileUrls = hasFile ? message.fichierUrl!.split(',') : [];
+    final List<String> fileNames = hasFile ? (message.fichierNom?.split(',') ?? []) : [];
 
     final urlRegExp = RegExp(
       r'(https?:\/\/[^\s]+)',
@@ -1049,11 +1072,16 @@ class _BubbleMessage extends StatelessWidget {
             CircleAvatar(
               radius: 14,
               backgroundColor: AppColors.surfaceContainer,
-              child: const Icon(
-                Icons.business,
-                size: 14,
-                color: AppColors.onSurfaceVariant,
-              ),
+              backgroundImage: (entrepriseLogoUrl != null && entrepriseLogoUrl!.isNotEmpty)
+                  ? NetworkImage(entrepriseLogoUrl!)
+                  : null,
+              child: (entrepriseLogoUrl == null || entrepriseLogoUrl!.isEmpty)
+                  ? const Icon(
+                      Icons.business,
+                      size: 14,
+                      color: AppColors.onSurfaceVariant,
+                    )
+                  : null,
             ),
             const SizedBox(width: 8),
           ],
@@ -1088,96 +1116,115 @@ class _BubbleMessage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (hasFile) ...[
-                      if (isImage)
-                        GestureDetector(
-                          onTap: () => afficherGrandApercuImage(
-                            context,
-                            message.fichierUrl!,
-                            message.fichierNom ?? 'Image',
-                          ),
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                constraints: const BoxConstraints(
-                                  maxHeight: 200,
-                                  maxWidth: 380,
-                                ),
-                                child: Hero(
-                                  tag: message.fichierUrl!,
-                                  child: Image.network(
-                                    message.fichierUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      color: AppColors.surfaceContainerHigh,
-                                      padding: const EdgeInsets.all(16),
-                                      child: const Row(
+                      ...List.generate(fileUrls.length, (index) {
+                        final url = fileUrls[index];
+                        final nom = index < fileNames.length ? fileNames[index] : 'Fichier';
+                        final uLower = url.toLowerCase();
+                        final nLower = nom.toLowerCase();
+                        final currentIsImage = uLower.contains('.png') ||
+                            uLower.contains('.jpg') ||
+                            uLower.contains('.jpeg') ||
+                            uLower.contains('.webp') ||
+                            uLower.contains('.gif') ||
+                            nLower.endsWith('.png') ||
+                            nLower.endsWith('.jpg') ||
+                            nLower.endsWith('.jpeg') ||
+                            nLower.endsWith('.webp') ||
+                            nLower.endsWith('.gif');
+
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: index < fileUrls.length - 1 ? 8.0 : 0),
+                          child: currentIsImage
+                              ? GestureDetector(
+                                  onTap: () => afficherGrandApercuImage(
+                                    context,
+                                    url,
+                                    nom,
+                                  ),
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        constraints: const BoxConstraints(
+                                          maxHeight: 200,
+                                          maxWidth: 380,
+                                        ),
+                                        child: Hero(
+                                          tag: url,
+                                          child: Image.network(
+                                            url,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) => Container(
+                                              color: AppColors.surfaceContainerHigh,
+                                              padding: const EdgeInsets.all(16),
+                                              child: const Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.broken_image, color: AppColors.error),
+                                                  SizedBox(width: 8),
+                                                  Text('Image non disponible'),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : GestureDetector(
+                                  onTap: () => _ouvrirUrl(url),
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: estMoi
+                                            ? Colors.white.withValues(alpha: 0.15)
+                                            : AppColors.surfaceContainerLow,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.broken_image, color: AppColors.error),
-                                          SizedBox(width: 8),
-                                          Text('Image non disponible'),
+                                          Icon(
+                                            Icons.insert_drive_file,
+                                            color: estMoi ? Colors.white : AppColors.primary,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Flexible(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  nom,
+                                                  style: AppTextStyles.bodyMedium.copyWith(
+                                                    color: estMoi ? Colors.white : AppColors.onSurface,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  'Télécharger le fichier',
+                                                  style: AppTextStyles.bodySmall.copyWith(
+                                                    color: estMoi ? Colors.white70 : AppColors.onSurfaceVariant,
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        GestureDetector(
-                          onTap: () => _ouvrirUrl(message.fichierUrl!),
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: estMoi
-                                    ? Colors.white.withValues(alpha: 0.15)
-                                    : AppColors.surfaceContainerLow,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.insert_drive_file,
-                                    color: estMoi ? Colors.white : AppColors.primary,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Flexible(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          message.fichierNom ?? 'Document',
-                                          style: AppTextStyles.bodyMedium.copyWith(
-                                            color: estMoi ? Colors.white : AppColors.onSurface,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Télécharger le fichier',
-                                          style: AppTextStyles.bodySmall.copyWith(
-                                            color: estMoi ? Colors.white70 : AppColors.onSurfaceVariant,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        );
+                      }),
                       const SizedBox(height: 8),
                     ],
 

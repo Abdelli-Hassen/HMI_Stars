@@ -108,18 +108,23 @@ class MessageService {
   /// pour chaque message mis à jour ou nouveau dans la conversation.
   StreamSubscription<List<Map<String, dynamic>>> abonnerNouveauxMessages(
     String entrepriseId,
-    void Function(Message message) onNouveauMessage,
-  ) {
+    void Function(Message message) onNouveauMessage, {
+    void Function(Object error)? onError,
+  }) {
     return _client
         .from('messages')
         .stream(primaryKey: ['id'])
         .eq('entreprise_id', entrepriseId)
         .order('date_envoi')
-        .listen((rows) {
-      for (final row in rows) {
-        onNouveauMessage(Message.fromJson(row));
-      }
-    });
+        .listen(
+      (rows) {
+        for (final row in rows) {
+          onNouveauMessage(Message.fromJson(row));
+        }
+      },
+      onError: onError,
+      cancelOnError: false,
+    );
   }
 
   /// Marque tous les messages reçus de la plateforme comme lus pour l'entreprise.

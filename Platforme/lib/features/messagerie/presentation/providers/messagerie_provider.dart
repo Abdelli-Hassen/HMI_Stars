@@ -265,12 +265,15 @@ class MessagerieProvider extends ChangeNotifier {
           }
         }
       }
-
+      
       if (aChangeGlobal) {
         notifyListeners();
       }
     }, onError: (error) {
-      debugPrint('[MessagerieProvider] Erreur de connexion temps réel (flux global) : $error');
+      debugPrint('[MessagerieProvider] Erreur de connexion temps réel (flux global) : $error. Reconnexion dans 5 secondes...');
+      Future.delayed(const Duration(seconds: 5), () {
+        _abonnerTempsReelGlobal();
+      });
     });
   }
 

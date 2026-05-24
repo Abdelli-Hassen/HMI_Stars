@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
@@ -37,11 +39,53 @@ class EntrepriseService {
     return params?.id;
   }
 
-  /// Updates the enterprise settings record.
-  Future<void> updateEntreprise(ClientParametres params) async {
-    await _client
+  /// Updates the enterprise settings record and returns the final ClientParametres.
+  Future<ClientParametres> updateEntreprise(ClientParametres params) async {
+    String? logoUrl = params.logoUrl;
+
+    if (logoUrl != null && logoUrl.isNotEmpty && !logoUrl.startsWith('http')) {
+      // It's a local file path, upload it to Supabase Storage first.
+      try {
+        final file = File(logoUrl);
+        if (await file.exists()) {
+          final ext = logoUrl.split('.').last.toLowerCase();
+          final storagePath = 'logos/${params.id}.$ext';
+
+          // Upload to bucket 'avatars' (which is public)
+          await _client.storage.from('avatars').upload(
+            storagePath,
+            file,
+            fileOptions: const FileOptions(upsert: true, contentType: 'image/*'),
+          );
+
+          // Get public URL with cache-busting
+          final baseUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+          logoUrl = '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+        }
+      } catch (e) {
+        debugPrint('[EntrepriseService] Error uploading logo: $e');
+        rethrow;
+      }
+    }
+
+    final updatedParams = params.copyWith(logoUrl: logoUrl);
+    final payload = updatedParams.toJson();
+
+    debugPrint('[EntrepriseService] Payload before update (to JSON): $payload');
+    if (payload.containsKey('name')) {
+      debugPrint('[EntrepriseService] WARNING: Payload contains unauthorized "name" key. Removing it.');
+    }
+    payload.remove('name');
+    debugPrint('[EntrepriseService] Sanitized payload: $payload');
+
+    final response = await _client
         .from('entreprises')
-        .update(params.toJson())
-        .eq('id', params.id);
+        .update(payload)
+        .eq('id', params.id)
+        .select()
+        .single();
+
+    return ClientParametres.fromJson(response);
   }
 }
+

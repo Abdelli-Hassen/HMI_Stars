@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
+import '../../core/widgets/app_header.dart';
 
 class AvertissementsPage extends StatefulWidget {
   const AvertissementsPage({super.key});
@@ -20,36 +21,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surface.withOpacity(0.9),
-            title: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/logo.jpeg',
-                    width: 70,
-                    height: 36,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'HMI Stars Consulting',
-                  style: GoogleFonts.manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).colorScheme.primary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          AppHeader.sliver(context: context),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),

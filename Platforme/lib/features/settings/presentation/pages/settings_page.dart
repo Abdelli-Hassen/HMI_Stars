@@ -179,6 +179,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Stack(
             children: [
               CircleAvatar(
+                key: ValueKey(avatarUrl),
                 radius: 32,
                 backgroundColor: AppColors.surfaceContainerHigh,
                 backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty

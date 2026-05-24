@@ -13,21 +13,34 @@ class EmployeeDayList extends StatefulWidget {
 }
 
 class _EmployeeDayListState extends State<EmployeeDayList> {
+  String _sortBy = 'default';
+
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final salaries = appState.getSalariesForDay(widget.day);
 
-    // Sort: non-pointed first
     final sorted = [...salaries];
-    sorted.sort((a, b) {
-      final aPointed = appState.getPointageStatus(widget.day, a.id);
-      final bPointed = appState.getPointageStatus(widget.day, b.id);
-      if (aPointed == bPointed) return 0;
-      return aPointed ? 1 : -1;
-    });
+    if (_sortBy == 'alphabetical') {
+      sorted.sort((a, b) => a.nomComplet.toLowerCase().compareTo(b.nomComplet.toLowerCase()));
+    } else {
+      // Sort: non-pointed first, then secondary alphabetical
+      sorted.sort((a, b) {
+        final aPointed = appState.getPointageStatus(widget.day, a.id);
+        final bPointed = appState.getPointageStatus(widget.day, b.id);
+        if (aPointed == bPointed) {
+          return a.nomComplet.toLowerCase().compareTo(b.nomComplet.toLowerCase());
+        }
+        return aPointed ? 1 : -1;
+      });
+    }
 
     final dateStr = _formatDate(widget.day);
+    final isFuture = widget.day.isAfter(DateTime.now()) &&
+        !(widget.day.year == DateTime.now().year &&
+            widget.day.month == DateTime.now().month &&
+            widget.day.day == DateTime.now().day);
+    final hasActiveEmployees = salaries.any((s) => !appState.isSalarieEnConge(s.id, widget.day));
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -81,27 +94,65 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                         ),
                       ],
                     ),
-                      Row(
+                    Row(
                         children: [
-                          TextButton.icon(
-                            onPressed: () {
-                              for (var s in salaries) {
-                                if (!appState.getPointageStatus(widget.day, s.id)) {
-                                  appState.setPointage(widget.day, s.id, true);
-                                }
-                              }
+                          PopupMenuButton<String>(
+                            icon: Icon(
+                              _sortBy == 'alphabetical' ? Icons.sort_by_alpha : Icons.sort,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                            tooltip: 'Trier les salariés',
+                            onSelected: (value) {
+                              setState(() {
+                                _sortBy = value;
+                              });
                             },
-                            icon: Icon(Icons.done_all, size: 16, color: Theme.of(context).colorScheme.primary),
-                            label: Text(
-                              'Tout cocher',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.primary,
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'default',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.playlist_add_check, size: 18, color: Theme.of(context).colorScheme.primary),
+                                    const SizedBox(width: 8),
+                                    Text('Non pointés en premier', style: GoogleFonts.inter(fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'alphabetical',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.sort_by_alpha, size: 18, color: Theme.of(context).colorScheme.primary),
+                                    const SizedBox(width: 8),
+                                    Text('Ordre alphabétique', style: GoogleFonts.inter(fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 4),
+                           if (!isFuture && hasActiveEmployees)
+                            TextButton.icon(
+                              onPressed: () {
+                                for (var s in salaries) {
+                                  final isEnConge = appState.isSalarieEnConge(s.id, widget.day);
+                                  if (!isEnConge && !appState.getPointageStatus(widget.day, s.id)) {
+                                    appState.setPointage(widget.day, s.id, true);
+                                  }
+                                }
+                              },
+                              icon: Icon(Icons.done_all, size: 16, color: Theme.of(context).colorScheme.primary),
+                              label: Text(
+                                'Tout cocher',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
+                          if (!isFuture && hasActiveEmployees) const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -177,23 +228,35 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
     bool isPointed,
     AppState appState,
   ) {
+    final hasConge = appState.isSalarieEnConge(salarie.id, widget.day);
+    final congeLabel = hasConge ? appState.getCongeDescriptionForSalarie(salarie.id, widget.day) : '';
+
+    Color cardBg;
+    Border? cardBorder;
+    if (isPointed) {
+      cardBg = Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.5);
+      cardBorder = Border.all(color: Colors.green.withValues(alpha: 0.2));
+    } else if (hasConge) {
+      cardBg = Colors.blue.shade50.withValues(alpha: 0.3);
+      cardBorder = Border.all(color: Colors.blue.withValues(alpha: 0.2));
+    } else {
+      cardBg = Theme.of(context).colorScheme.surfaceContainerLowest;
+      cardBorder = null;
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isPointed
-            ? Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(0.5)
-            : Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
-        border: isPointed
-            ? Border.all(color: Colors.green.withOpacity(0.2))
-            : null,
+        border: cardBorder,
       ),
       child: Row(
         children: [
@@ -243,6 +306,21 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  )
+                else if (hasConge)
+                  Row(
+                    children: [
+                      Icon(Icons.beach_access, color: Colors.blue, size: 13),
+                      const SizedBox(width: 4),
+                      Text(
+                        'En Congé ($congeLabel)',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
                         ),
                       ),
                     ],
@@ -313,13 +391,18 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                 scale: 1.2,
                 child: Checkbox(
                   value: isPointed,
-                  onChanged: (val) {
-                    context.read<AppState>().setPointage(
-                      widget.day,
-                      salarie.id,
-                      val ?? false,
-                    );
-                  },
+                  onChanged: (hasConge || (widget.day.isAfter(DateTime.now()) &&
+                          !(widget.day.year == DateTime.now().year &&
+                              widget.day.month == DateTime.now().month &&
+                              widget.day.day == DateTime.now().day)))
+                      ? null
+                      : (val) {
+                          context.read<AppState>().setPointage(
+                            widget.day,
+                            salarie.id,
+                            val ?? false,
+                          );
+                        },
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),

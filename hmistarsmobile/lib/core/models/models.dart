@@ -21,6 +21,8 @@ class Salarie {
   final String? emploiPoste;
   final bool isArchived;
   final String? avatarUrl;
+  final String cin;
+  final String description;
   // Pieces jointes
   final bool hasPieceIdentite;
   final bool hasCarteVitale;
@@ -47,6 +49,8 @@ class Salarie {
     this.emploiPoste,
     this.isArchived = false,
     this.avatarUrl,
+    this.cin = '',
+    this.description = '',
     this.hasPieceIdentite = false,
     this.hasCarteVitale = false,
     this.hasJustificatifDomicile = false,
@@ -59,9 +63,9 @@ class Salarie {
     return Salarie(
       id: json['id'] as String,
       entrepriseId: json['entreprise_id'] as String,
-      nom: json['nom'] as String,
-      prenom: json['prenom'] as String,
-      nomDeNaissance: json['nom_de_naissance'] as String,
+      nom: json['nom'] as String? ?? '',
+      prenom: json['prenom'] as String? ?? '',
+      nomDeNaissance: json['nom_de_naissance'] as String? ?? '',
       genre: json['genre'] as String?,
       numeroSecuriteSociale: json['numero_securite_sociale'] as String?,
       dateNaissance: json['date_naissance'] != null
@@ -75,13 +79,15 @@ class Salarie {
       dateEmbauche: json['date_embauche'] != null
           ? DateTime.tryParse(json['date_embauche'] as String)
           : null,
-      typeContrat: json['type_contrat'] as String,
+      typeContrat: json['type_contrat'] as String? ?? 'CDI',
       dateFinContrat: json['date_fin_contrat'] != null
           ? DateTime.tryParse(json['date_fin_contrat'] as String)
           : null,
       emploiPoste: json['emploi_poste'] as String?,
       isArchived: json['est_archive'] as bool? ?? false,
       avatarUrl: json['avatar_url'] as String?,
+      cin: json['cin'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       hasPieceIdentite: json['a_piece_identite'] as bool? ?? false,
       hasCarteVitale: json['a_carte_vitale'] as bool? ?? false,
       hasJustificatifDomicile:
@@ -110,6 +116,8 @@ class Salarie {
       'emploi_poste': emploiPoste,
       'est_archive': isArchived,
       'avatar_url': avatarUrl,
+      'cin': cin,
+      'description': description,
       'a_piece_identite': hasPieceIdentite,
       'a_carte_vitale': hasCarteVitale,
       'a_justificatif_domicile': hasJustificatifDomicile,
@@ -137,6 +145,8 @@ class Salarie {
     String? emploiPoste,
     bool? isArchived,
     String? avatarUrl,
+    String? cin,
+    String? description,
     bool? hasPieceIdentite,
     bool? hasCarteVitale,
     bool? hasJustificatifDomicile,
@@ -163,6 +173,8 @@ class Salarie {
       emploiPoste: emploiPoste ?? this.emploiPoste,
       isArchived: isArchived ?? this.isArchived,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      cin: cin ?? this.cin,
+      description: description ?? this.description,
       hasPieceIdentite: hasPieceIdentite ?? this.hasPieceIdentite,
       hasCarteVitale: hasCarteVitale ?? this.hasCarteVitale,
       hasJustificatifDomicile:
@@ -309,6 +321,7 @@ class Message {
   final TypeDocument? typeDocument;
   final bool estFichier;
   final bool estLu;
+  final String? userId;
 
   const Message({
     required this.id,
@@ -321,6 +334,7 @@ class Message {
     this.typeDocument,
     this.estFichier = false,
     this.estLu = false,
+    this.userId,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
@@ -342,6 +356,7 @@ class Message {
           : null,
       estFichier: json['est_fichier'] as bool? ?? false,
       estLu: json['est_lu'] as bool? ?? false,
+      userId: json['user_id'] as String?,
     );
   }
 
@@ -369,6 +384,7 @@ class Message {
     TypeDocument? typeDocument,
     bool? estFichier,
     bool? estLu,
+    String? userId,
   }) {
     return Message(
       id: id ?? this.id,
@@ -381,6 +397,7 @@ class Message {
       typeDocument: typeDocument ?? this.typeDocument,
       estFichier: estFichier ?? this.estFichier,
       estLu: estLu ?? this.estLu,
+      userId: userId ?? this.userId,
     );
   }
 }
@@ -470,6 +487,10 @@ class ClientParametres {
   final String? formeJuridique;
   final String? capitalSocial;
   final String? codeAPE;
+  final String? nomGerant;
+  final String? description;
+  final String? nSiren;
+  final String? nRcs;
 
   const ClientParametres({
     required this.id,
@@ -483,9 +504,19 @@ class ClientParametres {
     this.formeJuridique,
     this.capitalSocial,
     this.codeAPE,
+    this.nomGerant,
+    this.description,
+    this.nSiren,
+    this.nRcs,
   });
 
   factory ClientParametres.fromJson(Map<String, dynamic> json) {
+    String? logoUrl = json['logo_url'] as String?;
+    if (logoUrl != null && logoUrl.startsWith('http')) {
+      final cleanUrl = logoUrl.split('?').first;
+      logoUrl = '$cleanUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+    }
+
     return ClientParametres(
       id: json['id'] as String,
       raisonSociale: json['raison_sociale'] as String,
@@ -493,16 +524,20 @@ class ClientParametres {
       telephone: json['telephone'] as String?,
       email: json['email'] as String?,
       adresse: json['adresse'] as String?,
-      logoUrl: json['logo_url'] as String?,
+      logoUrl: logoUrl,
       tvaIntracommunautaire: json['tva_intracommunautaire'] as String?,
       formeJuridique: json['forme_juridique'] as String?,
       capitalSocial: json['capital_social'] as String?,
       codeAPE: json['code_ape'] as String?,
+      nomGerant: json['nom_gerant'] as String?,
+      description: json['description'] as String?,
+      nSiren: json['n_siren'] as String?,
+      nRcs: json['n_rcs'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{
       'raison_sociale': raisonSociale,
       'siret': siret,
       'telephone': telephone,
@@ -513,7 +548,13 @@ class ClientParametres {
       'forme_juridique': formeJuridique,
       'capital_social': capitalSocial,
       'code_ape': codeAPE,
+      'nom_gerant': nomGerant,
+      'description': description,
+      'n_siren': nSiren,
+      'n_rcs': nRcs,
     };
+    map.remove('name');
+    return map;
   }
 
   ClientParametres copyWith({
@@ -527,6 +568,10 @@ class ClientParametres {
     String? formeJuridique,
     String? capitalSocial,
     String? codeAPE,
+    String? nomGerant,
+    String? description,
+    String? nSiren,
+    String? nRcs,
   }) {
     return ClientParametres(
       id: id,
@@ -541,6 +586,95 @@ class ClientParametres {
       formeJuridique: formeJuridique ?? this.formeJuridique,
       capitalSocial: capitalSocial ?? this.capitalSocial,
       codeAPE: codeAPE ?? this.codeAPE,
+      nomGerant: nomGerant ?? this.nomGerant,
+      description: description ?? this.description,
+      nSiren: nSiren ?? this.nSiren,
+      nRcs: nRcs ?? this.nRcs,
+    );
+  }
+}
+
+// ----- Conge (Leave/Absence Request) -----
+class Conge {
+  final String? id; // null if not yet saved to DB
+  final String salarieId;
+  final String entrepriseId;
+  final String typeConge; // 'conge_paye', 'maladie', 'rtt', 'exceptionnel', 'autre'
+  final DateTime dateDebut;
+  final DateTime dateFin;
+  final bool estDemiJournee;
+  final String statut; // 'en_attente', 'approuve', 'refuse'
+  final String commentaire;
+  final DateTime? creeLe;
+
+  const Conge({
+    this.id,
+    required this.salarieId,
+    required this.entrepriseId,
+    required this.typeConge,
+    required this.dateDebut,
+    required this.dateFin,
+    this.estDemiJournee = false,
+    this.statut = 'en_attente',
+    this.commentaire = '',
+    this.creeLe,
+  });
+
+  factory Conge.fromJson(Map<String, dynamic> json) {
+    return Conge(
+      id: json['id'] as String?,
+      salarieId: json['salarie_id'] as String,
+      entrepriseId: json['entreprise_id'] as String,
+      typeConge: json['type_conge'] as String,
+      dateDebut: DateTime.parse(json['date_debut'] as String),
+      dateFin: DateTime.parse(json['date_fin'] as String),
+      estDemiJournee: json['est_demi_journee'] as bool? ?? false,
+      statut: json['statut'] as String? ?? 'en_attente',
+      commentaire: json['commentaire'] as String? ?? '',
+      creeLe: json['cree_le'] != null ? DateTime.parse(json['cree_le'] as String) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      'salarie_id': salarieId,
+      'entreprise_id': entrepriseId,
+      'type_conge': typeConge,
+      'date_debut': dateDebut.toIso8601String().split('T').first,
+      'date_fin': dateFin.toIso8601String().split('T').first,
+      'est_demi_journee': estDemiJournee,
+      'statut': statut,
+      'commentaire': commentaire,
+    };
+    if (id != null) {
+      data['id'] = id;
+    }
+    return data;
+  }
+
+  Conge copyWith({
+    String? id,
+    String? salarieId,
+    String? entrepriseId,
+    String? typeConge,
+    DateTime? dateDebut,
+    DateTime? dateFin,
+    bool? estDemiJournee,
+    String? statut,
+    String? commentaire,
+    DateTime? creeLe,
+  }) {
+    return Conge(
+      id: id ?? this.id,
+      salarieId: salarieId ?? this.salarieId,
+      entrepriseId: entrepriseId ?? this.entrepriseId,
+      typeConge: typeConge ?? this.typeConge,
+      dateDebut: dateDebut ?? this.dateDebut,
+      dateFin: dateFin ?? this.dateFin,
+      estDemiJournee: estDemiJournee ?? this.estDemiJournee,
+      statut: statut ?? this.statut,
+      commentaire: commentaire ?? this.commentaire,
+      creeLe: creeLe ?? this.creeLe,
     );
   }
 }

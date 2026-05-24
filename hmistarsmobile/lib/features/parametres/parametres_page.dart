@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
+import '../../core/widgets/app_header.dart';
+
 
 class ParametresPage extends StatefulWidget {
   const ParametresPage({super.key});
@@ -23,6 +26,10 @@ class _ParametresPageState extends State<ParametresPage> {
   final _formeJuridiqueController = TextEditingController();
   final _capitalSocialController = TextEditingController();
   final _codeAPEController = TextEditingController();
+  final _nomGerantController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _sirenController = TextEditingController();
+  final _rcsController = TextEditingController();
   bool _loaded = false;
 
   // Local image file picked from device
@@ -43,6 +50,10 @@ class _ParametresPageState extends State<ParametresPage> {
       _formeJuridiqueController.text = p.formeJuridique ?? '';
       _capitalSocialController.text = p.capitalSocial ?? '';
       _codeAPEController.text = p.codeAPE ?? '';
+      _nomGerantController.text = p.nomGerant ?? '';
+      _descriptionController.text = p.description ?? '';
+      _sirenController.text = p.nSiren ?? '';
+      _rcsController.text = p.nRcs ?? '';
       if (p.logoUrl != null &&
           p.logoUrl!.isNotEmpty &&
           !p.logoUrl!.startsWith('http')) {
@@ -63,14 +74,77 @@ class _ParametresPageState extends State<ParametresPage> {
     _formeJuridiqueController.dispose();
     _capitalSocialController.dispose();
     _codeAPEController.dispose();
+    _nomGerantController.dispose();
+    _descriptionController.dispose();
+    _sirenController.dispose();
+    _rcsController.dispose();
     super.dispose();
   }
 
   Future<void> _pickLogoFromDevice() async {
-    // image_picker not included — show a snackbar for now
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Upload de logo à venir dans une prochaine version')),
-    );
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                ),
+                SizedBox(width: 16),
+                Text('Mise à jour du logo...'),
+              ],
+            ),
+            duration: Duration(minutes: 1),
+          ),
+        );
+
+        final appState = context.read<AppState>();
+        final currentParams = appState.parametres;
+        if (currentParams != null) {
+          await appState.updateParametres(
+            currentParams.copyWith(logoUrl: image.path),
+          );
+
+          if (mounted) {
+            setState(() {
+              _localLogoFile = null;
+              _loaded = false;
+            });
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Logo mis à jour avec succès !'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -81,18 +155,50 @@ class _ParametresPageState extends State<ParametresPage> {
         ? _localLogoFile!.path
         : existingLogoUrl;
 
+    final raisonSocialeVal = _raisonSocialeController.text.trim();
+    final nomGerantVal = _nomGerantController.text.trim();
+    final emailVal = _emailController.text.trim();
+
+    if (raisonSocialeVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La Raison Sociale est requise'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (nomGerantVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le nom du gérant est requis'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (emailVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('L\'adresse email est requise'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     try {
       await appState.updateParametres(
         ClientParametres(
           id: existingId,
-          raisonSociale: _raisonSocialeController.text.trim(),
+          raisonSociale: raisonSocialeVal,
           siret: _siretController.text.trim(),
           telephone: _telephoneController.text.trim().isEmpty
               ? null
               : _telephoneController.text.trim(),
-          email: _emailController.text.trim().isEmpty
-              ? null
-              : _emailController.text.trim(),
+          email: emailVal,
           adresse: _adresseController.text.trim().isEmpty
               ? null
               : _adresseController.text.trim(),
@@ -108,10 +214,24 @@ class _ParametresPageState extends State<ParametresPage> {
           codeAPE: _codeAPEController.text.trim().isEmpty
               ? null
               : _codeAPEController.text.trim(),
+          nomGerant: nomGerantVal,
+          description: _descriptionController.text.trim().isEmpty
+              ? null
+              : _descriptionController.text.trim(),
+          nSiren: _sirenController.text.trim().isEmpty
+              ? null
+              : _sirenController.text.trim(),
+          nRcs: _rcsController.text.trim().isEmpty
+              ? null
+              : _rcsController.text.trim(),
           logoUrl: logoUrlToSave,
         ),
       );
       if (mounted) {
+        setState(() {
+          _localLogoFile = null;
+          _loaded = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Paramètres enregistrés'),
@@ -147,33 +267,7 @@ class _ParametresPageState extends State<ParametresPage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            title: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/logo.jpeg',
-                    width: 70,
-                    height: 36,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'HMI Stars Consulting',
-                  style: GoogleFonts.manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).colorScheme.primary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          AppHeader.sliver(context: context),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -234,6 +328,7 @@ class _ParametresPageState extends State<ParametresPage> {
         borderRadius: BorderRadius.circular(16),
         child: Image.network(
           p.logoUrl!,
+          key: ValueKey(p.logoUrl),
           width: 56,
           height: 56,
           fit: BoxFit.contain,
@@ -338,6 +433,14 @@ class _ParametresPageState extends State<ParametresPage> {
           ),
           const SizedBox(height: 20),
           _buildInfoRow(Icons.numbers, 'SIRET', p.siret),
+          if (p.nomGerant != null && p.nomGerant!.isNotEmpty)
+            _buildInfoRow(Icons.person, 'Gérant', p.nomGerant!),
+          if (p.description != null && p.description!.isNotEmpty)
+            _buildInfoRow(Icons.description, 'Description', p.description!),
+          if (p.nSiren != null && p.nSiren!.isNotEmpty)
+            _buildInfoRow(Icons.pin, 'SIREN', p.nSiren!),
+          if (p.nRcs != null && p.nRcs!.isNotEmpty)
+            _buildInfoRow(Icons.receipt_long_outlined, 'RCS', p.nRcs!),
           if (p.telephone != null)
             _buildInfoRow(Icons.phone, 'Téléphone', p.telephone!),
           if (p.email != null) _buildInfoRow(Icons.email, 'Email', p.email!),
@@ -508,10 +611,31 @@ class _ParametresPageState extends State<ParametresPage> {
             Icons.business_outlined,
           ),
           _buildField(
+            _nomGerantController,
+            'Nom du Gérant',
+            Icons.person_outline,
+          ),
+          _buildField(
+            _descriptionController,
+            'Activité / Description',
+            Icons.description_outlined,
+          ),
+          _buildField(
             _siretController,
             'SIRET',
             Icons.numbers,
             keyboardType: TextInputType.number,
+          ),
+          _buildField(
+            _sirenController,
+            'SIREN',
+            Icons.pin_outlined,
+            keyboardType: TextInputType.number,
+          ),
+          _buildField(
+            _rcsController,
+            'RCS',
+            Icons.receipt_long_outlined,
           ),
           _buildField(
             _telephoneController,

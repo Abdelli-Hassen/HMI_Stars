@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../providers/app_state.dart';
 
 /// Access theme-aware colors via context.
 /// Usage: context.cs.surface, context.cs.surfaceContainerLowest, etc.
 extension ThemeContextExt on BuildContext {
   ColorScheme get cs => Theme.of(this).colorScheme;
 }
-
-import '../providers/app_state.dart';
 
 class AppColors {
   AppColors._();
@@ -183,7 +182,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.tertiary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.tertiary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
@@ -215,10 +214,10 @@ class AppTheme {
           return Colors.transparent;
         }),
         checkColor: WidgetStateProperty.all(AppColors.onTertiary),
-        side: const BorderSide(color: AppColors.outline, width: 1.5),
+        side: BorderSide(color: AppColors.outline, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.tertiary,
         unselectedItemColor: AppColors.outline,
@@ -236,7 +235,7 @@ class AppTheme {
           fontSize: 20,
           letterSpacing: 2,
         ),
-        iconTheme: const IconThemeData(color: AppColors.primary),
+        iconTheme: IconThemeData(color: AppColors.primary),
       ),
     );
   }

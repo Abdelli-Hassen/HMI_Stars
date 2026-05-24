@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../core/models/models.dart';
+import '../../../core/providers/app_state.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -279,6 +281,120 @@ class MessageBubble extends StatelessWidget {
     return index.toString();
   }
 
+  Widget _buildAvatar(BuildContext context, bool isForSelf) {
+    final appState = Provider.of<AppState>(context, listen: false);
+    
+    // 1. Try to get avatar using message.userId if available
+    if (message.userId != null && message.userId!.isNotEmpty) {
+      final salarie = appState.salaries.firstWhere(
+        (s) => s.id == message.userId,
+        orElse: () => appState.salariesArchives.firstWhere(
+          (s) => s.id == message.userId,
+          orElse: () => const Salarie(
+            id: '',
+            entrepriseId: '',
+            nom: '',
+            prenom: '',
+            nomDeNaissance: '',
+            typeContrat: '',
+          ),
+        ),
+      );
+
+      if (salarie.id.isNotEmpty) {
+        if (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty) {
+          final url = salarie.avatarUrl!;
+          if (url.startsWith('http')) {
+            return CircleAvatar(
+              radius: 16,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              backgroundImage: NetworkImage(url),
+            );
+          } else {
+            final file = io.File(url);
+            if (file.existsSync()) {
+              return CircleAvatar(
+                radius: 16,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundImage: FileImage(file),
+              );
+            }
+          }
+        }
+        
+        // Initials if Salarie has no avatarUrl or local file doesn't exist
+        final initial = salarie.prenom.isNotEmpty
+            ? salarie.prenom[0].toUpperCase()
+            : (salarie.nom.isNotEmpty ? salarie.nom[0].toUpperCase() : '?');
+        return CircleAvatar(
+          radius: 16,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Text(
+            initial,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        );
+      }
+    }
+
+    // 2. Fallbacks
+    if (isForSelf) {
+      // Outgoing message sent by the company manager/client user
+      final p = appState.parametres;
+      if (p != null && p.logoUrl != null && p.logoUrl!.isNotEmpty) {
+        final url = p.logoUrl!;
+        if (url.startsWith('http')) {
+          return CircleAvatar(
+            radius: 16,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            backgroundImage: NetworkImage(url),
+          );
+        } else {
+          final file = io.File(url);
+          if (file.existsSync()) {
+            return CircleAvatar(
+              radius: 16,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              backgroundImage: FileImage(file),
+            );
+          }
+        }
+      }
+      
+      // Fallback for company initials/icon
+      final initial = p != null && p.raisonSociale.isNotEmpty
+          ? p.raisonSociale[0].toUpperCase()
+          : 'C';
+      return CircleAvatar(
+        radius: 16,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: Text(
+          initial,
+          style: GoogleFonts.manrope(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      );
+    } else {
+      // Incoming message from HMI Stars support (without a mapping salarie)
+      return CircleAvatar(
+        radius: 16,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: Icon(
+          Icons.star,
+          color: Theme.of(context).colorScheme.tertiary,
+          size: 14,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isSent = message.estEnvoyePar;
@@ -292,15 +408,7 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isSent) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              child: Icon(
-                Icons.star,
-                color: Theme.of(context).colorScheme.tertiary,
-                size: 14,
-              ),
-            ),
+            _buildAvatar(context, false),
             const SizedBox(width: 8),
           ],
           Flexible(
@@ -338,7 +446,10 @@ class MessageBubble extends StatelessWidget {
                   : buildTextBubble(isSent, context),
             ),
           ),
-          if (isSent) const SizedBox(width: 4),
+          if (isSent) ...[
+            const SizedBox(width: 8),
+            _buildAvatar(context, true),
+          ],
         ],
       ),
     );

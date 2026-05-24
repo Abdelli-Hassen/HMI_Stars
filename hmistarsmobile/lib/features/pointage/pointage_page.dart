@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
+import '../../core/widgets/app_header.dart';
 import 'widgets/employee_day_list.dart';
 
 class PointagePage extends StatefulWidget {
@@ -22,9 +24,11 @@ class _PointagePageState extends State<PointagePage> {
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
-    // Load pointages for the current month from Supabase
+    // Load pointages for the current month and conges from Supabase
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppState>().loadPointagesForMonth(DateTime.now());
+      final appState = context.read<AppState>();
+      appState.loadPointagesForMonth(DateTime.now(), force: true);
+      appState.loadConges();
     });
   }
 
@@ -46,42 +50,25 @@ class _PointagePageState extends State<PointagePage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surface.withOpacity(0.9),
-            elevation: 0,
-            title: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/logo.jpeg',
-                    width: 70,
-                    height: 36,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'HMI Stars Consulting',
-                  style: GoogleFonts.manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).colorScheme.primary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
+          AppHeader.sliver(
+            context: context,
             actions: [
-              Icon(
-                Icons.notifications_outlined,
-                color: Theme.of(context).colorScheme.outline,
+              IconButton(
+                icon: Icon(
+                  Icons.beach_access_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                tooltip: 'Gestion des congés',
+                onPressed: () => context.go('/conges'),
               ),
-              const SizedBox(width: 16),
+              IconButton(
+                icon: Icon(
+                  Icons.notifications_outlined,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+                onPressed: () {},
+              ),
+              const SizedBox(width: 8),
             ],
           ),
           SliverToBoxAdapter(
@@ -159,8 +146,9 @@ class _PointagePageState extends State<PointagePage> {
                       ? _buildBlockCalendar(appState)
                       : _buildListCalendar(appState),
                   const SizedBox(height: 20),
-                  // Stats bar
-                  _buildMonthlyStats(),
+
+                  // Leaves Management Shortcut Card
+                  _buildLeavesShortcutCard(appState),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -246,17 +234,23 @@ class _PointagePageState extends State<PointagePage> {
       focusedDay: _focusedDay,
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
       onDaySelected: (selectedDay, focusedDay) {
-        if (selectedDay.isAfter(DateTime.now())) return;
         setState(() {
           _selectedDay = selectedDay;
           _focusedDay = focusedDay;
         });
+        
+        // Ensure data is loaded
+        final appState = context.read<AppState>();
+        appState.loadPointagesForMonth(selectedDay);
+        
         _showDayDetails(context, selectedDay, appState);
       },
       onPageChanged: (focusedDay) {
         setState(() => _focusedDay = focusedDay);
-        // Load the newly visible month's pointages
-        context.read<AppState>().loadPointagesForMonth(focusedDay);
+        // Load the newly visible month's pointages and conges
+        final appState = context.read<AppState>();
+        appState.loadPointagesForMonth(focusedDay, force: true);
+        appState.loadConges();
       },
       calendarStyle: CalendarStyle(
         outsideDaysVisible: false,
@@ -285,7 +279,19 @@ class _PointagePageState extends State<PointagePage> {
       ),
       calendarBuilders: CalendarBuilders(
         markerBuilder: (context, date, events) {
-          if (date.isAfter(DateTime.now())) return const SizedBox.shrink();
+          final isFuture = date.isAfter(DateTime.now()) && !isSameDay(date, DateTime.now());
+          if (isFuture) {
+            // Check if any employee is on leave on this day
+            bool anyOnLeave = false;
+            for (final s in appState.salaries) {
+              if (appState.isSalarieEnConge(s.id, date)) {
+                anyOnLeave = true;
+                break;
+              }
+            }
+            if (!anyOnLeave) return const SizedBox.shrink();
+          }
+
           final statut = appState.getStatutJour(date);
           return Positioned(
             bottom: 2,
@@ -321,7 +327,58 @@ class _PointagePageState extends State<PointagePage> {
 
   Widget _buildListCalendar(AppState appState) {
     final now = DateTime.now();
-    final days = List.generate(30, (i) => now.subtract(Duration(days: 29 - i)));
+    final year = _focusedDay.year;
+    final month = _focusedDay.month;
+    
+    // Dernier jour du mois visé
+    final lastDayOfMonth = DateTime(year, month + 1, 0);
+    final totalDays = lastDayOfMonth.day;
+    
+    final List<DateTime> days = [];
+    for (int i = 1; i <= totalDays; i++) {
+      final day = DateTime(year, month, i);
+      final isFuture = day.isAfter(now) && !isSameDay(day, now);
+      if (!isFuture) {
+        days.add(day);
+      } else {
+        // If it's a future day, only add it if at least one employee is on leave
+        bool anyOnLeave = false;
+        for (final s in appState.salaries) {
+          if (appState.isSalarieEnConge(s.id, day)) {
+            anyOnLeave = true;
+            break;
+          }
+        }
+        if (anyOnLeave) {
+          days.add(day);
+        }
+      }
+    }
+
+    if (days.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Column(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Aucun jour à afficher pour ce mois',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return ListView.separated(
       shrinkWrap: true,
@@ -395,75 +452,71 @@ class _PointagePageState extends State<PointagePage> {
     );
   }
 
-  Widget _buildMonthlyStats() {
+  Widget _buildLeavesShortcutCard(AppState appState) {
     return Container(
-      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            color: Theme.of(context).colorScheme.primary,
-            width: MediaQuery.of(context).size.width * 0.35,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => context.go('/conges'),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               children: [
-                Text(
-                  'STATISTIQUES',
-                  style: GoogleFonts.inter(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.tertiary,
-                    letterSpacing: 1.5,
+                // Icon wrapper
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '92%',
-                  style: GoogleFonts.manrope(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w900,
+                  child: const Icon(
+                    Icons.beach_access_outlined,
                     color: Colors.white,
+                    size: 26,
                   ),
                 ),
-                Text(
-                  'Taux de présence mensuel',
-                  style: GoogleFonts.inter(fontSize: 10, color: Colors.white60),
+                const SizedBox(width: 16),
+                // Title and details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Absences & Congés',
+                        style: GoogleFonts.manrope(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Consigner et suivre les périodes d\'absence',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Analyse du Consultant',
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Le taux de ponctualité a augmenté de 4 points par rapport à la semaine dernière.',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

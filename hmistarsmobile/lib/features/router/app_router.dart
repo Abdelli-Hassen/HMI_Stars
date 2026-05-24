@@ -12,6 +12,7 @@ import '../salaries/salaries_page.dart';
 import '../salaries/add_salarie_page.dart';
 import '../avertissements/avertissements_page.dart';
 import '../parametres/parametres_page.dart';
+import '../conges/conges_page.dart';
 import '../shell/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -73,7 +74,12 @@ GoRouter createAppRouter(AppState appState) {
         path: '/salaries/modifier',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          final salarie = state.extra as Salarie?;
+          Salarie? salarie;
+          if (state.extra is Salarie) {
+            salarie = state.extra as Salarie;
+          } else if (state.extra is Map<String, dynamic>) {
+            salarie = Salarie.fromJson(state.extra as Map<String, dynamic>);
+          }
           return AddSalariePage(salarie: salarie);
         },
       ),
@@ -106,6 +112,10 @@ GoRouter createAppRouter(AppState appState) {
           GoRoute(
             path: '/parametres',
             builder: (context, state) => const ParametresPage(),
+          ),
+          GoRoute(
+            path: '/conges',
+            builder: (context, state) => const CongesPage(),
           ),
         ],
       ),

@@ -157,6 +157,7 @@ class AppTopBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   CircleAvatar(
+                    key: ValueKey(auth.userAvatarUrl),
                     radius: 16,
                     backgroundColor: AppColors.surfaceContainerHigh,
                     backgroundImage: auth.userAvatarUrl != null && auth.userAvatarUrl!.isNotEmpty ? NetworkImage(auth.userAvatarUrl!) : null,

@@ -9,7 +9,9 @@ import '../services/message_service.dart';
 import '../services/avertissement_service.dart';
 import '../services/entreprise_service.dart';
 import '../services/service_notification.dart';
-class AppState extends ChangeNotifier {
+import '../services/conge_service.dart';
+
+class AppState extends ChangeNotifier with WidgetsBindingObserver {
   // ─── Services ────────────────────────────────────────────────────────────
   late final AuthService _authService;
   late final SalarieService _salarieService;
@@ -17,6 +19,7 @@ class AppState extends ChangeNotifier {
   late final MessageService _messageService;
   late final AvertissementService _avertissementService;
   late final EntrepriseService _entrepriseService;
+  late final CongeService _congeService;
 
   // Abonnement Realtime pour les messages entrants de la plateforme
   StreamSubscription<List<Map<String, dynamic>>>? _abonnementMessages;
@@ -31,6 +34,7 @@ class AppState extends ChangeNotifier {
     _messageService = MessageService(client);
     _avertissementService = AvertissementService(client);
     _entrepriseService = EntrepriseService(client);
+    _congeService = CongeService(client);
 
     // Listen to Supabase auth changes so GoRouter can react
     _authService.onAuthStateChange.listen((authState) {
@@ -47,6 +51,28 @@ class AppState extends ChangeNotifier {
     if (existing != null) {
       _isAuthenticated = true;
       _onSignedIn(existing);
+    }
+
+    // Enregistrer l'observateur de cycle de vie
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _abonnementMessages?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      debugPrint('[AppState] App resumed, syncing messages and conges...');
+      final eid = _entrepriseId;
+      if (eid != null) {
+        loadMessages();
+        loadConges();
+      }
     }
   }
 
@@ -75,6 +101,7 @@ class AppState extends ChangeNotifier {
       loadSalaries(),
       loadMessages(),
       loadTemplates(),
+      loadConges(),
     ]);
   }
 
@@ -126,6 +153,7 @@ class AppState extends ChangeNotifier {
     _salariesArchives = [];
     _messages = [];
     _templates = [];
+    _conges = [];
     _parametres = null;
     _pointagesCache = {};
     // Annuler l'abonnement temps réel
@@ -171,6 +199,7 @@ class AppState extends ChangeNotifier {
           loadSalaries(),
           loadMessages(),
           loadTemplates(),
+          loadConges(),
         ]);
       } else {
         // Multiple companies — trigger the selector screen
@@ -185,8 +214,16 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> updateParametres(ClientParametres p) async {
-    await _entrepriseService.updateEntreprise(p);
-    _parametres = p;
+    final updated = await _entrepriseService.updateEntreprise(p);
+    _parametres = updated;
+    
+    if (_entreprisesDisponibles.isNotEmpty) {
+      final index = _entreprisesDisponibles.indexWhere((e) => e.id == p.id);
+      if (index != -1) {
+        _entreprisesDisponibles[index] = updated;
+      }
+    }
+    
     notifyListeners();
   }
 
@@ -277,12 +314,12 @@ class AppState extends ChangeNotifier {
 
   List<Salarie> getSalariesForDay(DateTime day) => _salaries;
 
-  Future<void> loadPointagesForMonth(DateTime month) async {
+  Future<void> loadPointagesForMonth(DateTime month, {bool force = false}) async {
     final eid = _entrepriseId;
     if (eid == null) return;
 
     final key = _monthKey(month);
-    if (_pointagesCache.containsKey(key)) return; // already loaded
+    if (!force && _pointagesCache.containsKey(key)) return; // already loaded
 
     _isLoadingPointage = true;
     notifyListeners();
@@ -372,18 +409,106 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool isSalarieEnConge(String salarieId, DateTime day) {
+    // 1. Check in conges list
+    final target = DateTime(day.year, day.month, day.day);
+    final inConges = _conges.any((c) {
+      if (c.salarieId != salarieId) return false;
+      final start = DateTime(c.dateDebut.year, c.dateDebut.month, c.dateDebut.day);
+      final end = DateTime(c.dateFin.year, c.dateFin.month, c.dateFin.day);
+      return (target.isAfter(start) || target.isAtSameMomentAs(start)) &&
+             (target.isBefore(end) || target.isAtSameMomentAs(end));
+    });
+    if (inConges) return true;
+
+    // 2. Check in pointages note
+    final key = _monthKey(day);
+    final dateStr = _dateKey(day);
+    final entries = _pointagesCache[key] ?? [];
+    final match = entries.where((e) => e.salarieId == salarieId && _dateKey(e.date) == dateStr);
+    if (match.isNotEmpty) {
+      final note = match.first.note ?? '';
+      if (note.startsWith('Congé Payé') ||
+          note.startsWith('Arrêt Maladie') ||
+          note.startsWith('RTT') ||
+          note.startsWith('Congé Exceptionnel') ||
+          note.startsWith('Autre Absence') ||
+          note.startsWith('Maladie') ||
+          note.startsWith('Arrêt') ||
+          note.startsWith('Conge')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String getCongeDescriptionForSalarie(String salarieId, DateTime day) {
+    // 1. Check in conges list
+    final target = DateTime(day.year, day.month, day.day);
+    final matchConge = _conges.where((c) {
+      if (c.salarieId != salarieId) return false;
+      final start = DateTime(c.dateDebut.year, c.dateDebut.month, c.dateDebut.day);
+      final end = DateTime(c.dateFin.year, c.dateFin.month, c.dateFin.day);
+      return (target.isAfter(start) || target.isAtSameMomentAs(start)) &&
+             (target.isBefore(end) || target.isAtSameMomentAs(end));
+    });
+    if (matchConge.isNotEmpty) {
+      return _getTypeLabel(matchConge.first.typeConge);
+    }
+
+    // 2. Check in pointages note
+    final key = _monthKey(day);
+    final dateStr = _dateKey(day);
+    final entries = _pointagesCache[key] ?? [];
+    final match = entries.where((e) => e.salarieId == salarieId && _dateKey(e.date) == dateStr);
+    if (match.isNotEmpty) {
+      final note = match.first.note ?? '';
+      if (note.startsWith('Congé Payé') ||
+          note.startsWith('Arrêt Maladie') ||
+          note.startsWith('RTT') ||
+          note.startsWith('Congé Exceptionnel') ||
+          note.startsWith('Autre Absence') ||
+          note.startsWith('Maladie') ||
+          note.startsWith('Arrêt') ||
+          note.startsWith('Conge')) {
+        final idx = note.indexOf(':');
+        if (idx != -1) {
+          return note.substring(0, idx).trim();
+        }
+        return note;
+      }
+    }
+    return 'En Congé';
+  }
+
   StatutJour getStatutJour(DateTime day) {
+    if (_salaries.isEmpty) return StatutJour.absent;
+
     final key = _monthKey(day);
     final dateStr = _dateKey(day);
     final entries = (_pointagesCache[key] ?? [])
         .where((e) => _dateKey(e.date) == dateStr)
         .toList();
 
-    if (_salaries.isEmpty) return StatutJour.absent;
-    if (entries.isEmpty) return StatutJour.absent;
-    final pointed = entries.where((e) => e.estPointe).length;
-    if (pointed == 0) return StatutJour.absent;
-    if (pointed >= _salaries.length) return StatutJour.complet;
+    int accountedCount = 0;
+    for (final s in _salaries) {
+      final isPointed = entries.any((e) => e.salarieId == s.id && e.estPointe);
+      if (isPointed) {
+        accountedCount++;
+      } else {
+        final onLeave = isSalarieEnConge(s.id, day);
+        if (onLeave) {
+          accountedCount++;
+        }
+      }
+    }
+
+    if (accountedCount == 0) return StatutJour.absent;
+    if (accountedCount >= _salaries.length) return StatutJour.complet;
     return StatutJour.incomplet;
   }
 
@@ -404,9 +529,13 @@ class AppState extends ChangeNotifier {
     final eid = _entrepriseId;
     if (eid == null) return;
 
-    _isLoadingMessages = true;
-    _hasMoreMessages = true;
-    notifyListeners();
+    // Chargement silencieux si des messages sont déjà affichés
+    final isFirstLoad = _messages.isEmpty;
+    if (isFirstLoad) {
+      _isLoadingMessages = true;
+      _hasMoreMessages = true;
+      notifyListeners();
+    }
 
     try {
       final fetched = await _messageService.getMessages(eid, offset: 0, limit: _messagePageSize);
@@ -416,8 +545,10 @@ class AppState extends ChangeNotifier {
       // Marquer comme lus
       _messageService.marquerMessagesCommeLus(eid);
     } finally {
-      _isLoadingMessages = false;
-      notifyListeners();
+      if (isFirstLoad) {
+        _isLoadingMessages = false;
+        notifyListeners();
+      }
     }
 
     // Ouvrir l'abonnement Realtime pour la messagerie
@@ -457,6 +588,14 @@ class AppState extends ChangeNotifier {
           notifyListeners();
         }
       },
+      onError: (err) {
+        debugPrint('[AppState] Realtime subscription error, reconnecting in 5 seconds: $err');
+        Future.delayed(const Duration(seconds: 5), () {
+          if (_entrepriseId == eid) {
+            loadMessages();
+          }
+        });
+      },
     );
   }
 
@@ -485,6 +624,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> addMessage(Message msg) async {
+
     // Optimistic UI update
     final optimisticMessage = Message(
       id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
@@ -681,6 +821,170 @@ La Direction''',
 
     for (final t in defaults) {
       await _avertissementService.addTemplate(t);
+    }
+  }
+
+  // ─── Congés ───────────────────────────────────────────────────────────────
+  List<Conge> _conges = [];
+  bool _isLoadingConges = false;
+
+  List<Conge> get conges => _conges;
+  bool get isLoadingConges => _isLoadingConges;
+
+  Future<void> loadConges() async {
+    final eid = _entrepriseId;
+    if (eid == null) return;
+
+    _isLoadingConges = true;
+    notifyListeners();
+
+    try {
+      _conges = await _congeService.getConges(eid);
+    } catch (e) {
+      debugPrint('[AppState] loadConges error: $e');
+    } finally {
+      _isLoadingConges = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> addConge(Conge conge) async {
+    final created = await _congeService.createConge(conge);
+    _conges.insert(0, created);
+    
+    try {
+      await _generatePointagesForConge(created);
+    } catch (e) {
+      debugPrint('[AppState] Failed to auto-generate pointages: $e');
+    }
+    
+    notifyListeners();
+  }
+
+  Future<void> updateConge(String id, Map<String, dynamic> updates) async {
+    final idx = _conges.indexWhere((c) => c.id == id);
+    if (idx != -1) {
+      final oldConge = _conges[idx];
+
+      // Delete old pointages
+      try {
+        await _deletePointagesForConge(oldConge);
+      } catch (e) {
+        debugPrint('[AppState] Failed to delete old pointages on update: $e');
+      }
+
+      // Update in db
+      final updated = await _congeService.updateConge(id, updates);
+      _conges[idx] = updated;
+      
+      try {
+        await _generatePointagesForConge(updated);
+      } catch (e) {
+        debugPrint('[AppState] Failed to auto-generate pointages on update: $e');
+      }
+      
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteConge(String id) async {
+    final idx = _conges.indexWhere((c) => c.id == id);
+    if (idx != -1) {
+      final conge = _conges[idx];
+      
+      await _congeService.deleteConge(id);
+      _conges.removeAt(idx);
+      
+      try {
+        await _deletePointagesForConge(conge);
+      } catch (e) {
+        debugPrint('[AppState] Failed to delete pointages for conge: $e');
+      }
+      
+      notifyListeners();
+    }
+  }
+
+  Future<void> _deletePointagesForConge(Conge conge) async {
+    await _pointageService.deletePointagesInRange(
+      conge.salarieId,
+      conge.dateDebut,
+      conge.dateFin,
+    );
+
+    // Update local cache
+    final start = DateTime(conge.dateDebut.year, conge.dateDebut.month, conge.dateDebut.day);
+    final end = DateTime(conge.dateFin.year, conge.dateFin.month, conge.dateFin.day);
+    final daysCount = end.difference(start).inDays + 1;
+
+    for (int i = 0; i < daysCount; i++) {
+      final day = DateTime(start.year, start.month, start.day + i);
+      final key = _monthKey(day);
+      final dateStr = _dateKey(day);
+      
+      final list = _pointagesCache[key];
+      if (list != null) {
+        list.removeWhere(
+          (e) => e.salarieId == conge.salarieId && _dateKey(e.date) == dateStr
+        );
+      }
+    }
+  }
+
+  String _getTypeLabel(String type) {
+    switch (type) {
+      case 'conge_paye':
+        return 'Congé Payé';
+      case 'maladie':
+        return 'Arrêt Maladie';
+      case 'rtt':
+        return 'RTT';
+      case 'exceptionnel':
+        return 'Congé Exceptionnel';
+      default:
+        return 'Autre Absence';
+    }
+  }
+
+  Future<void> _generatePointagesForConge(Conge conge) async {
+    final List<PointageEntree> entries = [];
+    final start = DateTime(conge.dateDebut.year, conge.dateDebut.month, conge.dateDebut.day);
+    final end = DateTime(conge.dateFin.year, conge.dateFin.month, conge.dateFin.day);
+    final daysCount = end.difference(start).inDays + 1;
+
+    for (int i = 0; i < daysCount; i++) {
+      final day = DateTime(start.year, start.month, start.day + i);
+      final label = _getTypeLabel(conge.typeConge);
+      final note = conge.commentaire.trim().isNotEmpty
+          ? '$label : ${conge.commentaire.trim()}'
+          : label;
+
+      final entry = PointageEntree(
+        salarieId: conge.salarieId,
+        entrepriseId: conge.entrepriseId,
+        date: day,
+        estPointe: false,
+        note: note,
+      );
+      entries.add(entry);
+    }
+
+    if (entries.isEmpty) return;
+
+    await _pointageService.upsertPointages(entries);
+
+    // Update local cache
+    for (final entry in entries) {
+      final key = _monthKey(entry.date);
+      final dateStr = _dateKey(entry.date);
+      final list = _pointagesCache.putIfAbsent(key, () => []);
+      final idx = list.indexWhere(
+          (e) => e.salarieId == entry.salarieId && _dateKey(e.date) == dateStr);
+      if (idx != -1) {
+        list[idx] = entry;
+      } else {
+        list.add(entry);
+      }
     }
   }
 }

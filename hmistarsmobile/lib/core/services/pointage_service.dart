@@ -45,4 +45,21 @@ class PointageService {
       onConflict: 'salarie_id,date',
     );
   }
+
+  /// Deletes pointages for a salarie within a date range.
+  Future<void> deletePointagesInRange(
+    String salarieId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final startStr = start.toIso8601String().split('T').first;
+    final endStr = end.toIso8601String().split('T').first;
+
+    await _client
+        .from('pointages')
+        .delete()
+        .eq('salarie_id', salarieId)
+        .gte('date', startStr)
+        .lte('date', endStr);
+  }
 }

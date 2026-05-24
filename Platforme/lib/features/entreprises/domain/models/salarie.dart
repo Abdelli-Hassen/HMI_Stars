@@ -6,6 +6,7 @@ class Salarie {
   final String prenom;
   final String nomNaissance;
   final String cin;
+  final String description;
   final String numeroSecuriteSociale;
   final DateTime? dateNaissance;
   final String lieuNaissance;
@@ -35,6 +36,7 @@ class Salarie {
     required this.prenom,
     this.nomNaissance = '',
     this.cin = '',
+    this.description = '',
     this.numeroSecuriteSociale = '',
     this.dateNaissance,
     this.lieuNaissance = '',
@@ -64,7 +66,8 @@ class Salarie {
       nom: json['nom'] as String? ?? '',
       prenom: json['prenom'] as String? ?? '',
       nomNaissance: json['nom_de_naissance'] as String? ?? '',
-      cin: '',
+      cin: json['cin'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       numeroSecuriteSociale: json['numero_securite_sociale'] as String? ?? '',
       dateNaissance: json['date_naissance'] != null
           ? DateTime.tryParse(json['date_naissance'] as String)
@@ -97,6 +100,8 @@ class Salarie {
         'nom': nom,
         'prenom': prenom,
         'nom_de_naissance': nomNaissance,
+        'cin': cin,
+        'description': description,
         'numero_securite_sociale': numeroSecuriteSociale,
         'date_naissance': dateNaissance?.toIso8601String().split('T').first,
         'lieu_naissance': lieuNaissance,
@@ -124,6 +129,7 @@ class Salarie {
     String? prenom,
     String? nomNaissance,
     String? cin,
+    String? description,
     String? numeroSecuriteSociale,
     DateTime? dateNaissance,
     String? lieuNaissance,
@@ -150,6 +156,7 @@ class Salarie {
       prenom: prenom ?? this.prenom,
       nomNaissance: nomNaissance ?? this.nomNaissance,
       cin: cin ?? this.cin,
+      description: description ?? this.description,
       numeroSecuriteSociale: numeroSecuriteSociale ?? this.numeroSecuriteSociale,
       dateNaissance: dateNaissance ?? this.dateNaissance,
       lieuNaissance: lieuNaissance ?? this.lieuNaissance,

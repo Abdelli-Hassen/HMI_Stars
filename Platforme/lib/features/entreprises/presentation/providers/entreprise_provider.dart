@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../domain/models/entreprise.dart';
 import '../../domain/models/salarie.dart';
@@ -116,6 +117,20 @@ class EntrepriseProvider extends ChangeNotifier {
     return created;
   }
 
+  Future<Salarie> modifierSalarie(Salarie salarie) async {
+    final updated = await _dataService.updateSalarie(salarie);
+    final list = _salariesCache[salarie.entrepriseId] ?? [];
+    final index = list.indexWhere((s) => s.id == salarie.id);
+    if (index != -1) {
+      list[index] = updated;
+      _salariesCache[salarie.entrepriseId] = [...list];
+    } else {
+      await fetchSalariesForEntreprise(salarie.entrepriseId);
+    }
+    notifyListeners();
+    return updated;
+  }
+
   Future<void> archiverSalarie(String id, String entrepriseId) async {
     await _dataService.archiveSalarie(id);
     await fetchSalariesForEntreprise(entrepriseId);
@@ -221,6 +236,19 @@ class EntrepriseProvider extends ChangeNotifier {
       _entreprises = [..._entreprises]..[idx] = updated;
       notifyListeners();
     }
+  }
+
+  Future<bool> uploadEntrepriseLogo(String entrepriseId, List<int> fileBytes, String fileName) async {
+    final url = await _dataService.uploadEntrepriseLogo(entrepriseId, Uint8List.fromList(fileBytes), fileName);
+    if (url != null) {
+      final idx = _entreprises.indexWhere((e) => e.id == entrepriseId);
+      if (idx != -1) {
+        _entreprises = [..._entreprises]..[idx] = _entreprises[idx].copyWith(logoUrl: url);
+        notifyListeners();
+      }
+      return true;
+    }
+    return false;
   }
 
   // ─── Filters ──────────────────────────────────────────────────────────────

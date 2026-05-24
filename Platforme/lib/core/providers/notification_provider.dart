@@ -140,7 +140,10 @@ class NotificationProvider extends ChangeNotifier {
         notifyListeners();
       }
     }, onError: (error) {
-      debugPrint('[NotificationProvider] Erreur de connexion temps réel (notifications) : $error');
+      debugPrint('[NotificationProvider] Erreur de connexion temps réel (notifications) : $error. Reconnexion dans 5 secondes...');
+      Future.delayed(const Duration(seconds: 5), () {
+        initialiserAbonnement();
+      });
     });
   }
 

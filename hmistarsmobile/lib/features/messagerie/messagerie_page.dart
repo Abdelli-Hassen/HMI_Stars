@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
+import '../../core/widgets/app_header.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/document_type_picker.dart';
 import 'widgets/company_info_sheet.dart';
@@ -178,62 +179,9 @@ class _MessageriePageState extends State<MessageriePage> {
     final messages = appState.messages;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-        leading: null,
+      appBar: AppHeader.standard(
+        context: context,
         automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            // HMI Stars profile photo
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    'assets/images/logo.jpeg',
-                    width: 80,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'HMI Stars',
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  Text(
-                    'En ligne',
-                    style: GoogleFonts.inter(fontSize: 11, color: Colors.green),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
         actions: [
           // Documents button
           IconButton(

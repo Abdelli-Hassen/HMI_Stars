@@ -13,10 +13,12 @@ import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
 import '../../../../core/supabase_config.dart';
 import '../../../entreprises/domain/models/salarie.dart';
-import '../../../entreprises/domain/models/document_entreprise.dart';
 import '../../../entreprises/domain/models/note_entreprise.dart';
 import '../../../entreprises/domain/models/entreprise.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
+import '../../../../core/services/platform_data_service.dart';
+import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
 
 class EntrepriseDetailsPage extends StatefulWidget {
   const EntrepriseDetailsPage({super.key});
@@ -27,7 +29,6 @@ class EntrepriseDetailsPage extends StatefulWidget {
 
 class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
   String _activeTab = 'Informations';
-  String _selectedDocCategory = 'Toutes';
   String? _loadedEntrepriseId;
 
   void _ensureDataLoaded(String entrepriseId) {
@@ -92,16 +93,19 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
   }
 
   Future<void> _exportSalariePointage(Salarie s) async {
-    final csvData = 'NOM,PRENOM,DATE,HEURES\n${s.nom},${s.prenom},${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year},8\n';
-    final bytes = Uint8List.fromList(csvData.codeUnits);
-    await FileSaver.instance.saveFile(
-      name: 'pointage_${s.nom}_${s.prenom}.csv',
-      bytes: bytes,
-      mimeType: MimeType.csv,
+    final entrepriseId = ModalRoute.of(context)?.settings.arguments as String?;
+    final provider = Provider.of<EntrepriseProvider>(context, listen: false);
+    final entreprise = entrepriseId != null 
+        ? provider.entreprises.firstWhere((e) => e.id == entrepriseId, orElse: () => provider.entreprises.first) 
+        : provider.entreprises.first;
+
+    showDialog(
+      context: context,
+      builder: (context) => _ExportPointageDialog(
+        salarie: s,
+        entrepriseNom: entreprise.nom,
+      ),
     );
-    if(mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fichier de pointage telecharge.'), backgroundColor: AppColors.success));
-    }
   }
 
 
@@ -109,136 +113,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
   void _showEmployeeDetailsModal(BuildContext context, Salarie salarie) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: AppColors.surfaceContainerLowest,
-        child: Container(
-          width: 600,
-          padding: const EdgeInsets.all(32),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Informations du Salarié', style: AppTextStyles.headlineSmall),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('État Civil & Identité'),
-                Row(
-                  children: [
-                    Expanded(child: _readField('Genre', salarie.genre)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _readField('Nom', salarie.nom)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: _readField('Prénom', salarie.prenom)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _readField('Nom de naissance', salarie.nomNaissance)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: _readField('N° Sécurité Sociale', salarie.numeroSecuriteSociale)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _readField('Date de naissance', salarie.dateNaissance != null ? "${salarie.dateNaissance!.day}/${salarie.dateNaissance!.month}/${salarie.dateNaissance!.year}" : "Non défini")),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: _readField('Lieu de naissance', salarie.lieuNaissance)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _readField('Nationalité', salarie.nationalite)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Coordonnées'),
-                _readField('Adresse postale', salarie.adressePostale),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: _readField('Téléphone', salarie.telephone)),
-                    const SizedBox(width: 16),
-                    Expanded(child: _readField('Email', salarie.email)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Informations Professionnelles'),
-                Row(
-                  children: [
-                    Expanded(child: _readField('Date d\'embauche', salarie.dateEmbauche != null ? "${salarie.dateEmbauche!.day}/${salarie.dateEmbauche!.month}/${salarie.dateEmbauche!.year}" : "Non défini")),
-                    const SizedBox(width: 16),
-                    Expanded(child: _readField('Type de contrat', salarie.typeContrat)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: _readField('Date de fin', salarie.dateFinContrat != null ? "${salarie.dateFinContrat!.day}/${salarie.dateFinContrat!.month}/${salarie.dateFinContrat!.year}" : "—")),
-                    const SizedBox(width: 16),
-                    Expanded(child: _readField('Emploi/Poste', salarie.emploiPoste)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Pièces jointes'),
-                Row(
-                  children: [
-                    _docChip('Pièce d\'identité', salarie.aPieceIdentite),
-                    const SizedBox(width: 8),
-                    _docChip('Carte Vitale', salarie.aCarteVitale),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _docChip('Justificatif domicile', salarie.aJustificatifDomicile),
-                    const SizedBox(width: 8),
-                    _docChip('Contrat signé', salarie.aContratSigne),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(title, style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
-    );
-  }
-
-  Widget _docChip(String label, bool available) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: available ? AppColors.success.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: available ? AppColors.success.withValues(alpha: 0.3) : AppColors.error.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(available ? Icons.check_circle : Icons.cancel, size: 14, color: available ? AppColors.success : AppColors.error),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: available ? AppColors.success : AppColors.error)),
-        ],
-      ),
+      builder: (context) => _SalarieDetailsDialog(salarie: salarie),
     );
   }
 
@@ -280,9 +155,15 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
+                    key: ValueKey(entreprise.logoUrl),
                     radius: 44,
                     backgroundColor: AppColors.surfaceContainerHigh,
-                    child: const Icon(Icons.domain, size: 44, color: AppColors.onSurfaceVariant),
+                    backgroundImage: (entreprise.logoUrl != null && entreprise.logoUrl!.isNotEmpty)
+                        ? NetworkImage(entreprise.logoUrl!)
+                        : null,
+                    child: (entreprise.logoUrl == null || entreprise.logoUrl!.isEmpty)
+                        ? const Icon(Icons.domain, size: 44, color: AppColors.onSurfaceVariant)
+                        : null,
                   ),
                   const SizedBox(width: 24),
                   Expanded(
@@ -340,9 +221,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-
-            // ─── Tab Bar ───
+                     // ─── Tab Bar ───
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
@@ -351,7 +230,6 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 child: Row(children: [
                   _tabButton('Informations'),
                   _tabButton('Salariés'),
-                  _tabButton('Documents'),
                   _tabButton('Archives des employés'),
                   _tabButton('Notes & Rappels'),
                 ]),
@@ -362,7 +240,6 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             // ─── Tab Content ───
             if (_activeTab == 'Informations') _buildInformationsTab(entreprise),
             if (_activeTab == 'Salariés') _buildSalariesTab(context, provider.salariesPourEntreprise(entreprise.id), entreprise.id),
-            if (_activeTab == 'Documents') _buildDocumentsTab(context, provider.documentsPourEntreprise(entreprise.id)),
             if (_activeTab == 'Archives des employés') _buildArchivesTab(provider.archivesPourEntreprise(entreprise.id)),
             if (_activeTab == 'Notes & Rappels') _buildNotesTab(context, provider.notesPourEntreprise(entreprise.id), entreprise.id),
           ],
@@ -425,13 +302,19 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               const SizedBox(height: 16),
               Row(children: [
                 Expanded(child: _readField('Date de création', "${entreprise.dateCreation.day}/${entreprise.dateCreation.month}/${entreprise.dateCreation.year}")),
+                const SizedBox(width: 16),
                 Expanded(child: _readField('N° d\'effectif', entreprise.effectif == 0 ? 'Non défini' : '${entreprise.effectif}')),
               ]),
               const SizedBox(height: 16),
-              _readField('Adresse physique', entreprise.adressePhysique.isEmpty ? 'Non défini' : entreprise.adressePhysique),
+              Row(children: [
+                Expanded(child: _readField('Téléphone', entreprise.telephone.isEmpty ? 'Non défini' : entreprise.telephone)),
+                const SizedBox(width: 16),
+                Expanded(child: _readField('Adresse physique', entreprise.adressePhysique.isEmpty ? 'Non défini' : entreprise.adressePhysique)),
+              ]),
               const SizedBox(height: 16),
               Row(children: [
                 Expanded(child: _readField('Adresse Email', entreprise.email)),
+                const SizedBox(width: 16),
                 Expanded(child: _readField('Nom de dirigeant', entreprise.nomGerant)),
               ]),
             ]),
@@ -467,6 +350,8 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 const SizedBox(width: 16),
                 Expanded(child: _readField('N° RCS', entreprise.nRcs.isEmpty ? 'Non défini' : entreprise.nRcs)),
               ]),
+              const SizedBox(height: 16),
+              _readField('Code APE / NAF', entreprise.codeApe.isEmpty ? 'Non défini' : entreprise.codeApe),
             ]),
           ),
         ),
@@ -597,63 +482,6 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
     );
   }
 
-  Widget _buildDocumentsTab(BuildContext context, List<DocumentEntreprise> docs) {
-    var filteredDocs = _selectedDocCategory == 'Toutes' ? docs : docs.where((d) => d.categorie == _selectedDocCategory).toList();
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Documents (${filteredDocs.length})', style: AppTextStyles.titleMedium),
-              DropdownButton<String>(
-                value: _selectedDocCategory,
-                items: [
-                   'Toutes',
-                   'Fichiers comptables', 'Fichiers fiscaux', 'Fichiers sociaux / paie',
-                   'Fichiers juridiques', 'Fichiers administratifs', 'Fichiers clients / fournisseurs',
-                   'Fichiers banques & finances', 'Autres documents'
-                ].map((c) => DropdownMenuItem(value: c, child: Text(c, style: AppTextStyles.bodyMedium))).toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedDocCategory = val);
-                },
-              ),
-            ]
-          ),
-          const SizedBox(height: 24),
-          if (filteredDocs.isEmpty)
-             const Center(child: Text('Aucun document trouvé.'))
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredDocs.length,
-              separatorBuilder: (context, index) => const Divider(),
-              itemBuilder: (ctx, idx) {
-                 final doc = filteredDocs[idx];
-                 return ListTile(
-                   leading: CircleAvatar(backgroundColor: AppColors.surfaceContainerLow, child: Icon(Icons.description, color: AppColors.primary)),
-                   title: Text(doc.nom, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700)),
-                   subtitle: Text('${doc.categorie} | Ajouté le ${doc.dateAjout.day}/${doc.dateAjout.month}/${doc.dateAjout.year}', style: AppTextStyles.bodySmall),
-                   trailing: OutlinedButton(
-                      child: const Text('Catégoriser'),
-                      onPressed: () {
-                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Catégorisation en cours de développement.'), backgroundColor: AppColors.primary));
-                      }
-                   ),
-                 );
-              }
-            )
-        ],
-      ),
-    );
-  }
-
-
 
   Widget _buildArchivesTab(List<Salarie> archives) {
     if (archives.isEmpty) {
@@ -664,58 +492,84 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
       );
     }
     return Container(
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Employés Archivés (${archives.length})', style: AppTextStyles.titleMedium),
-          const SizedBox(height: 8),
-          Text('Liste des employés inactifs (ayant quitté l\'entreprise).', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Employés Archivés (${archives.length})', style: AppTextStyles.titleMedium),
+                    const SizedBox(height: 4),
+                    Text('Liste des employés inactifs (ayant quitté l\'entreprise).', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Divider(color: AppColors.outlineVariant.withValues(alpha: 0.2), height: 1),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: archives.length,
-            separatorBuilder: (_, i) => const Divider(),
+            separatorBuilder: (context, index) => Divider(color: AppColors.outlineVariant.withValues(alpha: 0.1), height: 1),
             itemBuilder: (context, index) {
               final s = archives[index];
-              final dateFin = s.dateFinContrat;
-              return ListTile(
-                leading: CircleAvatar(backgroundColor: AppColors.surfaceContainerLow, child: const Icon(Icons.person_off, color: AppColors.onSurfaceVariant)),
-                title: Text('${s.nom} ${s.prenom}', style: AppTextStyles.labelMedium.copyWith(decoration: TextDecoration.lineThrough)),
-                subtitle: Text('Fin contrat : ${dateFin != null ? "${dateFin.day}/${dateFin.month}/${dateFin.year}" : "Inconnu"}', style: AppTextStyles.bodySmall),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.3))),
-                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                  OutlinedButton(
-                    onPressed: () => _showEmployeeDetailsModal(context, s),
-                    child: const Text('Dossier'),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.download_outlined, color: AppColors.primary),
-                    tooltip: 'Télécharger les informations',
-                    onPressed: () => _exportSalariePdf(s),
-                  ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    icon: const Icon(Icons.unarchive_outlined, color: AppColors.success),
-                    tooltip: 'Désarchiver l\'employé',
-                    onPressed: () {
-                      Provider.of<EntrepriseProvider>(context, listen: false).desarchiverSalarie(s.id, s.entrepriseId);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Employé désarchivé avec succès.'), backgroundColor: AppColors.success));
-                    },
-                  ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                    tooltip: 'Supprimer l\'archive',
-                    onPressed: () {
-                      Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(s.id, s.entrepriseId);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Archive supprimée définitivement.'), backgroundColor: AppColors.error));
-                    },
-                  ),
-                ]),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Row(
+                  children: [
+                    CircleAvatar(backgroundColor: AppColors.surfaceContainerLow, child: const Icon(Icons.person_off, color: AppColors.onSurfaceVariant)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${s.nom} ${s.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700, decoration: TextDecoration.lineThrough)),
+                          Text('Né(e): ${s.nomNaissance} | CIN: ${s.cin}', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => _exportSalariePointage(s),
+                      icon: const Icon(Icons.access_time, size: 16),
+                      label: const Text('Pointage'),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _exportSalariePdf(s),
+                      icon: const Icon(Icons.download, size: 16),
+                      label: const Text('Exporter'),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () => _showEmployeeDetailsModal(context, s),
+                      child: const Text('Plus d\'infos'),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.unarchive_outlined, color: AppColors.success),
+                      tooltip: 'Désarchiver l\'employé',
+                      onPressed: () {
+                        Provider.of<EntrepriseProvider>(context, listen: false).desarchiverSalarie(s.id, s.entrepriseId);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Employé désarchivé avec succès.'), backgroundColor: AppColors.success));
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                      tooltip: 'Supprimer l\'archive',
+                      onPressed: () {
+                        Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(s.id, s.entrepriseId);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Archive supprimée définitivement.'), backgroundColor: AppColors.error));
+                      },
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -934,6 +788,11 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
   late TextEditingController _tvaController;
   late TextEditingController _rcsController;
   late TextEditingController _capitalController;
+  late TextEditingController _telephoneController;
+  late TextEditingController _codeApeController;
+
+  String? _logoUrl;
+  bool _isUploadingLogo = false;
 
   @override
   void initState() {
@@ -951,6 +810,58 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     _tvaController = TextEditingController(text: widget.entreprise.nTva);
     _rcsController = TextEditingController(text: widget.entreprise.nRcs);
     _capitalController = TextEditingController(text: widget.entreprise.capitaleSocial);
+    _telephoneController = TextEditingController(text: widget.entreprise.telephone);
+    _codeApeController = TextEditingController(text: widget.entreprise.codeApe);
+    _logoUrl = widget.entreprise.logoUrl;
+  }
+
+  Future<void> _changeLogo() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = Provider.of<EntrepriseProvider>(context, listen: false);
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.first;
+      if (file.bytes == null || file.name.isEmpty) return;
+
+      setState(() => _isUploadingLogo = true);
+
+      final success = await provider.uploadEntrepriseLogo(widget.entreprise.id, file.bytes!, file.name);
+
+      if (!mounted) return;
+      
+      if (success) {
+        final updatedEntreprise = provider.entreprises.firstWhere((e) => e.id == widget.entreprise.id, orElse: () => widget.entreprise);
+        setState(() {
+          _logoUrl = updatedEntreprise.logoUrl;
+          _isUploadingLogo = false;
+        });
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Logo mis à jour avec succès !'),
+          backgroundColor: AppColors.success,
+        ));
+      } else {
+        setState(() => _isUploadingLogo = false);
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Erreur lors de la mise à jour du logo.'),
+          backgroundColor: AppColors.error,
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploadingLogo = false);
+        messenger.showSnackBar(SnackBar(
+          content: Text('Erreur lors de la sélection du fichier : $e'),
+          backgroundColor: AppColors.error,
+        ));
+      }
+    }
   }
 
   void _sauvegarder() {
@@ -975,6 +886,9 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
       nTva: _tvaController.text,
       nRcs: _rcsController.text,
       capitaleSocial: _capitalController.text,
+      telephone: _telephoneController.text,
+      codeApe: _codeApeController.text,
+      logoUrl: _logoUrl,
     );
 
     Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(entrepriseAjournee);
@@ -999,6 +913,8 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     _tvaController.dispose();
     _rcsController.dispose();
     _capitalController.dispose();
+    _telephoneController.dispose();
+    _codeApeController.dispose();
     super.dispose();
   }
 
@@ -1009,11 +925,58 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
       backgroundColor: AppColors.surfaceContainerLowest,
       child: Container(
         width: 500,
-        height: 600,
+        height: 700,
         padding: const EdgeInsets.all(32),
         child: Column(
           children: [
             Text('Modifier l\'Entreprise', style: AppTextStyles.headlineSmall),
+            const SizedBox(height: 16),
+            Center(
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    key: ValueKey(_logoUrl),
+                    radius: 40,
+                    backgroundColor: AppColors.surfaceContainerHigh,
+                    backgroundImage: (_logoUrl != null && _logoUrl!.isNotEmpty)
+                        ? NetworkImage(_logoUrl!)
+                        : null,
+                    child: (_logoUrl == null || _logoUrl!.isEmpty)
+                        ? const Icon(Icons.domain, size: 40, color: AppColors.onSurfaceVariant)
+                        : null,
+                  ),
+                  if (_isUploadingLogo)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Material(
+                      elevation: 2,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      color: AppColors.primary,
+                      child: InkWell(
+                        onTap: _changeLogo,
+                        child: const Padding(
+                          padding: EdgeInsets.all(6),
+                          child: Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
             Expanded(
               child: SingleChildScrollView(
@@ -1040,7 +1003,13 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildField('Adresse physique', _adresseController),
+                    Row(
+                      children: [
+                        Expanded(child: _buildField('Téléphone de l\'entreprise', _telephoneController, keyboardType: TextInputType.phone)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildField('Adresse physique', _adresseController)),
+                      ],
+                    ),
                     const SizedBox(height: 16),
                     _buildField('Description générale', _descController),
                     const SizedBox(height: 24),
@@ -1069,6 +1038,8 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                         Expanded(child: _buildField('N° RCS', _rcsController)),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    _buildField('Code APE / NAF', _codeApeController),
                   ],
                 ),
               ),
@@ -1145,6 +1116,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
   final _telController = TextEditingController();
   final _emailController = TextEditingController();
   final _emploiPosteController = TextEditingController();
+  final descriptionController = TextEditingController();
 
   String _genre = 'M';
   String _typeContrat = 'CDI';
@@ -1238,6 +1210,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
       typeContrat: _typeContrat,
       dateFinContrat: _dateFinContrat,
       emploiPoste: _emploiPosteController.text,
+      description: descriptionController.text,
       aPieceIdentite: fichiers['piece_identite'] != null,
       aCarteVitale: fichiers['carte_vitale'] != null,
       aJustificatifDomicile: fichiers['justificatif_domicile'] != null,
@@ -1399,14 +1372,26 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text('⚠ Obligatoire pour un contrat $_typeContrat', style: TextStyle(color: AppColors.error, fontSize: 11)),
                 ),
+              const SizedBox(height: 16),
+
+              // Description / Note
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Description / Note sur le salarié',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
 
               const SizedBox(height: 24),
 
-              // Pièces jointes
               Text('Pièces jointes', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               Text('Formats acceptés : PDF, JPG, PNG, DOCX', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
               const SizedBox(height: 12),
+
               Wrap(
                 spacing: 12,
                 runSpacing: 8,
@@ -1432,7 +1417,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                         : const Text('Ajouter le Salarié'),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -1494,5 +1479,1087 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
     );
   }
 }
+
+class _EditSalarieDialog extends StatefulWidget {
+  final Salarie salarie;
+  const _EditSalarieDialog({required this.salarie});
+
+  @override
+  State<_EditSalarieDialog> createState() => _EditSalarieDialogState();
+}
+
+class _EditSalarieDialogState extends State<_EditSalarieDialog> {
+  late final TextEditingController _nomController;
+  late final TextEditingController _prenomController;
+  late final TextEditingController _nomNaissanceController;
+  late final TextEditingController _cinController;
+  late final TextEditingController _nssController;
+  late final TextEditingController _lieuNaissanceController;
+  late final TextEditingController _nationaliteController;
+  late final TextEditingController _adressePostaleController;
+  late final TextEditingController _telController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _emploiPosteController;
+  late final TextEditingController descriptionController;
+
+  late String _genre;
+  late String _typeContrat;
+  bool _isLoading = false;
+  DateTime? _dateNaissance;
+  DateTime? _dateEmbauche;
+  DateTime? _dateFinContrat;
+
+  // Pièces jointes
+  Map<String, Uint8List?> fichiers = {
+    'piece_identite': null,
+    'carte_vitale': null,
+    'justificatif_domicile': null,
+    'contrat_signe': null,
+  };
+  Map<String, String> fichiersNoms = {
+    'piece_identite': '',
+    'carte_vitale': '',
+    'justificatif_domicile': '',
+    'contrat_signe': '',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _nomController = TextEditingController(text: widget.salarie.nom);
+    _prenomController = TextEditingController(text: widget.salarie.prenom);
+    _nomNaissanceController = TextEditingController(text: widget.salarie.nomNaissance);
+    _cinController = TextEditingController(text: widget.salarie.cin);
+    _nssController = TextEditingController(text: widget.salarie.numeroSecuriteSociale);
+    _lieuNaissanceController = TextEditingController(text: widget.salarie.lieuNaissance);
+    _nationaliteController = TextEditingController(text: widget.salarie.nationalite);
+    _adressePostaleController = TextEditingController(text: widget.salarie.adressePostale);
+    _telController = TextEditingController(text: widget.salarie.telephone);
+    _emailController = TextEditingController(text: widget.salarie.email);
+    _emploiPosteController = TextEditingController(text: widget.salarie.emploiPoste);
+    descriptionController = TextEditingController(text: widget.salarie.description);
+
+    _genre = widget.salarie.genre.isEmpty ? 'M' : widget.salarie.genre;
+    _typeContrat = widget.salarie.typeContrat.isEmpty ? 'CDI' : widget.salarie.typeContrat;
+    _dateNaissance = widget.salarie.dateNaissance;
+    _dateEmbauche = widget.salarie.dateEmbauche;
+    _dateFinContrat = widget.salarie.dateFinContrat;
+  }
+
+  @override
+  void dispose() {
+    _nomController.dispose();
+    _prenomController.dispose();
+    _nomNaissanceController.dispose();
+    _cinController.dispose();
+    _nssController.dispose();
+    _lieuNaissanceController.dispose();
+    _nationaliteController.dispose();
+    _adressePostaleController.dispose();
+    _telController.dispose();
+    _emailController.dispose();
+    _emploiPosteController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
+
+  bool get _needsDateFin => _typeContrat == 'CDD' || _typeContrat == 'Stage';
+
+  Future<void> _pickDate(String field) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(1950),
+      lastDate: DateTime(2050),
+      locale: const Locale('fr'),
+    );
+    if (picked != null) {
+      setState(() {
+        if (field == 'naissance') _dateNaissance = picked;
+        if (field == 'embauche') _dateEmbauche = picked;
+        if (field == 'fin') _dateFinContrat = picked;
+      });
+    }
+  }
+
+  Future<void> _pickFile(String key) async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx'],
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      if (file.bytes != null) {
+        setState(() {
+          fichiers[key] = file.bytes;
+          fichiersNoms[key] = file.name;
+        });
+      }
+    }
+  }
+
+  Future<void> _enregistrer() async {
+    if (_nomController.text.isEmpty || _prenomController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nom et Prénom sont obligatoires.')));
+      return;
+    }
+
+    if (_needsDateFin && _dateFinContrat == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('La date de fin de contrat est obligatoire pour un contrat $_typeContrat.'), backgroundColor: AppColors.error),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final s = Salarie(
+      id: widget.salarie.id,
+      entrepriseId: widget.salarie.entrepriseId,
+      nom: _nomController.text,
+      prenom: _prenomController.text,
+      genre: _genre,
+      nomNaissance: _nomNaissanceController.text.isEmpty ? _nomController.text : _nomNaissanceController.text,
+      cin: _cinController.text,
+      numeroSecuriteSociale: _nssController.text,
+      dateNaissance: _dateNaissance,
+      lieuNaissance: _lieuNaissanceController.text,
+      nationalite: _nationaliteController.text,
+      adressePostale: _adressePostaleController.text,
+      telephone: _telController.text,
+      email: _emailController.text,
+      dateEmbauche: _dateEmbauche ?? DateTime.now(),
+      typeContrat: _typeContrat,
+      dateFinContrat: _dateFinContrat,
+      emploiPoste: _emploiPosteController.text,
+      description: descriptionController.text,
+      aPieceIdentite: widget.salarie.aPieceIdentite || fichiers['piece_identite'] != null,
+      aCarteVitale: widget.salarie.aCarteVitale || fichiers['carte_vitale'] != null,
+      aJustificatifDomicile: widget.salarie.aJustificatifDomicile || fichiers['justificatif_domicile'] != null,
+      aContratSigne: widget.salarie.aContratSigne || fichiers['contrat_signe'] != null,
+      estActif: widget.salarie.estActif,
+    );
+
+    try {
+      await Provider.of<EntrepriseProvider>(context, listen: false).modifierSalarie(s);
+
+      // Upload les nouveaux fichiers si présents
+      final storage = SupabaseConfig.adminClient.storage.from('documents');
+
+      for (final entry in fichiers.entries) {
+        if (entry.value != null) {
+          final fileName = fichiersNoms[entry.key]!;
+          final ext = fileName.split('.').last.toLowerCase();
+          final path = 'salaries/${widget.salarie.id}/${entry.key}.$ext';
+          await storage.uploadBinary(path, entry.value!, fileOptions: FileOptions(upsert: true, contentType: _mimeType(ext)));
+        }
+      }
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Données du salarié modifiées avec succès !'), backgroundColor: AppColors.success));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+      }
+    }
+  }
+
+  String _mimeType(String ext) {
+    if (ext == 'pdf') return 'application/pdf';
+    if (ext == 'png') return 'image/png';
+    if (ext == 'jpg' || ext == 'jpeg') return 'image/jpeg';
+    if (ext == 'docx') return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    return 'application/octet-stream';
+  }
+
+  Widget _buildField(String label, TextEditingController controller, {bool required = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(label, style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+            if (required) Text(' *', style: const TextStyle(color: AppColors.error)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.outline)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+          ),
+          style: AppTextStyles.bodyMedium,
+        ),
+      ],
+    );
+  }
+
+  Widget _fileChip(String label, String key, bool initiallyHasFile) {
+    final hasNewFile = fichiers[key] != null;
+    final hasFile = hasNewFile || initiallyHasFile;
+    final fileName = hasNewFile ? fichiersNoms[key]! : 'Fichier existant';
+    return InkWell(
+      onTap: () => _pickFile(key),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : AppColors.outlineVariant),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              hasFile ? Icons.check_circle : Icons.upload_file,
+              size: 16,
+              color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              hasFile ? (hasNewFile ? fileName : '$label (Existant - Modifier)') : label,
+              style: AppTextStyles.labelSmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: AppColors.surfaceContainerLowest,
+      child: Container(
+        width: 650,
+        padding: const EdgeInsets.all(32),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Modifier le Salarié', style: AppTextStyles.headlineSmall),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text('État Civil', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Genre', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          initialValue: _genre,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'M', child: Text('Masculin')),
+                            DropdownMenuItem(value: 'F', child: Text('Féminin')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) setState(() => _genre = v);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField('Nom', _nomController, required: true)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildField('Prénom', _prenomController, required: true)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField('Nom de naissance', _nomNaissanceController)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildField('CIN', _cinController)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField('N° Sécurité Sociale', _nssController)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Date de naissance', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          onTap: () => _pickDate('naissance'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(border: Border.all(color: AppColors.outline), borderRadius: BorderRadius.circular(8)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_dateNaissance != null ? "${_dateNaissance!.day}/${_dateNaissance!.month}/${_dateNaissance!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
+                                const Icon(Icons.calendar_today, size: 16, color: AppColors.onSurfaceVariant),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField('Lieu de naissance', _lieuNaissanceController)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildField('Nationalité', _nationaliteController)),
+                  const SizedBox(width: 16),
+                  const Expanded(child: SizedBox()),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text('Coordonnées', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              _buildField('Adresse postale', _adressePostaleController),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildField('Téléphone', _telController)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField('Email', _emailController)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text('Contrat & Poste', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Date d\'embauche', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          onTap: () => _pickDate('embauche'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(border: Border.all(color: AppColors.outline), borderRadius: BorderRadius.circular(8)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_dateEmbauche != null ? "${_dateEmbauche!.day}/${_dateEmbauche!.month}/${_dateEmbauche!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
+                                const Icon(Icons.calendar_today, size: 16, color: AppColors.onSurfaceVariant),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Type de contrat', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          initialValue: _typeContrat,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'CDI', child: Text('CDI')),
+                            DropdownMenuItem(value: 'CDD', child: Text('CDD')),
+                            DropdownMenuItem(value: 'Apprentissage', child: Text('Apprentissage')),
+                            DropdownMenuItem(value: 'Stage', child: Text('Stage')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) setState(() => _typeContrat = v);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (_needsDateFin) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Date de fin de contrat', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 6),
+                          InkWell(
+                            onTap: () => _pickDate('fin'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(border: Border.all(color: AppColors.outline), borderRadius: BorderRadius.circular(8)),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(_dateFinContrat != null ? "${_dateFinContrat!.day}/${_dateFinContrat!.month}/${_dateFinContrat!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
+                                  const Icon(Icons.calendar_today, size: 16, color: AppColors.onSurfaceVariant),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(child: SizedBox()),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 16),
+              _buildField('Emploi / Poste', _emploiPosteController),
+              const SizedBox(height: 24),
+              _buildField('Description / Note sur le salarié', descriptionController),
+              const SizedBox(height: 24),
+              Text('Pièces Jointes (Modifier/Ajouter)', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  _fileChip('Pièce d\'identité', 'piece_identite', widget.salarie.aPieceIdentite),
+                  _fileChip('Carte Vitale', 'carte_vitale', widget.salarie.aCarteVitale),
+                  _fileChip('Justificatif domicile', 'justificatif_domicile', widget.salarie.aJustificatifDomicile),
+                  _fileChip('Contrat signé', 'contrat_signe', widget.salarie.aContratSigne),
+                ],
+              ),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    child: const Text('Annuler'),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _enregistrer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                        : const Text('Enregistrer'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _ExportPointageDialog extends StatefulWidget {
+  final Salarie salarie;
+  final String entrepriseNom;
+
+  const _ExportPointageDialog({
+    required this.salarie,
+    required this.entrepriseNom,
+  });
+
+  @override
+  State<_ExportPointageDialog> createState() => _ExportPointageDialogState();
+}
+
+class _ExportPointageDialogState extends State<_ExportPointageDialog> {
+  int _selectedMonth = DateTime.now().month;
+  int _selectedYear = DateTime.now().year;
+  bool _isLoading = false;
+
+  final List<String> _months = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+
+  final List<int> _years = List.generate(5, (index) => DateTime.now().year - index);
+
+  Future<void> _export() async {
+    setState(() => _isLoading = true);
+    const separator = ',';
+
+    try {
+      final dataService = PlatformDataService();
+      final pointages = await dataService.fetchPointagesForSalarieAndMonth(
+        widget.salarie.id,
+        _selectedYear,
+        _selectedMonth,
+      );
+
+      final Map<String, Map<String, dynamic>> pointageMap = {};
+      for (final p in pointages) {
+        final dStr = p['date'] as String?;
+        if (dStr != null) {
+          final dateOnly = dStr.split('T').first;
+          pointageMap[dateOnly] = p;
+        }
+      }
+
+      final daysInMonth = DateTime(_selectedYear, _selectedMonth + 1, 0).day;
+      int presents = 0;
+      int absents = 0;
+      int nonRenseignes = 0;
+
+      final rows = <List<String>>[];
+
+      for (int day = 1; day <= daysInMonth; day++) {
+        final date = DateTime(_selectedYear, _selectedMonth, day);
+        final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+        final displayDate = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+        String status = '';
+        String note = '';
+
+        if (pointageMap.containsKey(dateKey)) {
+          final p = pointageMap[dateKey]!;
+          final estPointe = p['est_pointe'] as bool? ?? false;
+          note = p['note'] as String? ?? '';
+          if (estPointe) {
+            status = 'Présent';
+            presents++;
+          } else {
+            status = note.isNotEmpty ? 'Congé' : 'Absent';
+            absents++;
+          }
+        } else {
+          status = 'Non renseigné';
+          nonRenseignes++;
+        }
+
+        rows.add([displayDate, status, note]);
+      }
+
+      final buffer = StringBuffer();
+      
+      buffer.writeln('Rapport de Pointage Mensuel$separator');
+      buffer.writeln('Salarié$separator${escapeCsv("${widget.salarie.prenom} ${widget.salarie.nom}", separator)}');
+      buffer.writeln('Entreprise$separator${escapeCsv(widget.entrepriseNom, separator)}');
+      buffer.writeln('Période$separator${_months[_selectedMonth - 1]} $_selectedYear');
+      buffer.writeln('Jours Présents$separator$presents');
+      buffer.writeln('Jours Absents/Congés$separator$absents');
+      buffer.writeln('Jours Non Renseignés$separator$nonRenseignes');
+      buffer.writeln('');
+      
+      buffer.writeln('Date${separator}Statut${separator}Note / Description');
+      
+      for (final row in rows) {
+        final dateEsc = escapeCsv(row[0], separator);
+        final statusEsc = escapeCsv(row[1], separator);
+        final noteEsc = escapeCsv(row[2], separator);
+        buffer.writeln('$dateEsc$separator$statusEsc$separator$noteEsc');
+      }
+
+      final csvContent = buffer.toString();
+      
+      final utf8BOM = [0xEF, 0xBB, 0xBF];
+      final bytes = Uint8List.fromList([...utf8BOM, ...utf8.encode(csvContent)]);
+
+      final monthStr = _selectedMonth.toString().padLeft(2, '0');
+      final fileName = 'pointage_${widget.salarie.nom.replaceAll(' ', '_')}_${widget.salarie.prenom.replaceAll(' ', '_')}_${monthStr}_$_selectedYear.csv';
+
+      await FileSaver.instance.saveFile(
+        name: fileName,
+        bytes: bytes,
+        mimeType: MimeType.csv,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Rapport exporté avec succès : $fileName'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de l\'export : $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String escapeCsv(String field, String separator) {
+    if (field.contains(separator) || field.contains('"') || field.contains('\n') || field.contains('\r')) {
+      return '"${field.replaceAll('"', '""')}"';
+    }
+    return field;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: AppColors.surfaceContainerLowest,
+      child: Container(
+        width: 450,
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Exporter le Pointage',
+              style: AppTextStyles.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Salarié : ${widget.salarie.prenom} ${widget.salarie.nom}',
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+
+            DropdownButtonFormField<int>(
+              initialValue: _selectedMonth,
+              decoration: const InputDecoration(
+                labelText: 'Mois',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: List.generate(12, (index) {
+                return DropdownMenuItem(
+                  value: index + 1,
+                  child: Text(_months[index]),
+                );
+              }),
+              onChanged: _isLoading ? null : (v) => setState(() => _selectedMonth = v!),
+            ),
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<int>(
+              initialValue: _selectedYear,
+              decoration: const InputDecoration(
+                labelText: 'Année',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: _years.map((y) {
+                return DropdownMenuItem(
+                  value: y,
+                  child: Text(y.toString()),
+                );
+              }).toList(),
+              onChanged: _isLoading ? null : (v) => setState(() => _selectedYear = v!),
+            ),
+            const SizedBox(height: 24),
+
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Annuler', style: TextStyle(color: AppColors.error)),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () => _export(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Exporter'),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SalarieDetailsDialog extends StatefulWidget {
+  final Salarie salarie;
+
+  const _SalarieDetailsDialog({required this.salarie});
+
+  @override
+  State<_SalarieDetailsDialog> createState() => _SalarieDetailsDialogState();
+}
+
+class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
+  bool _loadingFiles = true;
+  Map<String, String> _fileUrls = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDocuments();
+  }
+
+  Future<void> _loadDocuments() async {
+    try {
+      final list = await SupabaseConfig.adminClient.storage
+          .from('documents')
+          .list(path: 'salaries/${widget.salarie.id}');
+
+      final Map<String, String> urls = {};
+      for (final f in list) {
+        final parts = f.name.split('.');
+        if (parts.isNotEmpty) {
+          final key = parts.first;
+          final path = 'salaries/${widget.salarie.id}/${f.name}';
+          final url = SupabaseConfig.adminClient.storage
+              .from('documents')
+              .getPublicUrl(path);
+          urls[key] = url;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _fileUrls = urls;
+          _loadingFiles = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error listing documents: $e');
+      if (mounted) {
+        setState(() => _loadingFiles = false);
+      }
+    }
+  }
+
+  Future<void> _downloadOrViewFile(String label, String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Impossible d\'ouvrir le fichier $label.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de l\'ouverture du fichier : $e')),
+        );
+      }
+    }
+  }
+
+  Widget _readField(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.labelMedium.copyWith(
+            color: AppColors.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            value.isEmpty ? 'Non défini' : value,
+            style: AppTextStyles.bodyMedium,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: AppTextStyles.labelMedium.copyWith(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _docChip(String key, String label, bool available) {
+    final url = _fileUrls[key];
+    final isClickable = available && url != null;
+
+    return MouseRegion(
+      cursor: isClickable ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTap: isClickable ? () => _downloadOrViewFile(label, url) : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: available
+                ? (isClickable
+                    ? AppColors.success.withValues(alpha: 0.1)
+                    : AppColors.success.withValues(alpha: 0.05))
+                : AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: available
+                  ? (isClickable
+                      ? AppColors.success.withValues(alpha: 0.3)
+                      : AppColors.success.withValues(alpha: 0.15))
+                  : AppColors.error.withValues(alpha: 0.3),
+              width: isClickable ? 1.5 : 1.0,
+            ),
+            boxShadow: isClickable
+                ? [
+                    BoxShadow(
+                      color: AppColors.success.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (available && _loadingFiles)
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.success),
+                  ),
+                )
+              else
+                Icon(
+                  available
+                      ? (isClickable ? Icons.cloud_download : Icons.check_circle)
+                      : Icons.cancel,
+                  size: 14,
+                  color: available ? AppColors.success : AppColors.error,
+                ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: available ? AppColors.success : AppColors.error,
+                  decoration: isClickable ? TextDecoration.underline : TextDecoration.none,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final salarie = widget.salarie;
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: AppColors.surfaceContainerLowest,
+      child: Container(
+        width: 600,
+        padding: const EdgeInsets.all(32),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Informations du Salarié', style: AppTextStyles.headlineSmall),
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          showDialog(
+                            context: context,
+                            builder: (context) => _EditSalarieDialog(salarie: widget.salarie),
+                          );
+                        },
+                        icon: const Icon(Icons.edit, size: 16),
+                        label: const Text('Modifier'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildSectionTitle('État Civil & Identité'),
+              Row(
+                children: [
+                  Expanded(child: _readField('Genre', salarie.genre == 'M' ? 'Masculin' : (salarie.genre == 'F' ? 'Féminin' : salarie.genre))),
+                  const SizedBox(width: 16),
+                  Expanded(child: _readField('Nom', salarie.nom)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _readField('Prénom', salarie.prenom)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _readField('Nom de naissance', salarie.nomNaissance)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _readField('CIN', salarie.cin)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _readField('N° Sécurité Sociale', salarie.numeroSecuriteSociale)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _readField('Date de naissance', salarie.dateNaissance != null ? "${salarie.dateNaissance!.day}/${salarie.dateNaissance!.month}/${salarie.dateNaissance!.year}" : "Non défini")),
+                  const SizedBox(width: 16),
+                  Expanded(child: _readField('Lieu de naissance', salarie.lieuNaissance)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _readField('Nationalité', salarie.nationalite)),
+                  const SizedBox(width: 16),
+                  const Expanded(child: SizedBox()),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Coordonnées'),
+              _readField('Adresse postale', salarie.adressePostale),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _readField('Téléphone', salarie.telephone)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _readField('Email', salarie.email)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Informations Professionnelles'),
+              Row(
+                children: [
+                  Expanded(child: _readField('Date d\'embauche', salarie.dateEmbauche != null ? "${salarie.dateEmbauche!.day}/${salarie.dateEmbauche!.month}/${salarie.dateEmbauche!.year}" : "Non défini")),
+                  const SizedBox(width: 16),
+                  Expanded(child: _readField('Type de contrat', salarie.typeContrat)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _readField('Date de fin', salarie.dateFinContrat != null ? "${salarie.dateFinContrat!.day}/${salarie.dateFinContrat!.month}/${salarie.dateFinContrat!.year}" : "—")),
+                  const SizedBox(width: 16),
+                  Expanded(child: _readField('Emploi/Poste', salarie.emploiPoste)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Description / Note'),
+              _readField('Description / Note sur le salarié', salarie.description),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Pièces jointes'),
+              Text(
+                'Les pièces jointes en vert souligné sont téléchargeables. Cliquez pour les ouvrir.',
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  _docChip('piece_identite', 'Pièce d\'identité', salarie.aPieceIdentite),
+                  _docChip('carte_vitale', 'Carte Vitale', salarie.aCarteVitale),
+                  _docChip('justificatif_domicile', 'Justificatif domicile', salarie.aJustificatifDomicile),
+                  _docChip('contrat_signe', 'Contrat signé', salarie.aContratSigne),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 

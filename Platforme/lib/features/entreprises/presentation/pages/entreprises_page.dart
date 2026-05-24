@@ -273,6 +273,7 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
   // Nouvelles informations générales
   final _adresseController = TextEditingController();
   final _effectifController = TextEditingController();
+  final _telephoneController = TextEditingController();
 
   // Informations juridiques
   final _sirenController = TextEditingController();
@@ -281,6 +282,7 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
   final _tvaController = TextEditingController();
   final _rcsController = TextEditingController();
   final _capitalController = TextEditingController();
+  final _codeApeController = TextEditingController();
 
 
   Future<void> _creerEntreprise() async {
@@ -311,6 +313,8 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
       nTva: _tvaController.text,
       nRcs: _rcsController.text,
       capitaleSocial: _capitalController.text,
+      telephone: _telephoneController.text,
+      codeApe: _codeApeController.text,
     );
 
     try {
@@ -346,12 +350,14 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
     _mdpController.dispose();
     _adresseController.dispose();
     _effectifController.dispose();
+    _telephoneController.dispose();
     _sirenController.dispose();
     _siretController.dispose();
     _formeController.dispose();
     _tvaController.dispose();
     _rcsController.dispose();
     _capitalController.dispose();
+    _codeApeController.dispose();
     super.dispose();
   }
 
@@ -392,7 +398,13 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
                 ],
               ),
               const SizedBox(height: 16),
-              _buildField('Adresse physique', _adresseController),
+              Row(
+                children: [
+                  Expanded(child: _buildField('Téléphone de l\'entreprise', _telephoneController, keyboardType: TextInputType.phone)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField('Adresse physique', _adresseController)),
+                ],
+              ),
               const SizedBox(height: 16),
               _buildField('Description générale', _descController),
               const SizedBox(height: 24),
@@ -421,6 +433,8 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
                   Expanded(child: _buildField('N° RCS', _rcsController)),
                 ],
               ),
+              const SizedBox(height: 16),
+              _buildField('Code APE / NAF', _codeApeController),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
