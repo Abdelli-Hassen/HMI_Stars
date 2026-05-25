@@ -542,6 +542,36 @@ class PlatformDataService {
     }
   }
 
+  /// Upload un avatar de salarié dans Supabase Storage et met à jour son profil.
+  Future<String?> uploadSalarieAvatar(String salarieId, Uint8List fileBytes, String fileName) async {
+    try {
+      final ext = fileName.split('.').last.toLowerCase();
+      final storagePath = 'avatars/$salarieId.$ext';
+
+      // Upload vers le bucket 'avatars'
+      await _client.storage.from('avatars').uploadBinary(
+        storagePath,
+        fileBytes,
+        fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+      );
+
+      // Récupérer l'URL publique avec cache-busting
+      final baseUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+      final publicUrl = '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+      // Mettre à jour le salarié
+      await _client
+          .from('salaries')
+          .update({'avatar_url': publicUrl})
+          .eq('id', salarieId);
+
+      return publicUrl;
+    } catch (e) {
+      debugPrint('[DataService] Error uploading salarie avatar: $e');
+      return null;
+    }
+  }
+
   /// Upload un logo d'entreprise dans Supabase Storage et met à jour l'entreprise.
   Future<String?> uploadEntrepriseLogo(String entrepriseId, Uint8List fileBytes, String fileName) async {
     try {

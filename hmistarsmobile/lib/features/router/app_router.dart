@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../auth/login_page.dart';
@@ -64,26 +65,6 @@ GoRouter createAppRouter(AppState appState) {
         builder: (context, state) => const SelectionEntreprisePage(),
       ),
 
-      // ─── Full-screen routes (no bottom nav) ───────────────────────────────
-      GoRoute(
-        path: '/salaries/ajouter',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const AddSalariePage(),
-      ),
-      GoRoute(
-        path: '/salaries/modifier',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) {
-          Salarie? salarie;
-          if (state.extra is Salarie) {
-            salarie = state.extra as Salarie;
-          } else if (state.extra is Map<String, dynamic>) {
-            salarie = Salarie.fromJson(state.extra as Map<String, dynamic>);
-          }
-          return AddSalariePage(salarie: salarie);
-        },
-      ),
-
       // ─── Main shell with bottom nav ────────────────────────────────────────
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -104,6 +85,55 @@ GoRouter createAppRouter(AppState appState) {
           GoRoute(
             path: '/salaries',
             builder: (context, state) => const SalariesPage(),
+            routes: [
+              GoRoute(
+                path: 'ajouter',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) => const AddSalariePage(),
+              ),
+              GoRoute(
+                path: 'modifier/:id',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  final readOnly = state.uri.queryParameters['readOnly'] == 'true';
+                  Salarie? salarie;
+
+                  final appState = context.read<AppState>();
+                  if (id != null) {
+                    try {
+                      salarie = appState.salaries.firstWhere(
+                        (s) => s.id == id,
+                        orElse: () => appState.salariesArchives.firstWhere(
+                          (s) => s.id == id,
+                        ),
+                      );
+                    } catch (_) {
+                      salarie = null;
+                    }
+                  }
+
+                  if (salarie == null) {
+                    if (state.extra is Salarie) {
+                      salarie = state.extra as Salarie;
+                    } else if (state.extra is Map<String, dynamic>) {
+                      final map = state.extra as Map<String, dynamic>;
+                      if (map.containsKey('salarie')) {
+                        salarie = map['salarie'] as Salarie?;
+                      } else {
+                        salarie = Salarie.fromJson(map);
+                      }
+                    }
+                  }
+
+                  return AddSalariePage(
+                    salarie: salarie,
+                    salarieId: id,
+                    readOnly: readOnly,
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/avertissements',

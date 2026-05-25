@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
@@ -72,5 +73,42 @@ class SalarieService {
         .from('salaries')
         .delete()
         .eq('id', id);
+  }
+
+  /// Uploads a salarie avatar to Supabase Storage and returns the public URL.
+  Future<String?> uploadSalarieAvatar(String salarieId, Uint8List fileBytes, String fileName) async {
+    try {
+      final ext = fileName.split('.').last.toLowerCase();
+      // Bucket: 'avatars', path: 'avatars/$salarieId.$ext' to align with Admin/PlatformDataService pattern
+      final storagePath = 'avatars/$salarieId.$ext';
+
+      await _client.storage.from('avatars').uploadBinary(
+        storagePath,
+        fileBytes,
+        fileOptions: FileOptions(
+          upsert: true,
+          contentType: 'image/$ext',
+        ),
+      );
+
+      final baseUrl = _client.storage.from('avatars').getPublicUrl(storagePath);
+      final publicUrl = '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+      // Update the database if the salarie exists
+      await _client
+          .from('salaries')
+          .update({'avatar_url': publicUrl})
+          .eq('id', salarieId);
+
+      return publicUrl;
+    } catch (e) {
+      logError('Error uploading avatar: $e');
+      return null;
+    }
+  }
+
+  void logError(String message) {
+    // Basic print logging
+    print('[SalarieService] $message');
   }
 }

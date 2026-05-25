@@ -97,7 +97,7 @@ class Salarie {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{
       'entreprise_id': entrepriseId,
       'nom': nom,
       'prenom': prenom,
@@ -123,6 +123,10 @@ class Salarie {
       'a_justificatif_domicile': hasJustificatifDomicile,
       'a_contrat_signe': hasContratSigne,
     };
+    if (id.isNotEmpty) {
+      map['id'] = id;
+    }
+    return map;
   }
 
   Salarie copyWith({

@@ -275,15 +275,6 @@ class _ParametresPageState extends State<ParametresPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Configuration',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.tertiary,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  Text(
                     'Paramètres',
                     style: GoogleFonts.manrope(
                       fontSize: 28,
@@ -293,12 +284,15 @@ class _ParametresPageState extends State<ParametresPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildInfoCard(p),
-                  const SizedBox(height: 20),
+                  _buildSectionHeader('Profil de l\'entreprise'),
+                  _buildCompanyHeader(p),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Apparence'),
                   _buildAppearanceSection(context, appState, isDark),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Modifier les informations'),
                   _buildEditSection(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   _buildDangerZone(context, appState),
                   const SizedBox(height: 120),
                 ],
@@ -310,16 +304,30 @@ class _ParametresPageState extends State<ParametresPage> {
     );
   }
 
-  Widget _buildInfoCard(ClientParametres p) {
-    // Determine logo widget
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Text(
+        title,
+        style: GoogleFonts.manrope(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompanyHeader(ClientParametres p) {
     Widget logoWidget;
     if (_localLogoFile != null) {
       logoWidget = ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Image.file(
           _localLogoFile!,
-          width: 56,
-          height: 56,
+          width: 64,
+          height: 64,
           fit: BoxFit.contain,
         ),
       );
@@ -329,172 +337,96 @@ class _ParametresPageState extends State<ParametresPage> {
         child: Image.network(
           p.logoUrl!,
           key: ValueKey(p.logoUrl),
-          width: 56,
-          height: 56,
+          width: 64,
+          height: 64,
           fit: BoxFit.contain,
         ),
       );
     } else {
       logoWidget = Container(
-        width: 56,
-        height: 56,
+        width: 64,
+        height: 64,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Icon(Icons.business, color: Colors.white, size: 28),
+        child: Icon(
+          Icons.business,
+          color: Theme.of(context).colorScheme.primary,
+          size: 32,
+        ),
       );
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primaryContainer,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Tappable logo — pick from gallery
-              GestureDetector(
-                onTap: _pickLogoFromDevice,
-                child: Stack(
-                  children: [
-                    logoWidget,
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.tertiary,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      p.raisonSociale,
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      'Client HMI Stars',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.white60,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: _pickLogoFromDevice,
-                      child: Text(
-                        'Changer la photo',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.tertiary,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Theme.of(
-                            context,
-                          ).colorScheme.tertiary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildInfoRow(Icons.numbers, 'SIRET', p.siret),
-          if (p.nomGerant != null && p.nomGerant!.isNotEmpty)
-            _buildInfoRow(Icons.person, 'Gérant', p.nomGerant!),
-          if (p.description != null && p.description!.isNotEmpty)
-            _buildInfoRow(Icons.description, 'Description', p.description!),
-          if (p.nSiren != null && p.nSiren!.isNotEmpty)
-            _buildInfoRow(Icons.pin, 'SIREN', p.nSiren!),
-          if (p.nRcs != null && p.nRcs!.isNotEmpty)
-            _buildInfoRow(Icons.receipt_long_outlined, 'RCS', p.nRcs!),
-          if (p.telephone != null)
-            _buildInfoRow(Icons.phone, 'Téléphone', p.telephone!),
-          if (p.email != null) _buildInfoRow(Icons.email, 'Email', p.email!),
-          if (p.adresse != null)
-            _buildInfoRow(Icons.location_on, 'Adresse', p.adresse!),
-          if (p.tvaIntracommunautaire != null)
-            _buildInfoRow(
-              Icons.account_balance,
-              'TVA Intra.',
-              p.tvaIntracommunautaire!,
-            ),
-          if (p.formeJuridique != null)
-            _buildInfoRow(Icons.gavel, 'Forme Juridique', p.formeJuridique!),
-          if (p.capitalSocial != null)
-            _buildInfoRow(
-              Icons.monetization_on,
-              'Capital Social',
-              '${p.capitalSocial!} €',
-            ),
-          if (p.codeAPE != null)
-            _buildInfoRow(Icons.category, 'Code APE', p.codeAPE!),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white54, size: 16),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  color: Colors.white54,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
+          GestureDetector(
+            onTap: _pickLogoFromDevice,
+            child: Stack(
+              children: [
+                logoWidget,
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 10,
+                    ),
+                  ),
                 ),
-              ),
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.raisonSociale,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  'Client HMI Stars',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: _pickLogoFromDevice,
+                  child: Text(
+                    'Changer le logo',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.tertiary,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Theme.of(context).colorScheme.tertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -512,74 +444,60 @@ class _ParametresPageState extends State<ParametresPage> {
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Apparence',
-            style: GoogleFonts.manrope(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.primary,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF2A2F3A)
+                  : Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isDark ? Icons.dark_mode : Icons.light_mode,
+              color: isDark
+                  ? const Color(0xFFEAC249)
+                  : Theme.of(context).colorScheme.primary,
+              size: 22,
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF2A2F3A)
-                      : Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isDark ? 'Mode Sombre' : 'Mode Clair',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-                child: Icon(
-                  isDark ? Icons.dark_mode : Icons.light_mode,
-                  color: isDark
-                      ? const Color(0xFFEAC249)
-                      : Theme.of(context).colorScheme.primary,
-                  size: 22,
+                Text(
+                  isDark
+                      ? 'Interface en thème sombre'
+                      : 'Interface en thème clair',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isDark ? 'Mode Sombre' : 'Mode Clair',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      isDark
-                          ? 'Interface en thème sombre'
-                          : 'Interface en thème clair',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: isDark,
-                onChanged: (_) => appState.toggleDarkMode(),
-                activeColor: const Color(0xFFEAC249),
-                activeTrackColor: const Color(0xFF574400),
-                inactiveThumbColor: Theme.of(context).colorScheme.primary,
-                inactiveTrackColor: Theme.of(
-                  context,
-                ).colorScheme.outlineVariant,
-              ),
-            ],
+              ],
+            ),
+          ),
+          Switch(
+            value: isDark,
+            onChanged: (_) => appState.toggleDarkMode(),
+            activeThumbColor: const Color(0xFFEAC249),
+            activeTrackColor: const Color(0xFF574400),
+            inactiveThumbColor: Theme.of(context).colorScheme.primary,
+            inactiveTrackColor: Theme.of(
+              context,
+            ).colorScheme.outlineVariant,
           ),
         ],
       ),
@@ -596,15 +514,6 @@ class _ParametresPageState extends State<ParametresPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Modifier mes informations',
-            style: GoogleFonts.manrope(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 20),
           _buildField(
             _raisonSocialeController,
             'Raison Sociale',
@@ -718,55 +627,31 @@ class _ParametresPageState extends State<ParametresPage> {
   }
 
   Widget _buildDangerZone(BuildContext context, AppState appState) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.error.withOpacity(0.2),
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          appState.logout();
+          context.go('/connexion');
+        },
+        icon: Icon(
+          Icons.logout,
+          color: Theme.of(context).colorScheme.error,
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Zone Danger',
-            style: GoogleFonts.manrope(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.error,
-            ),
+        label: Text(
+          'Se déconnecter',
+          style: GoogleFonts.inter(
+            color: Theme.of(context).colorScheme.error,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                appState.logout();
-                context.go('/connexion');
-              },
-              icon: Icon(
-                Icons.logout,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              label: Text(
-                'Se déconnecter',
-                style: GoogleFonts.inter(
-                  color: Theme.of(context).colorScheme.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Theme.of(context).colorScheme.error),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Theme.of(context).colorScheme.error),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        ],
+        ),
       ),
     );
   }

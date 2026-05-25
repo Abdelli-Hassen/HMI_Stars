@@ -61,13 +61,6 @@ class _PointagePageState extends State<PointagePage> {
                 tooltip: 'Gestion des congés',
                 onPressed: () => context.go('/conges'),
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.notifications_outlined,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-                onPressed: () {},
-              ),
               const SizedBox(width: 8),
             ],
           ),

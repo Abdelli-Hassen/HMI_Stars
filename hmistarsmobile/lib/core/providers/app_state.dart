@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
@@ -272,6 +273,23 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       if (aIdx != -1) _salariesArchives[aIdx] = saved;
     }
     notifyListeners();
+  }
+
+  Future<String?> uploadSalarieAvatar(String salarieId, Uint8List fileBytes, String fileName) async {
+    final publicUrl = await _salarieService.uploadSalarieAvatar(salarieId, fileBytes, fileName);
+    if (publicUrl != null) {
+      final idx = _salaries.indexWhere((s) => s.id == salarieId);
+      if (idx != -1) {
+        _salaries[idx] = _salaries[idx].copyWith(avatarUrl: publicUrl);
+      } else {
+        final aIdx = _salariesArchives.indexWhere((s) => s.id == salarieId);
+        if (aIdx != -1) {
+          _salariesArchives[aIdx] = _salariesArchives[aIdx].copyWith(avatarUrl: publicUrl);
+        }
+      }
+      notifyListeners();
+    }
+    return publicUrl;
   }
 
   Future<void> archiverSalarie(String id) async {

@@ -383,13 +383,23 @@ class MessageBubble extends StatelessWidget {
       );
     } else {
       // Incoming message from HMI Stars support (without a mapping salarie)
-      return CircleAvatar(
-        radius: 16,
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: Icon(
-          Icons.star,
-          color: Theme.of(context).colorScheme.tertiary,
-          size: 14,
+      return Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(2),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/images/logo.jpeg',
+            fit: BoxFit.contain,
+          ),
         ),
       );
     }

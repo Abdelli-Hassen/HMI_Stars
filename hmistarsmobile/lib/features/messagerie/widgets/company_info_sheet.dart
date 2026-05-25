@@ -43,13 +43,16 @@ class CompanyInfoSheet extends StatelessWidget {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(
-                      Icons.star,
-                      color: Theme.of(context).colorScheme.tertiary,
-                      size: 32,
+                    padding: const EdgeInsets.all(4),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/logo.jpeg',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -94,26 +97,19 @@ class CompanyInfoSheet extends StatelessWidget {
                   _buildInfoRow(
                     Icons.location_on_outlined,
                     'Adresse',
-                    'Paris, Île-de-France, France',
+                    '85 RUE DUHESME 75018 PARIS',
                     context,
                   ),
                   _buildInfoRow(
-                    Icons.phone_outlined,
-                    'Téléphone',
-                    '+33 1 23 45 67 89',
+                    Icons.work_outline,
+                    'Activité principale de la société',
+                    'Conseil pour les affaires et autres conseils \nde gestion',
                     context,
                   ),
                   _buildInfoRow(
                     Icons.email_outlined,
                     'Email',
-                    'contact@hmistars.com',
-                    context,
-                  ),
-                  _buildInfoRow(Icons.language, 'Site Web', 'www.hmistars.com', context),
-                  _buildInfoRow(
-                    Icons.access_time,
-                    'Horaires',
-                    'Lun-Ven 9h-18h',
+                    'hmi.stars.contact@gmail.com',
                     context,
                   ),
                   const SizedBox(height: 20),

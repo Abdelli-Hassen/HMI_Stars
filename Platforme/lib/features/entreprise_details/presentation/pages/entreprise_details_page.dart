@@ -427,7 +427,15 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Row(
                   children: [
-                    CircleAvatar(backgroundColor: AppColors.surfaceContainerLow, child: Icon(Icons.person, color: AppColors.onSurfaceVariant)),
+                    CircleAvatar(
+                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                          ? NetworkImage(salarie.avatarUrl!)
+                          : null,
+                      child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
+                          ? Icon(Icons.person, color: AppColors.onSurfaceVariant)
+                          : null,
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -523,7 +531,15 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Row(
                   children: [
-                    CircleAvatar(backgroundColor: AppColors.surfaceContainerLow, child: const Icon(Icons.person_off, color: AppColors.onSurfaceVariant)),
+                    CircleAvatar(
+                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundImage: (s.avatarUrl != null && s.avatarUrl!.isNotEmpty)
+                          ? NetworkImage(s.avatarUrl!)
+                          : null,
+                      child: (s.avatarUrl == null || s.avatarUrl!.isEmpty)
+                          ? const Icon(Icons.person_off, color: AppColors.onSurfaceVariant)
+                          : null,
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -1125,6 +1141,9 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
   DateTime? _dateEmbauche;
   DateTime? _dateFinContrat;
 
+  Uint8List? _avatarBytes;
+  String _avatarName = '';
+
   // Pièces jointes
   Map<String, Uint8List?> fichiers = {
     'piece_identite': null,
@@ -1171,6 +1190,22 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
         setState(() {
           fichiers[key] = file.bytes;
           fichiersNoms[key] = file.name;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickAvatar() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      if (file.bytes != null) {
+        setState(() {
+          _avatarBytes = file.bytes;
+          _avatarName = file.name;
         });
       }
     }
@@ -1234,6 +1269,12 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
         }
       }
 
+      // Upload avatar if present
+      if (_avatarBytes != null && _avatarName.isNotEmpty) {
+        await Provider.of<EntrepriseProvider>(context, listen: false)
+            .uploadSalarieAvatar(salarieId, _avatarBytes!, _avatarName, widget.entrepriseId);
+      }
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Salarié ajouté avec succès !'), backgroundColor: AppColors.success));
@@ -1275,6 +1316,36 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Ajouter un Salarié', style: AppTextStyles.headlineSmall),
+              const SizedBox(height: 24),
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundImage: _avatarBytes != null
+                          ? MemoryImage(_avatarBytes!)
+                          : null,
+                      child: _avatarBytes == null
+                          ? const Icon(Icons.person, size: 50, color: AppColors.onSurfaceVariant)
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppColors.primary,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                          onPressed: _pickAvatar,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
 
               // Nom / Prénom
@@ -1509,6 +1580,9 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
   DateTime? _dateEmbauche;
   DateTime? _dateFinContrat;
 
+  Uint8List? _avatarBytes;
+  String _avatarName = '';
+
   // Pièces jointes
   Map<String, Uint8List?> fichiers = {
     'piece_identite': null,
@@ -1600,6 +1674,22 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
     }
   }
 
+  Future<void> _pickAvatar() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      if (file.bytes != null) {
+        setState(() {
+          _avatarBytes = file.bytes;
+          _avatarName = file.name;
+        });
+      }
+    }
+  }
+
   Future<void> _enregistrer() async {
     if (_nomController.text.isEmpty || _prenomController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nom et Prénom sont obligatoires.')));
@@ -1655,6 +1745,12 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
           final path = 'salaries/${widget.salarie.id}/${entry.key}.$ext';
           await storage.uploadBinary(path, entry.value!, fileOptions: FileOptions(upsert: true, contentType: _mimeType(ext)));
         }
+      }
+
+      // Upload avatar if present
+      if (_avatarBytes != null && _avatarName.isNotEmpty) {
+        await Provider.of<EntrepriseProvider>(context, listen: false)
+            .uploadSalarieAvatar(widget.salarie.id, _avatarBytes!, _avatarName, widget.salarie.entrepriseId);
       }
 
       if (mounted) {
@@ -1758,6 +1854,38 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                   Text('Modifier le Salarié', style: AppTextStyles.headlineSmall),
                   IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                 ],
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundImage: _avatarBytes != null
+                          ? MemoryImage(_avatarBytes!)
+                          : (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty
+                              ? NetworkImage(widget.salarie.avatarUrl!) as ImageProvider
+                              : null),
+                      child: (_avatarBytes == null && (widget.salarie.avatarUrl == null || widget.salarie.avatarUrl!.isEmpty))
+                          ? const Icon(Icons.person, size: 50, color: AppColors.onSurfaceVariant)
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppColors.primary,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                          onPressed: _pickAvatar,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
               Text('État Civil', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
@@ -2463,6 +2591,19 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
                     ],
                   ),
                 ],
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: AppColors.surfaceContainerLow,
+                  backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                      ? NetworkImage(salarie.avatarUrl!)
+                      : null,
+                  child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
+                      ? const Icon(Icons.person, size: 50, color: AppColors.onSurfaceVariant)
+                      : null,
+                ),
               ),
               const SizedBox(height: 24),
               _buildSectionTitle('État Civil & Identité'),

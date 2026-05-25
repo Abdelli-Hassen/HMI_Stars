@@ -131,6 +131,20 @@ class EntrepriseProvider extends ChangeNotifier {
     return updated;
   }
 
+  Future<String?> uploadSalarieAvatar(String salarieId, Uint8List fileBytes, String fileName, String entrepriseId) async {
+    final url = await _dataService.uploadSalarieAvatar(salarieId, fileBytes, fileName);
+    if (url != null) {
+      final list = _salariesCache[entrepriseId] ?? [];
+      final index = list.indexWhere((s) => s.id == salarieId);
+      if (index != -1) {
+        list[index] = list[index].copyWith(avatarUrl: url);
+        _salariesCache[entrepriseId] = [...list];
+        notifyListeners();
+      }
+    }
+    return url;
+  }
+
   Future<void> archiverSalarie(String id, String entrepriseId) async {
     await _dataService.archiveSalarie(id);
     await fetchSalariesForEntreprise(entrepriseId);

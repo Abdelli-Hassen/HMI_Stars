@@ -1,14 +1,28 @@
+import 'dart:io' as io;
+import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart' as fp;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 
 class AddSalariePage extends StatefulWidget {
   final Salarie? salarie;
-  const AddSalariePage({super.key, this.salarie});
+  final String? salarieId;
+  final bool readOnly;
+  const AddSalariePage({
+    super.key,
+    this.salarie,
+    this.salarieId,
+    this.readOnly = false,
+  });
 
   @override
   State<AddSalariePage> createState() => _AddSalariePageState();
@@ -21,6 +35,8 @@ class _AddSalariePageState extends State<AddSalariePage> {
   DateTime? _dateNaissance;
   DateTime? _dateEmbauche;
   DateTime? _dateFinContrat;
+  String? _avatarUrl;
+  bool _isUploadingAvatar = false;
 
   // Controllers
   final _nomController = TextEditingController();
@@ -45,39 +61,164 @@ class _AddSalariePageState extends State<AddSalariePage> {
   String? _initError;
   String? _initStackTrace;
 
+  late final String _salarieId;
+  bool _isLoadingSalarie = false;
+
+  String _generateUuid() {
+    final random = math.Random.secure();
+    final values = List<int>.generate(16, (i) => random.nextInt(256));
+    values[6] = (values[6] & 0x0f) | 0x40; // version 4
+    values[8] = (values[8] & 0x3f) | 0x80; // variant
+    final hex = values.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}';
+  }
+
+  Map<String, String> _fileUrls = {};
+  bool _loadingFiles = false;
+
+  Future<void> _loadDocuments() async {
+    setState(() => _loadingFiles = true);
+    try {
+      final client = Supabase.instance.client;
+      final list = await client.storage
+          .from('documents')
+          .list(path: 'salaries/$_salarieId');
+
+      final Map<String, String> urls = {};
+      for (final f in list) {
+        final parts = f.name.split('.');
+        if (parts.isNotEmpty) {
+          final key = parts.first;
+          final path = 'salaries/$_salarieId/${f.name}';
+          final url = client.storage
+              .from('documents')
+              .getPublicUrl(path);
+          urls[key] = url;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _fileUrls = urls;
+          _loadingFiles = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error listing documents in mobile: $e');
+      if (mounted) {
+        setState(() => _loadingFiles = false);
+      }
+    }
+  }
+
+  void _initializeFields(Salarie s) {
+    _nomController.text = s.nom;
+    _prenomController.text = s.prenom;
+    _nomNaissanceController.text = s.nomDeNaissance;
+    _genre = s.genre;
+    _nsecuController.text = s.numeroSecuriteSociale ?? '';
+    _dateNaissance = s.dateNaissance;
+    _lieuNaissanceController.text = s.lieuNaissance ?? '';
+    _nationaliteController.text = s.nationalite ?? '';
+    _adresseController.text = s.adressePostale ?? '';
+    _telephoneController.text = s.telephone ?? '';
+    _emailController.text = s.email ?? '';
+    _dateEmbauche = s.dateEmbauche;
+    _typeContrat = s.typeContrat;
+    _dateFinContrat = s.dateFinContrat;
+    _posteController.text = s.emploiPoste ?? '';
+    _cinController.text = s.cin;
+    _descriptionController.text = s.description;
+    _hasPieceIdentite = s.hasPieceIdentite;
+    _hasCarteVitale = s.hasCarteVitale;
+    _hasJustificatifDomicile = s.hasJustificatifDomicile;
+    _hasContratSigne = s.hasContratSigne;
+  }
+
+  Future<void> _loadSalarieFromStateOrDb() async {
+    setState(() => _isLoadingSalarie = true);
+    try {
+      final appState = context.read<AppState>();
+      Salarie? sal;
+      try {
+        sal = appState.salaries.firstWhere(
+          (s) => s.id == _salarieId,
+          orElse: () => appState.salariesArchives.firstWhere(
+            (s) => s.id == _salarieId,
+          ),
+        );
+      } catch (_) {
+        sal = null;
+      }
+
+      if (sal != null) {
+        if (mounted) {
+          setState(() {
+            _avatarUrl = sal!.avatarUrl;
+            _initializeFields(sal);
+            _isLoadingSalarie = false;
+          });
+          _loadDocuments();
+        }
+      } else {
+        await appState.loadSalaries();
+        try {
+          sal = appState.salaries.firstWhere(
+            (s) => s.id == _salarieId,
+            orElse: () => appState.salariesArchives.firstWhere(
+              (s) => s.id == _salarieId,
+            ),
+          );
+        } catch (_) {
+          sal = null;
+        }
+        if (mounted) {
+          setState(() {
+            if (sal != null) {
+              _avatarUrl = sal.avatarUrl;
+              _initializeFields(sal);
+            }
+            _isLoadingSalarie = false;
+          });
+          if (sal != null) {
+            _loadDocuments();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error loading salarie by id: $e");
+      if (mounted) {
+        setState(() => _isLoadingSalarie = false);
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _salarieId = widget.salarie?.id ?? widget.salarieId ?? _generateUuid();
+    _avatarUrl = widget.salarie?.avatarUrl;
+    
     try {
       if (widget.salarie != null) {
-        final s = widget.salarie!;
-        _nomController.text = s.nom;
-        _prenomController.text = s.prenom;
-        _nomNaissanceController.text = s.nomDeNaissance;
-        _genre = s.genre;
-        _nsecuController.text = s.numeroSecuriteSociale ?? '';
-        _dateNaissance = s.dateNaissance;
-        _lieuNaissanceController.text = s.lieuNaissance ?? '';
-        _nationaliteController.text = s.nationalite ?? '';
-        _adresseController.text = s.adressePostale ?? '';
-        _telephoneController.text = s.telephone ?? '';
-        _emailController.text = s.email ?? '';
-        _dateEmbauche = s.dateEmbauche;
-        _typeContrat = s.typeContrat;
-        _dateFinContrat = s.dateFinContrat;
-        _posteController.text = s.emploiPoste ?? '';
-        _cinController.text = s.cin;
-        _descriptionController.text = s.description;
-        _hasPieceIdentite = s.hasPieceIdentite;
-        _hasCarteVitale = s.hasCarteVitale;
-        _hasJustificatifDomicile = s.hasJustificatifDomicile;
-        _hasContratSigne = s.hasContratSigne;
+        _loadDocuments();
+        _initializeFields(widget.salarie!);
+      } else if (widget.salarieId != null) {
+        _loadSalarieFromStateOrDb();
       }
     } catch (e, stack) {
       debugPrint("FATAL ERROR IN AddSalariePage initState: $e");
       debugPrint(stack.toString());
       _initError = e.toString();
       _initStackTrace = stack.toString();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AddSalariePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.salarie != oldWidget.salarie && widget.salarie != null) {
+      _avatarUrl = widget.salarie!.avatarUrl;
+      _initializeFields(widget.salarie!);
     }
   }
 
@@ -104,7 +245,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
     final entrepriseId = appState.entrepriseId ?? '';
 
     final newSalarie = Salarie(
-      id: widget.salarie?.id ?? '',
+      id: _salarieId,
       entrepriseId: entrepriseId,
       nom: _nomController.text.trim(),
       prenom: _prenomController.text.trim(),
@@ -139,13 +280,15 @@ class _AddSalariePageState extends State<AddSalariePage> {
           : _posteController.text.trim(),
       cin: _cinController.text.trim(),
       description: _descriptionController.text.trim(),
+      avatarUrl: _avatarUrl,
       hasPieceIdentite: _hasPieceIdentite,
       hasCarteVitale: _hasCarteVitale,
       hasJustificatifDomicile: _hasJustificatifDomicile,
       hasContratSigne: _hasContratSigne,
     );
 
-    if (widget.salarie != null) {
+    final isEditing = widget.salarie != null || widget.salarieId != null;
+    if (isEditing) {
       appState.updateSalarie(newSalarie).catchError((e) {
         debugPrint('[AddSalariePage] Error updating employee: $e');
       });
@@ -203,11 +346,11 @@ class _AddSalariePageState extends State<AddSalariePage> {
       );
     }
 
-    try {
+    if (_isLoadingSalarie) {
       return Scaffold(
         appBar: AppBar(
           title: Text(
-            widget.salarie != null ? 'Modifier Salarié' : 'Nouveau Salarié',
+            widget.readOnly ? 'Profil Salarié' : 'Chargement...',
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w800,
               color: Theme.of(context).colorScheme.primary,
@@ -217,24 +360,37 @@ class _AddSalariePageState extends State<AddSalariePage> {
             icon: Icon(Icons.close, color: Theme.of(context).colorScheme.primary),
             onPressed: () => context.pop(),
           ),
-          actions: [
-            TextButton(
-              onPressed: _save,
-              child: Text(
-                'Enregistrer',
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.tertiary,
-                ),
-              ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    try {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.readOnly
+                ? 'Profil Salarié'
+                : ((widget.salarie != null || widget.salarieId != null) ? 'Modifier Salarié' : 'Nouveau Salarié'),
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.primary,
             ),
-          ],
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.close, color: Theme.of(context).colorScheme.primary),
+            onPressed: () => context.pop(),
+          ),
         ),
         body: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              _buildAvatarHeader(),
+              const SizedBox(height: 24),
               _buildSection('Informations Personnelles', [
                 // Genre
                 _buildLabel('Genre'),
@@ -245,12 +401,12 @@ class _AddSalariePageState extends State<AddSalariePage> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 12),
                       child: GestureDetector(
-                        onTap: () => setState(() => _genre = g),
+                        onTap: widget.readOnly ? null : () => setState(() => _genre = g),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
-                            vertical: 12,
+                            vertical: 14,
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
@@ -327,13 +483,13 @@ class _AddSalariePageState extends State<AddSalariePage> {
                   children: ['CDI', 'CDD', 'Apprentissage', 'Stage'].map((type) {
                     final isSelected = _typeContrat == type;
                     return GestureDetector(
-                      onTap: () => setState(() => _typeContrat = type),
+                      onTap: widget.readOnly ? null : () => setState(() => _typeContrat = type),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
-                          vertical: 10,
-                         ),
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Theme.of(context).colorScheme.tertiary
@@ -371,47 +527,59 @@ class _AddSalariePageState extends State<AddSalariePage> {
               ]),
               const SizedBox(height: 20),
               _buildSection('Pièces Jointes', [
+                if (_loadingFiles) ...[
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: LinearProgressIndicator(),
+                  ),
+                ],
                 _buildFileUpload(
                   'Pièce d\'identité',
                   _hasPieceIdentite,
+                  'piece_identite',
                   (v) => setState(() => _hasPieceIdentite = v),
                 ),
                 _buildFileUpload(
                   'Carte Vitale',
                   _hasCarteVitale,
+                  'carte_vitale',
                   (v) => setState(() => _hasCarteVitale = v),
                 ),
                 _buildFileUpload(
                   'Justificatif de Domicile',
                   _hasJustificatifDomicile,
+                  'justificatif_domicile',
                   (v) => setState(() => _hasJustificatifDomicile = v),
                 ),
                 _buildFileUpload(
                   'Contrat Signé',
                   _hasContratSigne,
+                  'contrat_signe',
                   (v) => setState(() => _hasContratSigne = v),
                 ),
               ]),
               const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _save,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              if (!widget.readOnly) ...[
+                ElevatedButton(
+                  onPressed: _isUploadingAvatar ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    (widget.salarie != null || widget.salarieId != null)
+                        ? 'Mettre à jour le Salarié'
+                        : 'Enregistrer le Salarié',
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-                child: Text(
-                  widget.salarie != null
-                      ? 'Mettre à jour le Salarié'
-                      : 'Enregistrer le Salarié',
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
+              ],
             ],
           ),
         ),
@@ -498,7 +666,8 @@ class _AddSalariePageState extends State<AddSalariePage> {
             controller: ctrl,
             keyboardType: keyboardType,
             maxLines: maxLines,
-            validator: required
+            readOnly: widget.readOnly,
+            validator: required && !widget.readOnly
                 ? (v) => v == null || v.isEmpty ? 'Champ requis' : null
                 : null,
             decoration: InputDecoration(hintText: label),
@@ -521,16 +690,18 @@ class _AddSalariePageState extends State<AddSalariePage> {
           _buildLabel(label),
           const SizedBox(height: 6),
           GestureDetector(
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: value ?? DateTime(1990),
-                firstDate: DateTime(1900),
-                lastDate: DateTime(2100),
-                locale: const Locale('fr', 'FR'),
-              );
-              if (picked != null) onPick(picked);
-            },
+            onTap: widget.readOnly
+                ? null
+                : () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: value ?? DateTime(1990),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime(2100),
+                      locale: const Locale('fr', 'FR'),
+                    );
+                    if (picked != null) onPick(picked);
+                  },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
@@ -565,7 +736,109 @@ class _AddSalariePageState extends State<AddSalariePage> {
     );
   }
 
-  Widget _buildFileUpload(String label, bool value, Function(bool) onChanged) {
+  Future<void> _downloadOrViewFile(String label, String? url) async {
+    if (url == null || url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucun lien disponible pour ce fichier.')),
+      );
+      return;
+    }
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Impossible d\'ouvrir le fichier $label.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de l\'ouverture du fichier : $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickAndUploadFile(String label, String docType, Function(bool) onChanged) async {
+    try {
+      final result = await fp.FilePicker.pickFiles(type: fp.FileType.any);
+      if (result == null || result.files.isEmpty) return;
+      
+      final file = result.files.first;
+      final localPath = file.path;
+      if (localPath == null) return;
+ 
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+ 
+      final appState = context.read<AppState>();
+      final entrepriseId = appState.entrepriseId ?? '';
+      final client = Supabase.instance.client;
+      final ext = file.extension ?? 'bin';
+      
+      final fileName = '$docType.$ext';
+      final storagePath = 'salaries/$_salarieId/$fileName';
+ 
+      final fileObject = io.File(localPath);
+      await client.storage.from('documents').upload(
+        storagePath,
+        fileObject,
+        fileOptions: const FileOptions(upsert: true),
+      );
+ 
+      final publicUrl = client.storage.from('documents').getPublicUrl(storagePath);
+ 
+      // Save to 'public.fichiers' table
+      final salarieNom = '${_prenomController.text.trim()} ${_nomController.text.trim()}';
+ 
+      await client.from('fichiers').insert({
+        'entreprise_id': entrepriseId,
+        'nom': '$label - ${salarieNom.trim().isEmpty ? 'Nouveau Salarié' : salarieNom.trim()}',
+        'url': publicUrl,
+        'est_envoye_par_user': true,
+        'type_document': 'autre',
+      });
+ 
+      if (!mounted) return;
+      Navigator.pop(context); // Dismiss loading dialog
+ 
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fichier "$fileName" téléversé avec succès'),
+          backgroundColor: Colors.green,
+        ),
+      );
+ 
+      setState(() {
+        _fileUrls[docType] = publicUrl;
+      });
+
+      onChanged(true);
+    } catch (e) {
+      debugPrint('[AddSalariePage] Upload error: $e');
+      if (!mounted) return;
+      Navigator.pop(context); // Dismiss loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors du téléversement : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+ 
+  Widget _buildFileUpload(String label, bool value, String docType, Function(bool) onChanged) {
+    final fileUrl = _fileUrls[docType];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -580,37 +853,38 @@ class _AddSalariePageState extends State<AddSalariePage> {
               ),
             ),
           ),
+
           OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sélecteur de fichier simulé')),
-              );
-              Future.delayed(const Duration(milliseconds: 600), () {
-                onChanged(true);
-              });
-            },
+            onPressed: widget.readOnly
+                ? (value && fileUrl != null ? () => _downloadOrViewFile(label, fileUrl) : null)
+                : () => _pickAndUploadFile(label, docType, onChanged),
             icon: Icon(
-              value ? Icons.check_circle : Icons.upload_file,
+              widget.readOnly
+                  ? (value ? Icons.file_present : Icons.block)
+                  : (value ? Icons.check_circle : Icons.upload_file),
               color: value
                   ? Colors.green
-                  : Theme.of(context).colorScheme.tertiary,
+                  : (widget.readOnly ? Colors.grey : Theme.of(context).colorScheme.tertiary),
               size: 18,
             ),
             label: Text(
-              value ? 'Ajouté' : 'Charger',
+              widget.readOnly
+                  ? (value ? 'Visualiser' : 'Non fourni')
+                  : (value ? 'Modifié' : 'Charger'),
               style: GoogleFonts.inter(
                 color: value
                     ? Colors.green
-                    : Theme.of(context).colorScheme.tertiary,
+                    : (widget.readOnly ? Colors.grey : Theme.of(context).colorScheme.tertiary),
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
               ),
             ),
             style: OutlinedButton.styleFrom(
+              minimumSize: const Size(120, 48),
               side: BorderSide(
                 color: value
                     ? Colors.green
-                    : Theme.of(context).colorScheme.tertiary,
+                    : (widget.readOnly ? Colors.grey : Theme.of(context).colorScheme.tertiary),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -620,6 +894,200 @@ class _AddSalariePageState extends State<AddSalariePage> {
         ],
       ),
     );
+  }
+
+  Widget _buildAvatarHeader() {
+    final hasInitials = _nomController.text.trim().isNotEmpty || _prenomController.text.trim().isNotEmpty;
+    final initials = ((_prenomController.text.isNotEmpty ? _prenomController.text[0] : '') +
+            (_nomController.text.isNotEmpty ? _nomController.text[0] : ''))
+        .toUpperCase();
+
+    return Center(
+      child: GestureDetector(
+        onTap: (widget.readOnly || _isUploadingAvatar) ? null : _pickAndUploadAvatar,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  width: 4,
+                ),
+              ),
+              child: CircleAvatar(
+                radius: 60,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
+                backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                    ? NetworkImage(_avatarUrl!)
+                    : null,
+                child: _avatarUrl == null || _avatarUrl!.isEmpty
+                    ? (hasInitials
+                        ? Text(
+                            initials,
+                            style: GoogleFonts.manrope(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          )
+                        : Icon(
+                            Icons.person,
+                            size: 56,
+                            color: Theme.of(context).colorScheme.primary,
+                          ))
+                    : null,
+              ),
+            ),
+            if (_isUploadingAvatar)
+              Positioned.fill(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black38,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            if (!widget.readOnly && !_isUploadingAvatar)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final appState = context.read<AppState>();
+    final theme = Theme.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Modifier la photo de profil',
+                  style: GoogleFonts.manrope(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: Text('Choisir dans la galerie', style: GoogleFonts.inter()),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text('Prendre une photo', style: GoogleFonts.inter()),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() => _isUploadingAvatar = true);
+
+      final Uint8List bytes = await pickedFile.readAsBytes();
+      
+      final publicUrl = await appState.uploadSalarieAvatar(
+        _salarieId,
+        bytes,
+        pickedFile.name,
+      );
+
+      if (publicUrl != null) {
+        setState(() {
+          _avatarUrl = publicUrl;
+        });
+        if (mounted) {
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: const Text('Photo de profil mise à jour avec succès'),
+              backgroundColor: theme.colorScheme.primary,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          scaffoldMessenger.showSnackBar(
+            const SnackBar(
+              content: Text('Erreur lors de la mise à jour de la photo de profil'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[AddSalariePage] Error picking/uploading avatar: $e');
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text('Erreur : $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingAvatar = false);
+      }
+    }
   }
 
   Widget _buildLabel(String text) {

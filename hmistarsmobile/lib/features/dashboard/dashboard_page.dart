@@ -47,7 +47,7 @@ class DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Bonjour, Admin',
+                    'Bonjour, ${params?.nomGerant ?? 'Admin'}',
                     style: GoogleFonts.manrope(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
@@ -64,19 +64,6 @@ class DashboardPage extends StatelessWidget {
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Quick actions bento grid
-                  Text(
-                    'Accès Rapide',
-                    style: GoogleFonts.manrope(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildQuickActions(context),
                   const SizedBox(height: 24),
 
                   // Key Metrics Map
@@ -355,99 +342,4 @@ class DashboardPage extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildQuickActions(BuildContext context) {
-    final actions = [
-      _QuickAction(
-        icon: Icons.warning_amber_outlined,
-        label: 'Avertissements',
-        color: Theme.of(context).colorScheme.primary,
-        route: '/avertissements',
-      ),
-      _QuickAction(
-        icon: Icons.calendar_today,
-        label: 'Pointage',
-        color: Theme.of(context).colorScheme.tertiary,
-        route: '/pointage',
-      ),
-      _QuickAction(
-        icon: Icons.beach_access_outlined,
-        label: 'Congés & Abs.',
-        color: Colors.deepOrange,
-        route: '/conges',
-      ),
-      _QuickAction(
-        icon: Icons.group_outlined,
-        label: 'Salariés',
-        color: Colors.teal,
-        route: '/salaries',
-      ),
-      _QuickAction(
-        icon: Icons.chat_bubble_outline,
-        label: 'Messagerie',
-        color: Colors.indigo,
-        route: '/messagerie',
-      ),
-      _QuickAction(
-        icon: Icons.settings_outlined,
-        label: 'Paramètres',
-        color: Colors.blueGrey,
-        route: '/parametres',
-      ),
-    ];
-
-    return GridView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        mainAxisExtent: 95,
-      ),
-      children: actions.map((a) => _buildQuickActionCard(context, a)).toList(),
-    );
-  }
-
-  Widget _buildQuickActionCard(BuildContext context, _QuickAction action) {
-    return GestureDetector(
-      onTap: () => context.go(action.route),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: action.color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: action.color.withOpacity(0.15)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(action.icon, color: action.color, size: 24),
-            Text(
-              action.label,
-              style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: action.color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickAction {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final String route;
-  const _QuickAction({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.route,
-  });
 }

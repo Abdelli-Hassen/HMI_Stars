@@ -62,13 +62,6 @@ class _SalariesPageState extends State<SalariesPage>
                 tooltip: 'Actualiser',
                 onPressed: () => context.read<AppState>().loadSalaries(),
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.person_add_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                onPressed: () => context.push('/salaries/ajouter'),
-              ),
             ],
             bottom: TabBar(
               controller: _tabController,
@@ -180,7 +173,9 @@ class _SalariesPageState extends State<SalariesPage>
                 _isGridView
                     ? _buildEmployeeGrid(context, filtered, appState)
                     : _buildEmployeeList(context, filtered, appState),
-                _buildArchivedList(context, archives, appState),
+                _isGridView
+                    ? _buildArchivedGrid(context, archives, appState)
+                    : _buildArchivedList(context, archives, appState),
               ],
             ),
           ),
@@ -232,7 +227,7 @@ class _SalariesPageState extends State<SalariesPage>
         crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        mainAxisExtent: 260,
+        mainAxisExtent: 270,
       ),
       itemCount: salaries.length,
       itemBuilder: (ctx, idx) =>
@@ -246,7 +241,10 @@ class _SalariesPageState extends State<SalariesPage>
     AppState appState,
   ) {
     return GestureDetector(
-      onTap: () => context.push('/salaries/modifier', extra: salarie),
+      onTap: () => context.push(
+        '/salaries/modifier/${salarie.id}?readOnly=true',
+        extra: salarie,
+      ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -265,73 +263,30 @@ class _SalariesPageState extends State<SalariesPage>
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withOpacity(0.3),
-                  child: Text(
-                    salarie.prenom.isNotEmpty
-                        ? salarie.prenom[0].toUpperCase()
-                        : '?',
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 20,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-                Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () =>
-                          context.push('/salaries/modifier', extra: salarie),
-                      child: Icon(
-                        Icons.edit_outlined,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.outline,
+            CircleAvatar(
+              radius: 38,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withOpacity(0.3),
+              backgroundImage: salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty
+                  ? NetworkImage(salarie.avatarUrl!)
+                  : null,
+              child: salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty
+                  ? Text(
+                      salarie.prenom.isNotEmpty
+                          ? salarie.prenom[0].toUpperCase()
+                          : '?',
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 26,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: () => _confirmArchive(context, salarie, appState),
-                      child: Icon(
-                        Icons.archive_outlined,
-                        size: 18,
-                        color: Colors.orange,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () => _confirmDelete(context, salarie, appState),
-                      child: Icon(
-                        Icons.delete_outline,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    )
+                  : null,
             ),
             const SizedBox(height: 12),
-            Text(
-              salarie.typeContrat.toUpperCase(),
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.tertiary,
-                letterSpacing: 1.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
             Text(
               salarie.nomComplet,
               style: GoogleFonts.manrope(
@@ -339,81 +294,257 @@ class _SalariesPageState extends State<SalariesPage>
                 fontSize: 14,
                 color: Theme.of(context).colorScheme.primary,
               ),
+              textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            if (salarie.emploiPoste != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                salarie.emploiPoste!,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 4),
+            Text(
+              salarie.emploiPoste ?? 'Salarié',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.secondary,
               ),
-            ],
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              salarie.description.isNotEmpty ? salarie.description : 'Aucune description',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
             const Spacer(),
-            Divider(color: Theme.of(context).colorScheme.outlineVariant),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'CONTRAT',
-                        style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.outline,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      Text(
-                        salarie.typeContrat,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                GestureDetector(
+                  onTap: () => context.push(
+                    '/salaries/modifier/${salarie.id}?readOnly=false',
+                    extra: salarie,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => _confirmArchive(context, salarie, appState),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.archive_outlined,
+                      size: 16,
+                      color: Colors.orange,
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => _confirmDelete(context, salarie, appState),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArchivedGrid(
+    BuildContext context,
+    List<Salarie> salaries,
+    AppState appState,
+  ) {
+    if (salaries.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.archive_outlined,
+              size: 64,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Aucun salarié archivé',
+              style: GoogleFonts.manrope(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: 270,
+      ),
+      itemCount: salaries.length,
+      itemBuilder: (ctx, idx) =>
+          _buildArchivedCard(context, salaries[idx], appState),
+    );
+  }
+
+  Widget _buildArchivedCard(
+    BuildContext context,
+    Salarie salarie,
+    AppState appState,
+  ) {
+    return GestureDetector(
+      onTap: () => context.push(
+        '/salaries/modifier/${salarie.id}?readOnly=true',
+        extra: salarie,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 38,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              backgroundImage: salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty
+                  ? NetworkImage(salarie.avatarUrl!)
+                  : null,
+              child: salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty
+                  ? Text(
+                      salarie.prenom.isNotEmpty
+                          ? salarie.prenom[0].toUpperCase()
+                          : '?',
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 26,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Actif',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              salarie.nomComplet,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              salarie.emploiPoste ?? 'Salarié Archivé',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              salarie.description.isNotEmpty ? salarie.description : 'Aucune description',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => appState.desarchiverSalarie(salarie.id),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.unarchive_outlined,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => _confirmDelete(context, salarie, appState),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
               ],
@@ -464,20 +595,28 @@ class _SalariesPageState extends State<SalariesPage>
             borderRadius: BorderRadius.circular(14),
           ),
           child: InkWell(
-            onTap: () => context.push('/salaries/modifier', extra: s),
+            onTap: () => context.push(
+              '/salaries/modifier/${s.id}?readOnly=true',
+              extra: s,
+            ),
             child: Row(
               children: [
                 CircleAvatar(
                   backgroundColor: Theme.of(
                     context,
                   ).colorScheme.surfaceContainerHighest,
-                  child: Text(
-                    s.prenom[0].toUpperCase(),
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  backgroundImage: s.avatarUrl != null && s.avatarUrl!.isNotEmpty
+                      ? NetworkImage(s.avatarUrl!)
+                      : null,
+                  child: s.avatarUrl == null || s.avatarUrl!.isEmpty
+                      ? Text(
+                          s.prenom.isNotEmpty ? s.prenom[0].toUpperCase() : '?',
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -582,7 +721,10 @@ class _SalariesPageState extends State<SalariesPage>
       itemBuilder: (ctx, idx) {
         final current = salaries[idx];
         return GestureDetector(
-          onTap: () => context.push('/salaries/modifier', extra: current),
+          onTap: () => context.push(
+            '/salaries/modifier/${current.id}?readOnly=true',
+            extra: current,
+          ),
           child: Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(16),
@@ -607,15 +749,20 @@ class _SalariesPageState extends State<SalariesPage>
                   backgroundColor: Theme.of(
                     context,
                   ).colorScheme.primaryContainer.withOpacity(0.3),
-                  child: Text(
-                    current.prenom.isNotEmpty
-                        ? current.prenom[0].toUpperCase()
-                        : '?',
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
+                  backgroundImage: current.avatarUrl != null && current.avatarUrl!.isNotEmpty
+                      ? NetworkImage(current.avatarUrl!)
+                      : null,
+                  child: current.avatarUrl == null || current.avatarUrl!.isEmpty
+                      ? Text(
+                          current.prenom.isNotEmpty
+                              ? current.prenom[0].toUpperCase()
+                              : '?',
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -648,8 +795,10 @@ class _SalariesPageState extends State<SalariesPage>
                     size: 20,
                     color: Theme.of(context).colorScheme.outline,
                   ),
-                  onPressed: () =>
-                      context.push('/salaries/modifier', extra: current),
+                  onPressed: () => context.push(
+                    '/salaries/modifier/${current.id}?readOnly=false',
+                    extra: current,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
