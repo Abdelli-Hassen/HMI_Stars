@@ -682,3 +682,53 @@ class Conge {
     );
   }
 }
+
+class Fichier {
+  final String id;
+  final String entrepriseId;
+  final String nom;
+  final String url;
+  final bool estEnvoyeParUser;
+  final DateTime creeLe;
+  final TypeDocument? typeDocument;
+
+  const Fichier({
+    required this.id,
+    required this.entrepriseId,
+    required this.nom,
+    required this.url,
+    required this.estEnvoyeParUser,
+    required this.creeLe,
+    this.typeDocument,
+  });
+
+  factory Fichier.fromJson(Map<String, dynamic> json) {
+    final dateStr = json['cree_le'] as String;
+    final parsedDate = dateStr.endsWith('Z') || dateStr.contains('+')
+        ? DateTime.parse(dateStr)
+        : DateTime.parse('${dateStr}Z');
+
+    return Fichier(
+      id: json['id'] as String,
+      entrepriseId: json['entreprise_id'] as String,
+      nom: json['nom'] as String? ?? 'fichier',
+      url: json['url'] as String? ?? '',
+      estEnvoyeParUser: json['est_envoye_par_user'] as bool? ?? false,
+      creeLe: parsedDate.toLocal(),
+      typeDocument: json['type_document'] != null
+          ? TypeDocumentExtension.fromString(json['type_document'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'entreprise_id': entrepriseId,
+      'nom': nom,
+      'url': url,
+      'est_envoye_par_user': estEnvoyeParUser,
+      'type_document': typeDocument?.value,
+    };
+  }
+}
+

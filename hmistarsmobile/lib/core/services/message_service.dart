@@ -140,4 +140,14 @@ class MessageService {
       // Ignorer l'erreur silencieusement
     }
   }
+
+  /// Récupère tous les fichiers d'une entreprise dans la table 'fichiers'.
+  Future<List<Fichier>> getFichiers(String entrepriseId) async {
+    final data = await _client
+        .from('fichiers')
+        .select()
+        .eq('entreprise_id', entrepriseId)
+        .order('cree_le', ascending: false);
+    return (data as List).map((e) => Fichier.fromJson(e)).toList();
+  }
 }

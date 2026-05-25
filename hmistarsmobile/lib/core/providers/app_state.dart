@@ -543,9 +543,36 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   List<Message> get messages => List.unmodifiable(_messages);
 
+  List<Fichier> _fichiers = [];
+  bool _isLoadingFichiers = false;
+
+  List<Fichier> get fichiers => List.unmodifiable(_fichiers);
+  bool get isLoadingFichiers => _isLoadingFichiers;
+
+  Future<void> loadFichiers() async {
+    final eid = _entrepriseId;
+    if (eid == null) return;
+
+    _isLoadingFichiers = true;
+    notifyListeners();
+
+    try {
+      final fetched = await _messageService.getFichiers(eid);
+      _fichiers = fetched;
+    } catch (e) {
+      debugPrint('[AppState] Error loading fichiers: $e');
+    } finally {
+      _isLoadingFichiers = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> loadMessages() async {
     final eid = _entrepriseId;
     if (eid == null) return;
+
+    // Charger les fichiers en même temps
+    loadFichiers();
 
     // Chargement silencieux si des messages sont déjà affichés
     final isFirstLoad = _messages.isEmpty;
