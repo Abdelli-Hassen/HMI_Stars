@@ -16,12 +16,12 @@ import '../parametres/parametres_page.dart';
 import '../conges/conges_page.dart';
 import '../shell/main_shell.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 GoRouter createAppRouter(AppState appState) {
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/connexion',
     redirect: (context, state) {
       final isAuthenticated = appState.isAuthenticated;
@@ -88,12 +88,12 @@ GoRouter createAppRouter(AppState appState) {
             routes: [
               GoRoute(
                 path: 'ajouter',
-                parentNavigatorKey: _rootNavigatorKey,
+                parentNavigatorKey: rootNavigatorKey,
                 builder: (context, state) => const AddSalariePage(),
               ),
               GoRoute(
                 path: 'modifier/:id',
-                parentNavigatorKey: _rootNavigatorKey,
+                parentNavigatorKey: rootNavigatorKey,
                 builder: (context, state) {
                   final id = state.pathParameters['id'];
                   final readOnly = state.uri.queryParameters['readOnly'] == 'true';

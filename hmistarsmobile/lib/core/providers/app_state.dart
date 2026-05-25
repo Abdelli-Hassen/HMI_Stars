@@ -68,11 +68,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      debugPrint('[AppState] App resumed, syncing messages and conges...');
+      debugPrint('[AppState] App resumed, syncing messages, conges and notifications...');
       final eid = _entrepriseId;
       if (eid != null) {
         loadMessages();
         loadConges();
+        ServiceNotification().enregistrerJetonPourEntreprises([eid]);
       }
     }
   }
@@ -98,6 +99,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _parametres = choix;
     _entreprisesDisponibles = []; // selection done
     notifyListeners();
+    ServiceNotification().enregistrerJetonPourEntreprises([choix.id]);
     await Future.wait([
       loadSalaries(),
       loadMessages(),

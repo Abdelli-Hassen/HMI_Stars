@@ -3,7 +3,7 @@
 # Folders to exclude as requested
 .agent/
 diary/
-Optimizing Real-Time Messaging Architecture.md
+
 # IDE and System files
 .vscode/
 .idea/
@@ -42,10 +42,3 @@ build/
 google-services.json
 GoogleService-Info.plist
 supabase_config.dart
-
-# Extra scratch files and images
-flutter_01.png
-fix_consts.dart
-fix_consts2.dart
-replace_colors.dart
-*.sql
