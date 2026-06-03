@@ -1,0 +1,43 @@
+@startuml
+autonumber
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Client (Company Manager)" as Client
+box "Client App (Flutter Mobile)" #LightBlue
+  participant "ChatScreen" as MobileChat
+  participant "Supabase SDK (Mobile)" as SDKMobile
+end box
+
+box "Backend (Supabase)" #LightGreen
+  participant "PostgreSQL Database" as DB
+  participant "Realtime Service (WebSockets)" as RT
+end box
+
+box "Admin Portal (Flutter Web)" #LightBlue
+  participant "Supabase SDK (Web)" as SDKWeb
+  participant "AdminDashboard" as WebChat
+end box
+actor "Manager (HMI Stars)" as HMI
+
+== Step 1: Establish WebSocket Connections ==
+Client -> SDKMobile : Open chat screen
+SDKMobile -> RT : Subscribe to channel 'messages:company_id=eq.X'
+HMI -> SDKWeb : Open client chat panel
+SDKWeb -> RT : Subscribe to channel 'messages:company_id=eq.X'
+
+== Step 2: Message Sent by Client ==
+Client -> MobileChat : Type message & click Send
+MobileChat -> SDKMobile : insert() message in 'messages' table
+SDKMobile -> DB : HTTP POST /rest/v1/messages
+note over DB : PostgreSQL RLS checks write permission
+DB --> SDKMobile : Message stored successfully
+MobileChat -> MobileChat : Render message locally as "Sent"
+
+== Step 3: Real-time Broadcasting ==
+DB -> RT : Replicate write to Realtime engine
+RT -> SDKWeb : Broadcast payload over WebSocket connection
+SDKWeb -> WebChat : Stream updated list
+WebChat -> HMI : Render incoming message in real-time
+
+@enduml

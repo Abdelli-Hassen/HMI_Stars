@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/platform_auth_service.dart';
 import '../../../../core/services/platform_data_service.dart';
+import '../../../../core/router/app_router.dart';
 import '../../domain/models/platform_user.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
@@ -75,6 +77,16 @@ class AuthProvider extends ChangeNotifier {
 
     // Écouter les changements d'état auth
     _authService.onAuthStateChange.listen((state) async {
+      debugPrint('[AuthProvider] Auth event: ${state.event}');
+      if (state.event == AuthChangeEvent.passwordRecovery) {
+        _user = state.session?.user;
+        _status = AuthStatus.unauthenticated;
+        _errorMessage = null;
+        notifyListeners();
+        _navigateToResetPassword();
+        return;
+      }
+
       if (state.session?.user != null) {
         _user = state.session!.user;
         await _verifierEtChargerProfil();
@@ -380,6 +392,24 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('[AuthProvider] Error uploading avatar: $e');
       return false;
+    }
+  }
+
+  void _navigateToResetPassword() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndNavigate();
+    });
+  }
+
+  void _checkAndNavigate() {
+    final navigator = AppRoutes.navigatorKey.currentState;
+    if (navigator != null) {
+      navigator.pushNamedAndRemoveUntil(
+        AppRoutes.resetPassword,
+        (route) => false,
+      );
+    } else {
+      Future.delayed(const Duration(milliseconds: 100), _checkAndNavigate);
     }
   }
 }

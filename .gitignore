@@ -1,9 +1,5 @@
 # Root .gitignore for HMI Stars Monorepo
 
-# Folders to exclude as requested
-.agent/
-diary/
-
 # IDE and System files
 .vscode/
 .idea/
@@ -29,16 +25,3 @@ build/
 *.xccheckout
 *.xcscmblueprint
 *.xcuserstate
-
-# Secret files (CRITICAL)
-.env
-.env.*
-! .env.example
-*.key
-*.pem
-*.jks
-*.p12
-*.keystore
-google-services.json
-GoogleService-Info.plist
-supabase_config.dart

@@ -1,0 +1,178 @@
+\chapter{System Design Development}
+
+\section{Introduction}
+
+This chapter presents the design development of the HMI Stars system. It describes how the solution was structured and specified using the Unified Process, covering the Inception, Elaboration, and Construction phases.
+It details the functional analysis through use case modeling, followed by system design using UML diagrams, architectural decisions, and class modeling. It also presents the transition from logical design to implementation, including database mapping, system modularization, and deployment choices.
+
+\section{Phase of Inception}
+
+\subsection{Use Case Model Development}
+During the inception phase, we defined the system actors and their corresponding use cases. Since the solution is composed of two distinct interfaces: a mobile application and a web application : both connected to a shared database, the functional requirements were represented using three use case diagrams: a general system overview, a mobile-oriented diagram, and a web-oriented diagram.
+
+
+\subsubsection{Global Use Case Diagram}
+Figure 2.1 presents the global use case diagram, showing how the Client and HMI Stars Manager interact with the overall ecosystem.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{diagrams/usecase.png}
+    \caption{Global Use Case Diagram}
+    \label{fig:use_case_design}
+\end{figure}
+
+\subsubsection{Mobile Client Application Use Case Diagram}
+Figure 2.2 illustrates the functional scope of the mobile application dedicated to client company managers, focusing on personnel tracking, pointage logging, leave requests, document uploads, and real-time chat.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{diagrams/app_usecase.png}
+    \caption{Mobile Application Use Case Diagram}
+    \label{fig:use_case_mobile}
+\end{figure}
+
+\subsubsection{web application Use Case Diagram}
+Figure 2.3 shows the functional scope of the web application used by HMI Stars managers and administrative staff. \\
+It focuses on client company registration, employee record access, data export, task scheduling, role management, and real-time messaging.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{diagrams/platform_usecase.png}
+    \caption{WebApp Use Case Diagram}
+    \label{fig:use_case_web}
+\end{figure}
+
+\subsection{Definition of Priorities}
+To plan the construction phase, functional use cases were prioritized based on business value and technical risk, as shown in Table 2.1.
+
+\begin{table}[H]
+\centering
+\caption{Priority assignment table}
+\label{tab:priorities}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Use Case} & \textbf{Priority} & \textbf{Complexity} & \textbf{Target Iteration} \\
+\hline
+UC-01: Authenticate & High & Medium & Iteration 1 \\
+\hline
+UC-02: Manage Employees & High & Medium & Iteration 1 \\
+\hline
+UC-03: Submit Attendance (Pointage) & High & High & Iteration 2 \\
+\hline
+UC-04: Submit Leave Request & Medium & Medium & Iteration 2 \\
+\hline
+UC-05: Real-time Chat & High & High & Iteration 3 \\
+\hline
+UC-06: Upload Documents & High & Low & Iteration 3 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Detailed Description of Use Cases}
+Here is the detailed description for the employee attendance submission use case:\\
+\textbf{Actor} :  Client (Gérant).\\
+\textbf{Pre-condition} :  The Client is authenticated and has active employees registered \\ under their company.\\
+\textbf{Main Flow} :
+    \\1. The Client navigates to the "Pointage" section.
+   \\2. The system load the list of active employees.
+    \\3. The Client chooses a date from the calendar.
+\\4. The Client marks the attendance status (present/absent) for each employee.
+    \\5. The Client clicks "Save".
+    \\6. The system records the pointage in the PostgreSQL database.\\
+\textbf{Alternative Flow (Offline)} : If network is unavailable, the system caches the pointage local records and synchronizes them once connection is restored.
+
+\subsection{User Interface Prototypes}
+Simple interface layouts were drafted to validate user flows, focusing on simple forms for the mobile attendance screens and a split-screen view for the web admin dashboard.
+
+\section{Phase of Elaboration}
+
+\subsection{Architectural Analysis}
+In the elaboration phase, we analyze the structural constraints.\\ The system must support cross-platform mobile and web-based administration while ensuring database-level data isolation.
+
+\subsection{Use Case Analysis}
+We model the dynamic interactions of use cases using UML sequence diagrams to show the workflow between frontend components, the routing system, the database tables, and actors.
+
+\subsubsection{Password Recovery \& Authentication Sequence}
+The sequence diagram in Figure \ref{fig:sequence_auth_design} details the password recovery process.\\ It highlights how the Flutter Router handles the URL hash parameters to initialize a session directly from the Supabase redirect link without requiring credentials manually.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/auth_sequence_diagram.png}
+    \caption{Authentication Sequence Diagram - Password Recovery}
+    \label{fig:sequence_auth_design}
+\end{figure}
+
+\subsubsection{Leave Request Submission \& Approval Sequence}
+Figure \ref{fig:sequence_leave_design} shows the lifecycle of a leave request, highlighting how the Client submits it, how Row Level Security policies validate the transaction, and how notifications are managed.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/leave_sequence_diagram.png}
+    \caption{Sequence Diagram - Leave Request \& Processing Flow}
+    \label{fig:sequence_leave_design}
+\end{figure}
+
+\subsubsection{Real-time Messaging Sequence}
+Figure \ref{fig:sequence_chat_design} illustrates the instant communication sequence. It displays how PostgreSQL write operations are instantly pushed to listeners via Supabase's Realtime WebSocket engine to keep the client mobile application and web application synchronized.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/chat_sequence_diagram.png}
+    \caption{Sequence Diagram - Real-Time Message Sync Flow}
+    \label{fig:sequence_chat_design}
+\end{figure}
+
+\subsection{Architectural Design}
+The architectural design defines the subsystems. We adopted a Monorepo client-server pattern. Both client applications (Web and Mobile) communicate with Supabase via REST APIs and WebSockets, as detailed in the system architecture and data flow diagram (Figure \ref{fig:architecture_design}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/arch_diagram.png}
+    \caption{System Architecture and Data Stream Diagram}
+    \label{fig:architecture_design}
+\end{figure}
+
+\subsection{Use Case Design}
+The use case design maps objects to the logical class diagram. Figure \ref{fig:class_diag} shows the model class relationships matching the database schema.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.01\textwidth]{diagrams/class_diagram.png}
+    \caption{Logical Class Diagram of the System}
+    \label{fig:class_diag}
+\end{figure}
+\section{Phase of Construction}
+
+\subsection{Database Mapping}
+The logical class models are mapped to physical PostgreSQL tables in the Supabase database schema:
+\\
+\textbf{entreprises} : Stores client company registration data, legal details (SIRET, SIREN, legal form, capital), contact information, and logo URLs.\\
+\textbf{salaries} : Contains employee registry files including personal credentials (social security number, birth details) and contract statuses.\\
+\textbf{pointages} : Records daily attendance and check-in logs for registered company employees.\\
+\textbf{conges} : Stores leave and absence requests (start/end dates, type of leave, comment, and status).\\
+\textbf{messages} : Stores real-time chat messages and file transfers exchanged between HMI managers and company clients.\\
+\textbf{fichiers} : Catalogs uploaded administrative and accounting documents (Extrait KBIS, VAT declarations, RIB, bank statements).\\
+\textbf{utilisateurs\_plateforme} : Manages profile metadata and roles (Admin, Moderator, Secretary) for HMI Stars platform staff.\\
+\textbf{notes\_entreprises} : Contains internal notes, follow-up logs, and specific notes recorded by HMI staff for each client company.\\
+\textbf{taches\_urgentes} : Manages scheduled reminders, alerts, and urgent tasks associated with client accounts.\\
+\textbf{modeles\_avertissements} : Stores letter templates for warnings, summons, and other formal disciplinary procedures.\\
+\textbf{preferences} : Stores individual user preference configurations and notification settings.\\
+
+To enforce complete security isolation, PostgreSQL \textbf{Row Level Security (RLS)}  is enabled on all tables. The client can only read data where the company ID matches their own authenticated organization ID.
+
+\subsection{Implementation Environment}
+\textbf{Frontend Development : } VS Code editor with Flutter SDK and Dart extensions.
+\textbf{Backend Management :} Supabase CLI and Web Dashboard.\\
+\textbf{Version Control :}  Git repository.
+
+\subsection{Identification of Implementation Subsystems}
+The code is modularized into feature folders following clean architecture guidelines:
+\textbf{1. Core Subsystem :} Theme configurations, routing services, and Supabase client helpers.\\
+\textbf{2. Auth Feature Subsystem :}  Sign-in, sign-up, and password recovery controllers.
+\textbf{3. Client Management Subsystem :} Employees list, attendance pointage forms, and leave requests.\\
+\textbf{4. Messaging Subsystem :} Real-time chat widget, WebSocket listeners, and file upload services.
+
+\subsection{Deployment of the Computerized System}
+\textbf{web application : } Deployed on Vercel hosting.\\
+\textbf{Mobile Client App : }Compiled as an Android APK.\\
+\textbf{Database and API : } Hosted on Supabase cloud.
+
+\subsection{Use Case Implementation}
+We implemented the features iteratively, starting with model classes, then integrating database API calls, and finally completing the user interface components.
+
+\section{Conclusion}
+This chapter detailed the design development using the Unified Process structure. The next chapter will focus on theTransition phase, functional testing, and user evaluation of the implemented system.

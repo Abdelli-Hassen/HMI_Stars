@@ -1,0 +1,252 @@
+﻿<w:tab w:val="left" w:pos="0"/></w:tabs><w:snapToGrid w:val="0"/><w:spacing w:before="0"/><w:jc w:val="center"/><w:rPr><w:rFonts w:asciiTheme="majorHAnsi" w:hAnsiTheme="majorHAnsi"/><w:b/><w:bCs/><w:i w:val="0"/><w:iCs w:val="0"/><w:color w:val="auto"/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:pPr><w:r w:rsidRPr="001A2E12"><w:rPr><w:rFonts w:asciiTheme="majorHAnsi" w:hAnsiTheme="majorHAnsi" w:cs="Arial"/><w:i w:val="0"/><w:iCs w:val="0"/><w:color w:val="auto"/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t>R├⌐publique Tunisienne
+
+Universit├⌐ de Kairouan 
+ 
+
+
+Minist├¿re de lΓÇÖEnseignement Sup├⌐rieur et┬áde la Recherche Scientifique
+
+Facult├⌐ des Sciences et Techniques de Sidi Bouzid
+
+
+
+
+
+N┬░ dΓÇÖordre :┬áΓÇª
+
+
+M├ëMOIRE DE PROJET DE┬áFIN DΓÇÖ├ëTUDES
+En vue de lΓÇÖobtention du
+Dipl├┤me de License en Sciences Informatiques
+Pr├⌐sent├⌐ par
+Pr├⌐nom NOM
+
+Sujet┬á:
+
+<w:bottom w:val="thickThinSmallGap" w:sz="24" w:space="1" w:color="1F497D" w:themeColor="text2"/></w:pBdr><w:spacing w:before="120" w:after="120" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/><w:rPr><w:rFonts w:ascii="Bell MT" w:hAnsi="Bell MT" w:cs="Arial"/><w:sz w:val="40"/><w:szCs w:val="40"/><w:lang w:eastAsia="fr-FR"/></w:rPr></w:pPr><w:r w:rsidRPr="00AC606E"><w:rPr><w:rFonts w:ascii="Bell MT" w:hAnsi="Bell MT" w:cs="Arial"/><w:sz w:val="40"/><w:szCs w:val="40"/><w:lang w:eastAsia="fr-FR"/></w:rPr><w:t xml:space="preserve">Guide de conduite dΓÇÖun projet informatique avec le processus unifi├⌐
+
+
+Soutenu le ΓÇªΓÇª, devant le jury compos├⌐ de :
+M.
+ΓÇª..
+Pr├⌐sident 
+Mme.
+ΓÇª..
+Rapporteur
+
+
+M.
+ΓÇª..
+
+Encadreur
+
+
+A.U.┬á: ...........
+
+D├⌐dicaces
+<w:tab w:val="left" w:pos="426"/></w:tabs><w:spacing w:line="360" w:lineRule="auto"/><w:jc w:val="right"/><w:rPr><w:rStyle w:val="Accentuationintense"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:u w:val="none"/></w:rPr></w:pPr><w:r w:rsidRPr="00466F51"><w:rPr><w:rStyle w:val="Accentuationintense"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:u w:val="none"/></w:rPr><w:t>.
+
+Remerciements
+
+
+
+Table des mati├¿res
+Introduction g├⌐n├⌐rale</w:r><w:r w:rsidR="00705BF4"><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="00705BF4"><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672809 \h </w:instrText></w:r><w:r w:rsidR="00705BF4"><w:rPr><w:webHidden/></w:rPr></w:r><w:r w:rsidR="00705BF4"><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="00705BF4"><w:rPr><w:webHidden/></w:rPr><w:t>1
+<w:tab w:val="left" w:pos="1540"/></w:tabs><w:rPr><w:rFonts w:asciiTheme="minorHAnsi" w:eastAsiaTheme="minorEastAsia" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi"/><w:b w:val="0"/><w:bCs w:val="0"/><w:kern w:val="2"/><w:szCs w:val="24"/><w14:ligatures w14:val="standardContextual"/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc192672810" w:history="1"><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Chapitre 1</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Pr├⌐sentation g├⌐n├⌐rale du projet</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672810 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>2
+1.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Introduction</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672811 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>2
+1.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Pr├⌐sentation de lΓÇÖorganisme dΓÇÖaccueil</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672812 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>2
+1.2.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>├ëtude pr├⌐alable</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672813 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>2
+1.2.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Choix m├⌐thodologiques et organisation du travail</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672814 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>2
+1.3.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Conclusion</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672815 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>2
+<w:tab w:val="left" w:pos="1540"/></w:tabs><w:rPr><w:rFonts w:asciiTheme="minorHAnsi" w:eastAsiaTheme="minorEastAsia" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi"/><w:b w:val="0"/><w:bCs w:val="0"/><w:kern w:val="2"/><w:szCs w:val="24"/><w14:ligatures w14:val="standardContextual"/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc192672816" w:history="1"><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Chapitre 2</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>D├⌐roulement de la conception du syst├¿me</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672816 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Introduction</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672817 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Phase dΓÇÖinception</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672818 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.2.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>├ëlaboration du mod├¿le des cas dΓÇÖutilisation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672819 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.2.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>D├⌐finition des priorit├⌐s</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672820 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.2.3.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Description d├⌐taill├⌐e des cas dΓÇÖutilisation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672821 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.2.4.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Prototypes dΓÇÖ'interface utilisateur</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672822 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.3.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Phase dΓÇÖ├⌐laboration</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672823 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.3.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Analyse architecturale</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672824 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.3.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Analyse des cas dΓÇÖutilisation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672825 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.3.3.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Conception architecturale</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672826 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.3.4.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Conception des cas dΓÇÖutilisation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672827 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.4.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Phase de construction</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672828 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.4.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Passage vers la base des donn├⌐es</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672829 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.4.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Environnement de r├⌐alisation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672830 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.4.3.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Identification des sous-syst├¿mes dΓÇÖimpl├⌐mentation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672831 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.4.4.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>D├⌐ploiement du syst├¿me informatis├⌐</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672832 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.4.5.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Impl├⌐mentation des cas dΓÇÖutilisation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672833 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>4
+2.5.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Conclusion</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672834 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>5
+<w:tab w:val="left" w:pos="1540"/></w:tabs><w:rPr><w:rFonts w:asciiTheme="minorHAnsi" w:eastAsiaTheme="minorEastAsia" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi"/><w:b w:val="0"/><w:bCs w:val="0"/><w:kern w:val="2"/><w:szCs w:val="24"/><w14:ligatures w14:val="standardContextual"/></w:rPr></w:pPr><w:hyperlink w:anchor="_Toc192672835" w:history="1"><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Chapitre 3</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>R├⌐alisation du syst├¿me</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672835 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Introduction</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672836 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Phase de transition</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672837 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.3.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Confrontation Cahier des charges/R├⌐alisation</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672838 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.4.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Environnement dΓÇÖex├⌐cution</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672839 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.5.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Test de lΓÇÖapplication</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672840 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.5.1.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>D├⌐monstration des fonctionnalit├⌐s r├⌐alis├⌐es</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672841 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.5.2.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>├ëvaluation de lΓÇÖutilit├⌐</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672842 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.5.3.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>├ëvaluation de lΓÇÖutilisabilit├⌐</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672843 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+3.6.</w:r><w:r w:rsidRPr="00550E81"><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr><w:t>Conclusion</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672844 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>6
+Conclusion g├⌐n├⌐rale</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672845 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>7
+Bibliographie</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672846 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>8
+Glossaire</w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192672847 \h </w:instrText></w:r><w:r><w:rPr><w:webHidden/></w:rPr></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:webHidden/></w:rPr><w:t>9
+
+
+
+
+REMARQUES :
+
+Le sommaire-type ci-dessus pr├⌐sent├⌐ est propos├⌐ pour un m├⌐moire relatif ├á un projet dΓÇÖinformatique de gestion. Il peut ├¬tre modifi├⌐ en fonction des caract├⌐ristiques propres de chaque projet et de la m├⌐thodologie utilis├⌐e.
+Les titres des chapitres et des paragraphes gagnent ├á ├¬tre adapt├⌐s au projet trait├⌐.
+La structure dΓÇÖun m├⌐moire relatif ├á un projet de recherche informatique est ├á d├⌐finir en fonction des caract├⌐ristiques du projet, sous la supervision de lΓÇÖenseignant responsable de lΓÇÖencadrement.
+
+<w:tab w:val="left" w:pos="1020"/></w:tabs><w:spacing w:before="23" w:after="0" w:line="240" w:lineRule="auto"/><w:ind w:left="699" w:right="-20"/><w:rPr><w:rFonts w:ascii="Times New Roman" w:eastAsia="Times New Roman" w:hAnsi="Times New Roman"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:eastAsia="Times New Roman" w:hAnsi="Times New Roman"/><w:w w:val="102"/><w:sz w:val="22"/></w:rPr><w:t>.
+
+Liste des figures
+<w:tab w:val="right" w:leader="dot" w:pos="8493"/></w:tabs><w:rPr><w:rFonts w:asciiTheme="minorHAnsi" w:eastAsiaTheme="minorEastAsia" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi"/><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:kern w:val="2"/><w:sz w:val="24"/><w:lang w:eastAsia="fr-FR"/><w14:ligatures w14:val="standardContextual"/></w:rPr></w:pPr><w:r w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="0037521F" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/></w:rPr><w:instrText xml:space="preserve"> TOC \h \z \c "Figure" </w:instrText></w:r><w:r w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:hyperlink w:anchor="_Toc192673527" w:history="1"><w:r w:rsidR="00077CA5" w:rsidRPr="00AB7F78"><w:rPr><w:rStyle w:val="Lienhypertexte"/><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/></w:rPr><w:t xml:space="preserve">Figure ΓÇÄ1.1- Processus g├⌐n├⌐ral du processus unifi├⌐</w:r><w:r w:rsidR="00077CA5" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="00077CA5" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc192673527 \h </w:instrText></w:r><w:r w:rsidR="00077CA5" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr></w:r><w:r w:rsidR="00077CA5" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="00077CA5" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:t>3
+
+
+Liste des tableaux
+<w:tab w:val="right" w:leader="dot" w:pos="8493"/></w:tabs><w:rPr><w:rFonts w:asciiTheme="minorHAnsi" w:eastAsiaTheme="minorEastAsia" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi"/><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:eastAsia="fr-FR"/></w:rPr></w:pPr><w:r w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="00D37411" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/></w:rPr><w:instrText xml:space="preserve"> TOC \h \z \c "Tableau" </w:instrText></w:r><w:r w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:hyperlink w:anchor="_Toc341619660" w:history="1"><w:r w:rsidR="00D37411" w:rsidRPr="00AB7F78"><w:rPr><w:rStyle w:val="Lienhypertexte"/><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/></w:rPr><w:t xml:space="preserve">Tableau ΓÇÄ1.1- R├⌐capitulatif de quelques caract├⌐ristiques de la RIS.</w:r><w:r w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="00D37411" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:instrText xml:space="preserve"> PAGEREF _Toc341619660 \h </w:instrText></w:r><w:r w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr></w:r><w:r w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="00077CA5" w:rsidRPr="00AB7F78"><w:rPr><w:b w:val="0"/><w:bCs w:val="0"/><w:noProof/><w:webHidden/></w:rPr><w:t>3
+
+
+Introduction g├⌐n├⌐rale
+
+LΓÇÖintroduction g├⌐n├⌐rale pr├⌐sente le sujet par des renseignements pr├⌐cis et pose le probl├¿me ├á r├⌐soudre sans ├⌐vocation de r├⌐sultats. Une fois le probl├¿me pos├⌐ avec clart├⌐, les grands traits de la d├⌐marche vers lΓÇÖobjectif sont d├⌐crits. En effet, le contenu de chaque chapitre est annonc├⌐ bri├¿vement.
+
+
+┬á: Pr├⌐sentation g├⌐n├⌐rale du projet
+Introduction 
+Pr├⌐sentation de lΓÇÖorganisme dΓÇÖaccueil
+├ëtude pr├⌐alable
+├ëtude de lΓÇÖexistant
+Critique de lΓÇÖexistant
+Solution envisag├⌐e
+Choix m├⌐thodologiques et organisation du travail
+Le Processus Unifi├⌐
+
+Le Langage de Mod├⌐lisation Unifi├⌐ (UML)
+Organisation du travail
+Conclusion 
+
+
+
+
+Figure ΓÇÄ1.1- Processus g├⌐n├⌐ral du processus unifi├⌐
+
+
+
+
+Tableau ΓÇÄ1.1- Affectation des priorit├⌐s
+
+
+: D├⌐roulement de la conception du syst├¿me
+Introduction
+Phase dΓÇÖinception
+├ëlaboration du mod├¿le des cas dΓÇÖutilisation
+D├⌐finition des priorit├⌐s
+Description d├⌐taill├⌐e des cas dΓÇÖutilisation
+Prototypes dΓÇÖ'interface utilisateur
+ Phase dΓÇÖ├⌐laboration
+ Analyse architecturale
+Analyse des cas dΓÇÖutilisation
+Conception architecturale
+Conception des cas dΓÇÖutilisation
+Phase de construction
+Passage vers la base des donn├⌐es
+Environnement de r├⌐alisation
+Identification des sous-syst├¿mes dΓÇÖimpl├⌐mentation
+D├⌐ploiement du syst├¿me informatis├⌐
+Impl├⌐mentation des cas dΓÇÖutilisation
+
+Conclusion
+
+
+
+: R├⌐alisation du syst├¿me
+Introduction
+Phase de transition
+Confrontation Cahier des charges/R├⌐alisation
+Environnement dΓÇÖex├⌐cution
+Test de lΓÇÖapplication
+D├⌐monstration des fonctionnalit├⌐s r├⌐alis├⌐es
+├ëvaluation de lΓÇÖutilit├⌐
+├ëvaluation de lΓÇÖutilisabilit├⌐
+Conclusion
+
+
+
+
+
+
+Conclusion g├⌐n├⌐rale
+La conclusion doit comprendre les points suivants :
+R├⌐capitulation de la d├⌐marche compl├¿te annonc├⌐e par lΓÇÖintroduction g├⌐n├⌐rale
+Pr├⌐sentation des r├⌐sultats : R├⌐ponses aux probl├¿mes pos├⌐s au d├⌐but ;
+Les probl├¿mes rencontr├⌐s lors de la r├⌐alisation du projet
+Les apports (techniques et autres)
+Perspectives dΓÇÖapprofondissement ou dΓÇÖ├⌐largissement du sujet.
+
+
+
+Bibliographie
+Bibliographie : Ouvrages et articles consult├⌐s lors de lΓÇÖ├⌐laboration du projet, class├⌐s par ordre alphab├⌐tique du nom de lΓÇÖauteur, selon le mod├¿le suivant :
+[i] NOM_AUTEUR1, NOM_AUTEUR2, ┬½ Titre de lΓÇÖouvrage ┬╗, lieu de publication, nom de  lΓÇÖ├⌐diteur, ann├⌐e de publication.
+Exemple :
+[1] REEVES, Hubert. ┬½ Bases de donn├⌐es relationnelles ┬╗, Paris, Editions du seuil, 1988.
+Webographie : Sites Web visit├⌐s lors de lΓÇÖ├⌐laboration du projet, avec une br├¿ve description du    th├¿me consult├⌐ (une ou deux lignes au maximum) avec la date de la derni├¿re visite.
+Exemple :
+[2] http://www.asp.net/ : Fondements du langage ASP.NET. DV : mai 2007
+Remarque : dans le texte du rapport, vous mettez des liens vers ces r├⌐f├⌐rences.
+<w:docGrid w:linePitch="299"/></w:sectPr></w:pPr><w:r w:rsidRPr="00852279"><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:szCs w:val="24"/><w:lang w:eastAsia="fr-FR"/></w:rPr><w:t>Exemple : ΓÇª.les bases de donn├⌐es[2].
+Glossaire
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<w:bottom w:val="thickThinSmallGap" w:sz="24" w:space="1" w:color="1F497D" w:themeColor="text2"/></w:pBdr><w:spacing w:before="120" w:after="120" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/><w:rPr><w:rFonts w:ascii="Bell MT" w:hAnsi="Bell MT" w:cs="Arial"/><w:sz w:val="40"/><w:szCs w:val="40"/><w:lang w:eastAsia="fr-FR"/></w:rPr></w:pPr><w:r w:rsidRPr="00B2153A"><w:rPr><w:rFonts w:ascii="Bell MT" w:hAnsi="Bell MT" w:cs="Arial"/><w:sz w:val="40"/><w:szCs w:val="40"/><w:lang w:eastAsia="fr-FR"/></w:rPr><w:t xml:space="preserve">Titre du sujet du projet 
+
+
+
+╪º┘ä╪«┘ä╪º╪╡╪⌐ : 
+
+╪º┘ä┘à┘ü╪º╪¬┘è╪¡ : 
+
+R├⌐sum├⌐ :┬á
+Ce projet sΓÇÖinscrit dans le cadre deΓÇª. 
+Mots cl├⌐s┬á: 
+Abstract: 
+
+Key-words: 
+
+

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
@@ -15,6 +17,73 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   bool _obscure1 = true;
   bool _obscure2 = true;
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _loading = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updatePassword() async {
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (password.isEmpty) {
+      setState(() => _errorMessage = "Veuillez entrer un nouveau mot de passe.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setState(() => _errorMessage = "Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() => _errorMessage = "Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final auth = context.read<AuthProvider>();
+      await auth.changePassword(password);
+      
+      if (!mounted) return;
+      
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Succès'),
+          content: const Text('Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, AppRoutes.login);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      setState(() => _errorMessage = "Une erreur est survenue lors de la réinitialisation.");
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +100,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     headline: "L'architecture de votre excellence financière.",
                     subHeadline:
                         "Sécurisez votre accès à l'outil de gestion RH et financière le plus précis du marché français.",
-                    bottomCard: _buildApprovalBadge(),
                   ),
                 ),
 
@@ -39,166 +107,160 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 Expanded(
                   child: Container(
                     color: AppColors.surface,
-                    padding: const EdgeInsets.symmetric(horizontal: 64, vertical: 48),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 24),
-                          Text('Réinitialiser le mot de passe',
-                              style: AppTextStyles.headlineMedium),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Veuillez choisir un nouveau mot de passe sécurisé pour votre compte.',
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(color: AppColors.onSurfaceVariant),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // New Password
-                          Text('NOUVEAU MOT DE PASSE',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                  letterSpacing: 1.2,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.onSurfaceVariant)),
-                          const SizedBox(height: 8),
-                          TextField(
-                            obscureText: _obscure1,
-                            decoration: InputDecoration(
-                              hintText: '••••••••',
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                    _obscure1
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                    size: 20,
-                                    color: AppColors.outline),
-                                onPressed: () =>
-                                    setState(() => _obscure1 = !_obscure1),
-                              ),
+                    child: Center(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        padding: const EdgeInsets.all(48),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border(
+                            left: BorderSide(
+                              color: AppColors.primary,
+                              width: 3,
                             ),
                           ),
-                          const SizedBox(height: 20),
-
-                          // Confirm Password
-                          Text('CONFIRMER LE MOT DE PASSE',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                  letterSpacing: 1.2,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.onSurfaceVariant)),
-                          const SizedBox(height: 8),
-                          TextField(
-                            obscureText: _obscure2,
-                            decoration: InputDecoration(
-                              hintText: '••••••••',
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                    _obscure2
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                    size: 20,
-                                    color: AppColors.outline),
-                                onPressed: () =>
-                                    setState(() => _obscure2 = !_obscure2),
-                              ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Réinitialiser le mot de passe',
+                                style: AppTextStyles.headlineMedium),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Veuillez choisir un nouveau mot de passe sécurisé pour votre compte.',
+                              style: AppTextStyles.bodyMedium
+                                  .copyWith(color: AppColors.onSurfaceVariant),
                             ),
-                          ),
-                          const SizedBox(height: 20),
+                            const SizedBox(height: 28),
 
-                          // Security Requirements
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('EXIGENCES DE SÉCURITÉ',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                        letterSpacing: 1.2,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.onSurfaceVariant)),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _securityReq('8 caractères minimum', true),
-                                    ),
-                                    Expanded(
-                                      child: _securityReq('Une majuscule', false),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _securityReq('Un chiffre', false),
-                                    ),
-                                    Expanded(
-                                      child: _securityReq('Un caractère spécial', false),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-
-                          // Submit
-                          SizedBox(
-                            width: double.infinity,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ElevatedButton(
-                                onPressed: () => Navigator.pushReplacementNamed(
-                                    context, AppRoutes.login),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 18),
+                            if (_errorMessage != null)
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 24),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
-                                        'Enregistrer le nouveau mot de passe',
-                                        style: GoogleFonts.manrope(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        )),
+                                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
                                     const SizedBox(width: 8),
-                                    const Icon(Icons.arrow_forward,
-                                        size: 18, color: Colors.white),
+                                    Expanded(child: Text(_errorMessage!, style: TextStyle(color: AppColors.error))),
                                   ],
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
 
-                          // Footer
-                          Divider(color: AppColors.surfaceContainer),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              MouseRegion(
+                            // New Password
+                            Text('NOUVEAU MOT DE PASSE',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                    letterSpacing: 1.2,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.onSurfaceVariant)),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: _obscure1,
+                              decoration: InputDecoration(
+                                hintText: '••••••••',
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                      _obscure1
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                      size: 20,
+                                      color: AppColors.outline),
+                                  onPressed: () =>
+                                      setState(() => _obscure1 = !_obscure1),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Confirm Password
+                            Text('CONFIRMER LE MOT DE PASSE',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                    letterSpacing: 1.2,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.onSurfaceVariant)),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _confirmPasswordController,
+                              obscureText: _obscure2,
+                              decoration: InputDecoration(
+                                hintText: '••••••••',
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                      _obscure2
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                      size: 20,
+                                      color: AppColors.outline),
+                                  onPressed: () =>
+                                      setState(() => _obscure2 = !_obscure2),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Submit Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _loading ? null : _updatePassword,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 18),
+                                  ),
+                                  child: _loading
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2),
+                                        )
+                                      : Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                                'Mettre à jour le mot de passe',
+                                                style: GoogleFonts.manrope(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Colors.white,
+                                                )),
+                                            const SizedBox(width: 8),
+                                            const Icon(Icons.arrow_forward,
+                                                size: 18, color: Colors.white),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Footer
+                            Divider(color: AppColors.surfaceContainer),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: MouseRegion(
                                 cursor: SystemMouseCursors.click,
                                 child: GestureDetector(
                                   onTap: () => Navigator.pop(context),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.arrow_back,
-                                          size: 16, color: AppColors.primary),
-                                      const SizedBox(width: 4),
+                                      const Icon(Icons.chevron_left,
+                                          size: 18, color: AppColors.primary),
                                       Text('Retour à la connexion',
                                           style: AppTextStyles.labelMedium
                                               .copyWith(
@@ -209,21 +271,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                   ),
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  const Icon(Icons.lock_outline,
-                                      size: 14, color: AppColors.outline),
-                                  const SizedBox(width: 4),
-                                  Text('CHIFFREMENT SSL 256 BITS',
-                                      style: AppTextStyles.labelSmall.copyWith(
-                                          fontSize: 9,
-                                          letterSpacing: 1.2,
-                                          color: AppColors.outline)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -246,23 +296,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         color: AppColors.outline)),
                 Row(
                   children: [
-                    Text('MENTIONS LÉGALES',
-                        style: AppTextStyles.labelSmall.copyWith(
-                            fontSize: 9,
-                            letterSpacing: 1.2,
-                            color: AppColors.outline)),
+                    _footerLink('MENTIONS LÉGALES'),
                     const SizedBox(width: 24),
-                    Text('CONFIDENTIALITÉ',
-                        style: AppTextStyles.labelSmall.copyWith(
-                            fontSize: 9,
-                            letterSpacing: 1.2,
-                            color: AppColors.outline)),
+                    _footerLink('CONFIDENTIALITÉ'),
                     const SizedBox(width: 24),
-                    Text('SUPPORT',
-                        style: AppTextStyles.labelSmall.copyWith(
-                            fontSize: 9,
-                            letterSpacing: 1.2,
-                            color: AppColors.outline)),
+                    _footerLink('SUPPORT'),
                   ],
                 ),
               ],
@@ -273,66 +311,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     );
   }
 
-  Widget _securityReq(String text, bool met) {
-    return Row(
-      children: [
-        Icon(
-          met ? Icons.check_circle : Icons.circle_outlined,
-          size: 16,
-          color: met ? AppColors.success : AppColors.outline,
-        ),
-        const SizedBox(width: 6),
-        Text(text,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.onSurfaceVariant,
-            )),
-      ],
-    );
-  }
-
-  Widget _buildApprovalBadge() {
-    return Container(
-      padding: const EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Avatars
-          const SizedBox(
-            width: 48,
-            height: 28,
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  child: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Color(0xFF334155),
-                    child: Icon(Icons.person, size: 14, color: Colors.white54),
-                  ),
-                ),
-                Positioned(
-                  left: 18,
-                  child: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Color(0xFF475569),
-                    child: Icon(Icons.person, size: 14, color: Colors.white54),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text('APPROUVÉ PAR +500 CABINETS',
-              style: AppTextStyles.labelSmall.copyWith(
-                  fontSize: 10,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.7))),
-        ],
+  Widget _footerLink(String text) {
+    return Text(
+      text,
+      style: AppTextStyles.labelSmall.copyWith(
+        fontSize: 9,
+        letterSpacing: 1.2,
+        color: AppColors.outline,
       ),
     );
   }

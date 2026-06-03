@@ -1,0 +1,41 @@
+@startuml
+skinparam componentStyle uml2
+left to right direction
+
+package "Presentation Layer (Flutter Monorepo)" #LightBlue {
+  [Web Administration Platform] as webApp #White
+  [Mobile Client App] as mobileApp #White
+}
+
+package "State Management & Business Logic" #LightYellow {
+  [Provider AuthProvider] as authProv
+  [Provider CompanyProvider] as entProv
+  [Provider NotificationProvider] as notifProv
+}
+
+package "Backend Supabase (BaaS)" #LightGreen {
+  [Supabase API Gateway] as gateway
+  [Supabase Auth (GoTrue)] as auth
+  [Supabase Storage] as storage
+  [Supabase Realtime (Phoenix)] as realtime
+  database "PostgreSQL Database" as db
+}
+
+webApp --> authProv : uses
+webApp --> entProv : uses
+mobileApp --> authProv : uses
+mobileApp --> entProv : uses
+entProv --> notifProv : notifies
+
+authProv --> gateway : HTTPS (REST)
+entProv --> gateway : HTTPS (REST)
+
+gateway --> auth : delegates
+gateway --> storage : stores files
+gateway --> realtime : listens for changes
+gateway --> db : reads/writes SQL
+
+realtime --> webApp : WebSocket stream (Realtime Streams)
+realtime --> mobileApp : WebSocket stream (Realtime Streams)
+
+@enduml

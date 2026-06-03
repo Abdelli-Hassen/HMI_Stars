@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "739144832148",
+    "project_id": "hmistars-f5cd6",
+    "storage_bucket": "hmistars-f5cd6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:739144832148:android:fd8501fef39e403ecf1081",
+        "android_client_info": {
+          "package_name": "com.hmistars.hmistarsmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_42aKglj627Yy2nprFW15PoPvdGvnQdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

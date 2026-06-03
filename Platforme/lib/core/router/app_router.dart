@@ -18,6 +18,8 @@ import '../../features/settings/presentation/pages/gestion_comptes_page.dart';
 class AppRoutes {
   AppRoutes._();
 
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   static const String login = '/login';
   static const String signUp = '/sign-up';
   static const String forgotPassword = '/forgot-password';

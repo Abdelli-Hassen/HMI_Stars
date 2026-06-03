@@ -1,0 +1,71 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Client (Company Manager)" as client
+actor "Manager (HMI Stars)" as admin
+
+rectangle "HMI Stars Ecosystem" {
+  usecase "Authenticate / Reset Password" as UC_Auth
+  usecase "Manage Account Profile & Settings" as UC_Settings
+  
+  package "Employee & Leave Management" {
+    usecase "Manage Employees (Add, View, Edit, Delete, Archive/Unarchive)" as UC_Manage_Employees
+    usecase "Log Daily Attendance" as UC_Pointage
+    usecase "Submit a Leave Request" as UC_Conge
+    usecase "Process Employee Leave Requests" as UC_Process_Conge
+    usecase "Issue Employee Warnings" as UC_Issue_Warnings
+  }
+  
+  package "Company & Firm Management" {
+    usecase "Manage Companies (Create, Categorize, Archive/Unarchive, Delete)" as UC_Manage_Companies
+    usecase "Manage Company Employees & Data (Create, Delete, Edit, Export)" as UC_Manage_Company_Employees
+    usecase "Manage HMI Stars Users (Secretaries, Admins)" as UC_Manage_Users
+  }
+  
+  package "Communication & Documents" {
+    usecase "Upload Accounting & Administrative Documents" as UC_Upload_Docs_Client
+    usecase "Send & Receive Client Documents" as UC_Manage_Docs_Firm
+    usecase "Send Notices/Warnings to HMI Stars Manager" as UC_Client_Send_Notices
+    usecase "Schedule Tasks & Reminders for Clients" as UC_Firm_Taches
+    usecase "Chat in Real-Time" as UC_Chat
+  }
+}
+
+client --> UC_Auth
+client --> UC_Settings
+client --> UC_Manage_Employees
+client --> UC_Pointage
+client --> UC_Conge
+client --> UC_Process_Conge
+client --> UC_Issue_Warnings
+client --> UC_Upload_Docs_Client
+client --> UC_Client_Send_Notices
+client --> UC_Chat
+
+admin --> UC_Auth
+admin --> UC_Settings
+admin --> UC_Manage_Companies
+admin --> UC_Manage_Company_Employees
+admin --> UC_Manage_Users
+admin --> UC_Manage_Docs_Firm
+admin --> UC_Firm_Taches
+admin --> UC_Chat
+
+UC_Settings ..> UC_Auth : <<include>>
+UC_Manage_Employees ..> UC_Auth : <<include>>
+UC_Pointage ..> UC_Auth : <<include>>
+UC_Conge ..> UC_Auth : <<include>>
+UC_Process_Conge ..> UC_Auth : <<include>>
+UC_Issue_Warnings ..> UC_Auth : <<include>>
+UC_Manage_Companies ..> UC_Auth : <<include>>
+UC_Manage_Company_Employees ..> UC_Auth : <<include>>
+UC_Manage_Users ..> UC_Auth : <<include>>
+UC_Upload_Docs_Client ..> UC_Auth : <<include>>
+UC_Manage_Docs_Firm ..> UC_Auth : <<include>>
+UC_Client_Send_Notices ..> UC_Auth : <<include>>
+UC_Firm_Taches ..> UC_Auth : <<include>>
+UC_Chat ..> UC_Auth : <<include>>
+
+@enduml

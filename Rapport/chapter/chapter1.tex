@@ -1,0 +1,121 @@
+\chapter{General Project Presentation}
+
+\section{Introduction}
+This first chapter establishes the context of our graduation project. It presents the professional environment where the internship took place, describes the host organization's operational structure, formulates the exact problem statement to be solved, and proposes the conceptual approach chosen. Finally, a literature review compares existing solutions to validate our technical decisions.
+
+\section{Company presentation}
+The internship was conducted remotely at \textbf{HMI Stars Consulting}, a consulting company specialized in project management, company registration, and social and tax administrative support.
+The company offers services such as helping clients draft legal statutes and manage daily administrative tasks, including social declarations, employment contract tracking, salary processing, and communication with public authorities.
+HMI Stars Consulting works with small and medium-sized enterprises (SMEs) based in France. To ensure proper follow-up, it relies on administrative staff, including secretaries and administrators, who work closely with client company managers.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\linewidth]{images/hmi_stars.jpeg}
+    \caption{HMI Stars logo}
+    \label{fig:HMI Stars logo}
+\end{figure}
+
+\section{Preliminary Study}
+
+\subsection{Study of the existing}
+
+\subsubsection{Description of the existing}
+To find a solution to our problem, we conducted research on existing systems. We chose three platforms that offer business administration, client portals, and document management capabilities:
+\begin{itemize}
+    \item \textbf{Odoo (Community Edition)}:
+    Odoo is an open-source business software suite offering a range of integrated applications for various business needs. It includes modules for accounting, customer relationship management (CRM), human resources, and document sharing. It allows client companies to upload records through web forms, although customizing portal views and real-time interaction flows requires advanced technical setups.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\linewidth]{images/odoo.png}
+        \caption{Odoo Logo}
+        \label{fig:Odoo Logo}
+    \end{figure}
+    
+    \item \textbf{ERPNext}:
+    ERPNext is an open-source Enterprise Resource Planning (ERP) platform built on the Frappe framework. It is designed for small and medium-sized enterprises and includes features such as client portals, employee directory management, expense tracking, and support ticket systems.
+    However, its messaging system does not provide real-time synchronization by default, and it does not include a dedicated mobile application for clients.
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\linewidth]{images/erp.png}
+        \caption{erp Logo}
+        \label{fig:erp Logo}
+    \end{figure}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\linewidth]{images/erp_ext.png}
+        \caption{erp-ext Logo}
+        \label{fig:erp_ext Logo}
+    \end{figure}
+    \item \textbf{Dolibarr ERP \& CRM}:
+    Dolibarr is a comprehensive web-based ERP and CRM tool aimed at small companies and freelancers. It offers billing, stock management, administrative records storage, and employee tracking features. It provides self-service client portals, but it is built on legacy web architectures and lacks a modern, reactive real-time mobile application for client-agency daily chat exchanges.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\linewidth]{images/dolibarr.jpg}
+        \caption{Dolibarr Logo}
+        \label{fig:Dolibarr Logo}
+    \end{figure}
+\end{itemize}
+\vspace{-0.8cm}
+
+\subsubsection{Comparison of the existing}
+We studied the three systems from different aspects indicated in the table below:
+\begin{table}[H]
+\centering
+\caption{Comparison between Odoo, ERPNext and Dolibarr}
+\label{tab:comparison_existing}
+\begin{tabular}{|l|p{3.8cm}|p{3.8cm}|p{3.8cm}|}
+\hline
+\textbf{Criteria} & \textbf{Odoo} & \textbf{ERPNext} & \textbf{Dolibarr} \\
+\hline
+\textbf{Target market} & Small to large businesses & Small to mid-size companies & Freelancers and SMEs \\
+\hline
+\textbf{Deployment} & On-premises or cloud & On-premises or cloud & On-premises or cloud \\
+\hline
+\textbf{Customization} & Highly customizable platform & Customizable via Frappe framework & Extensible via modules but layout is limited \\
+\hline
+\textbf{Document Sharing} & Full document management & File attachments in portal & Simple document storage per client \\
+\hline
+\textbf{Real-time Chat} & Yes, basic messaging & No native real-time chat & No native chat \\
+\hline
+\textbf{Mobile App} & Yes, responsive hybrid & Basic responsive view & Third-party apps only \\
+\hline
+\textbf{Open-source} & Yes (Community Edition) & Yes & Yes \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Criticism of the existing}
+Based on the comparison of the existing systems, we note the following limitations:
+\begin{itemize}
+    \item \textbf{Odoo}: Although ERPNext offers a wide range of features, it can be complex to learn and use. In addition, creating highly customized client portals or specific mobile functionalities often requires advanced customization or additional development efforts.
+    \item \textbf{ERPNext}: While it simplifies document attachments and has a solid database schema, it lacks interactive real-time messaging workspaces where managers and client companies can communicate immediately.
+    \item \textbf{Dolibarr}: Dolibarr is lightweight and free, but its interface is outdated and relies on legacy web technologies. It does not provide reactive, real-time feedback for document processing states or instant support messaging.
+\end{itemize}
+
+\subsubsection{Proposed solution}
+To address the needs of HMI Stars Consulting and overcome the limitations of existing ERP solutions, we designed and developed a customized application ecosystem called \textbf{HMI Stars}.The solution consists of three main components:
+\begin{enumerate}
+    \item \textbf{A Web Administration Platform:} Dedicated to HMI Stars Consulting managers, allowing them to register client companies, review uploaded files (categorized by type: KBIS, VAT, RIB, bank statements ...), and reply to client inquiries.
+    \item \textbf{A Cross-Platform Mobile Application:} Dedicated to client managers, providing tools to manage their employees, log daily attendance, submit leave and absence requests, and upload documents.
+    \item \textbf{A Real-Time Backend Server:} Powered by Supabase, handling instant synchronization of messages and files while guaranteeing strict data isolation using PostgreSQL Row Level Security (RLS).
+\end{enumerate}
+
+\section{Methodological Choices and Work Organization}
+
+\subsection{The Unified Process (2TUP)}
+
+We chose the \textbf{2TUP (Two Track Unified Process)} methodology for the development of this project. This approach separates the development process into two seperate tracks: a functional track, focused on business requirements and use cases, and a technical track, focused on the technologies and architecture used to implement the solution.
+By addressing functional and technical aspects in parallel, 2TUP helps identify potential risks early and ensures a better alignment between business needs and technical choices.
+
+\subsection{Unified Modeling Language (UML)}
+UML is used as the standard modeling language to specify, visualize, and document the different elements of the system throughout the functional development process.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{images/uml.png}
+    \caption{UML}
+    \label{fig:UML}
+\end{figure}
+\subsection{Work Organization}
+The project timeline is organized around the four iterative phases of the Unified Process: Inception (defining scope and analyzing functional requirements), Elaboration (designing the architecture and validating technologies), Construction (implementing the database and frontend development), and Transition (testing, validation, and deployment).
+
+\section{Conclusion}
+The study of the existing system highlights the urgent need to transition to a structured, secure communication platform. The 2TUP methodology provides a solid framework to develop this project. The next chapter will detail the design development, covering the Inception, Elaboration, and Construction phases.

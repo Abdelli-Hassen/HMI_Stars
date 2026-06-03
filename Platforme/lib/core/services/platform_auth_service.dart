@@ -68,7 +68,8 @@ class PlatformAuthService {
   }
 
   Future<void> resetPassword(String email) async {
-    await _client.auth.resetPasswordForEmail(email);
+    final redirectTo = kIsWeb ? '${Uri.base.origin}/reset-password' : null;
+    await _client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
   }
 
   /// Updates the current user's password.

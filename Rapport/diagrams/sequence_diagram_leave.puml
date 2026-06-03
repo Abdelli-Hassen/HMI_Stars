@@ -1,0 +1,41 @@
+@startuml
+autonumber
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Client (Company Manager)" as Client
+box "Frontend (Flutter App)" #LightBlue
+  participant "LeaveScreen" as LeaveUI
+  participant "Supabase Client SDK" as SDK
+end box
+
+box "Backend (Supabase & PostgreSQL)" #LightGreen
+  participant "PostgreSQL Database" as DB
+  participant "Realtime Service" as RT
+end box
+
+actor "Manager (HMI Stars)" as HMI
+
+== Step 1: Submit Leave Request ==
+Client -> LeaveUI : Fill & submit leave form
+LeaveUI -> SDK : insert() leave request details
+SDK -> DB : Insert row in 'conges' table
+note over DB : PostgreSQL RLS verifies company_id matching user session
+DB --> SDK : Row created successfully
+SDK --> LeaveUI : Display success status
+
+== Step 2: Real-time Notification ==
+DB -> RT : Trigger CDC (Change Data Capture)
+RT -> HMI : Push real-time notification / dashboard update
+note over HMI : HMI Manager is notified of the new request (read-only)
+
+== Step 3: Process Leave Request ==
+Client -> LeaveUI : Review request & click "Approve" / "Reject"
+LeaveUI -> SDK : update() leave request status
+SDK -> DB : Update status in 'conges' table
+DB --> SDK : Status updated successfully
+SDK --> LeaveUI : Refresh UI showing new status
+DB -> RT : Trigger CDC on update
+RT -> HMI : Push real-time update to HMI dashboard
+
+@enduml
