@@ -598,7 +598,9 @@ class _StatCardState extends State<_StatCard> {
             color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: effectiveColor.withValues(alpha: _hovered ? 0.3 : 0.1),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? effectiveColor.withValues(alpha: _hovered ? 0.55 : 0.25)
+                  : effectiveColor.withValues(alpha: _hovered ? 0.3 : 0.1),
               width: 1,
             ),
             boxShadow: [
@@ -754,9 +756,13 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
             color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: _hovered 
-                  ? cs.primary.withValues(alpha: 0.5)
-                  : cs.outline.withValues(alpha: 0.35),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? (_hovered 
+                      ? cs.primary.withValues(alpha: 0.6)
+                      : cs.outlineVariant.withValues(alpha: 0.6))
+                  : (_hovered 
+                      ? cs.primary.withValues(alpha: 0.5)
+                      : cs.outline.withValues(alpha: 0.35)),
               width: 1,
             ),
             boxShadow: _hovered

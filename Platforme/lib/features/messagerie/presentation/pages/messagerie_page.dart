@@ -1117,6 +1117,12 @@ class _BubbleMessage extends StatelessWidget {
                   color: estMoi
                       ? null
                       : cs.surfaceContainerLowest,
+                  border: estMoi
+                      ? null
+                      : Border.all(
+                          color: cs.outlineVariant.withValues(alpha: 0.5),
+                          width: 1,
+                        ),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),

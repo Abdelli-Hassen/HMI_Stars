@@ -145,7 +145,7 @@ class _DashboardPageState extends State<DashboardPage>
     final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.dashboard,
-      title: context.tr('HMI Stars - Tableau de Bord RH', 'HMI Stars - HR Dashboard'),
+      title: context.tr('HMI Stars - Tableau de Bord', 'HMI Stars - Dashboard'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: Column(
@@ -170,13 +170,6 @@ class _DashboardPageState extends State<DashboardPage>
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          context.tr(
-                            'Indicateurs globaux de supervision et de communication de votre portefeuille client.',
-                            'Global supervision and communication indicators of your client portfolio.',
-                          ),
-                          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
-                        ),
                       ],
                     ),
                   ],
@@ -211,7 +204,7 @@ class _DashboardPageState extends State<DashboardPage>
                               iconColor: cs.primary,
                               value: displayCompanies,
                               label: context.tr('ENTREPRISES CLIENTES', 'CLIENT COMPANIES'),
-                              badge: context.tr('Portefeuille', 'Portfolio'),
+                              badge: context.tr('Totale des entreprises', 'Total Companies'),
                               badgeColor: cs.primary,
                             ),
                             const SizedBox(width: 16),
@@ -220,7 +213,7 @@ class _DashboardPageState extends State<DashboardPage>
                               iconColor: AppColors.success,
                               value: displaySalaries,
                               label: context.tr('SALARIÉS GÉRÉS', 'EMPLOYEES MANAGED'),
-                              badge: context.tr('Effectif total', 'Total headcount'),
+                              badge: context.tr('Effectif total', 'Total employees'),
                               badgeColor: AppColors.success,
                             ),
                             const SizedBox(width: 16),
