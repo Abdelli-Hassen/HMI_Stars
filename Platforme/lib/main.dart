@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'dart:async';
 import 'core/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
@@ -24,24 +25,41 @@ import 'dart:js_interop';
 external void _jsEval(String code);
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  usePathUrlStrategy();
+  // Override debugPrint to suppress all Flutter debugPrint logs
+  debugPrint = (String? message, {int? wrapWidth}) {};
 
-  if (kIsWeb) {
-    try {
-      _jsEval('window.BroadcastChannel = undefined;');
-    } catch (_) {}
-  }
+  runZoned(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    usePathUrlStrategy();
 
-  await Supabase.initialize(
-    url: SupabaseConfig.url,
-    anonKey: SupabaseConfig.anonKey,
-    authOptions: const FlutterAuthClientOptions(
-      authFlowType: AuthFlowType.implicit,
-    ),
-  );
+    if (kIsWeb) {
+      try {
+        _jsEval('''
+          window.BroadcastChannel = class BroadcastChannel {
+            constructor(name) {}
+            postMessage(message) {}
+            close() {}
+            addEventListener() {}
+            removeEventListener() {}
+          };
+        ''');
+      } catch (_) {}
+    }
 
-  runApp(const HmiStarsApp());
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.anonKey,
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.implicit,
+      ),
+    );
+
+    runApp(const HmiStarsApp());
+  }, zoneSpecification: ZoneSpecification(
+    print: (Zone self, ZoneDelegate parent, Zone zone, String line) {
+      // Silence standard print statements
+    },
+  ));
 }
 
 
