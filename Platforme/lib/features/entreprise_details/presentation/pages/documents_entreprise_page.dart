@@ -616,7 +616,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
           decoration: BoxDecoration(
             color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -654,7 +654,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
         child: Container(
           decoration: BoxDecoration(
             color: cs.surfaceContainerLowest,
-            border: Border.all(color: cs.outlineVariant, width: 1),
+            border: Border.all(color: cs.outline.withValues(alpha: 0.35), width: 1),
             borderRadius: BorderRadius.circular(16),
           ),
           clipBehavior: Clip.antiAlias,

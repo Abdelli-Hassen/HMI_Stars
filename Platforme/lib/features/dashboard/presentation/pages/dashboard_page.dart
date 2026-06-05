@@ -279,7 +279,7 @@ class _DashboardPageState extends State<DashboardPage>
         decoration: BoxDecoration(
           color: cs.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
+          border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
         ),
         child: const Center(child: CircularProgressIndicator()),
       );
@@ -295,7 +295,7 @@ class _DashboardPageState extends State<DashboardPage>
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,7 +377,7 @@ class _DashboardPageState extends State<DashboardPage>
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,7 +473,7 @@ class _KpiCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
+          border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

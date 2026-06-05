@@ -46,42 +46,48 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
     final pdf = pw.Document();
     pdf.addPage(
       pw.MultiPage(
-        build: (pw.Context context) {
+        build: (pw.Context pdfCtx) {
+          final isM = s.genre.trim().toUpperCase().startsWith('M');
+          final genderStr = isM ? context.tr('Masculin', 'Male') : context.tr('Féminin', 'Female');
+          final activeStr = s.estActif ? context.tr('Oui', 'Yes') : context.tr('Non (Archivé)', 'No (Archived)');
+          final undefinedStr = context.tr('Non défini', 'Not defined');
+          final noneCdiStr = context.tr('Néant / CDI', 'None / CDI');
+
           return [
-            pw.Text('Dossier Complet du Salarie: ${s.nom} ${s.prenom}', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+            pw.Text('${context.tr('Dossier Complet du Salarié: ', 'Complete Employee File: ')}${s.nom} ${s.prenom}', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
             pw.SizedBox(height: 20),
             
-            pw.Text('1. Identite & Etat Civil', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(context.tr('1. Identité & État Civil', '1. Identity & Civil Status'), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
             pw.Divider(),
-            pw.Text('Nom: ${s.nom}'),
-            pw.Text('Prenom: ${s.prenom}'),
-            pw.Text('Nom de naissance: ${s.nomNaissance}'),
-            pw.Text('Genre: ${s.genre}'),
-            pw.Text('Date de naissance: ${s.dateNaissance != null ? "${s.dateNaissance!.day}/${s.dateNaissance!.month}/${s.dateNaissance!.year}" : "Non défini"}'),
-            pw.Text('Lieu de naissance: ${s.lieuNaissance}'),
-            pw.Text('Nationalite: ${s.nationalite}'),
+            pw.Text('${context.tr('Nom: ', 'Last Name: ')}${s.nom}'),
+            pw.Text('${context.tr('Prénom: ', 'First Name: ')}${s.prenom}'),
+            pw.Text('${context.tr('Nom de naissance: ', 'Birth Name: ')}${s.nomNaissance}'),
+            pw.Text('${context.tr('Genre: ', 'Gender: ')}$genderStr'),
+            pw.Text('${context.tr('Date de naissance: ', 'Date of Birth: ')}${s.dateNaissance != null ? "${s.dateNaissance!.day}/${s.dateNaissance!.month}/${s.dateNaissance!.year}" : undefinedStr}'),
+            pw.Text('${context.tr('Lieu de naissance: ', 'Place of Birth: ')}${s.lieuNaissance}'),
+            pw.Text('${context.tr('Nationalité: ', 'Nationality: ')}${s.nationalite}'),
             pw.SizedBox(height: 15),
 
-            pw.Text('2. Coordonnees', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(context.tr('2. Coordonnées', '2. Contact Info'), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
             pw.Divider(),
-            pw.Text('Adresse: ${s.adressePostale}'),
-            pw.Text('Telephone: ${s.telephone}'),
-            pw.Text('Email: ${s.email}'),
+            pw.Text('${context.tr('Adresse: ', 'Address: ')}${s.adressePostale}'),
+            pw.Text('${context.tr('Téléphone: ', 'Phone: ')}${s.telephone}'),
+            pw.Text('${context.tr('Email: ', 'Email: ')}${s.email}'),
             pw.SizedBox(height: 15),
 
-            pw.Text('3. Affiliation & Identite', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(context.tr('3. Affiliation & Identité', '3. Affiliation & Identity'), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
             pw.Divider(),
-            pw.Text('Numero CIN / Piece: ${s.cin}'),
-            pw.Text('Securite Sociale (SS): ${s.numeroSecuriteSociale}'),
+            pw.Text('${context.tr('Numéro CIN / Pièce: ', 'ID Card Number: ')}${s.cin}'),
+            pw.Text('${context.tr('Sécurité Sociale (SS): ', 'Social Security (SS): ')}${s.numeroSecuriteSociale}'),
             pw.SizedBox(height: 15),
 
-            pw.Text('4. Contrat & Poste', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(context.tr('4. Contrat & Poste', '4. Contract & Job'), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
             pw.Divider(),
-            pw.Text('Date d\'embauche: ${s.dateEmbauche != null ? "${s.dateEmbauche!.day}/${s.dateEmbauche!.month}/${s.dateEmbauche!.year}" : "Non défini"}'),
-            pw.Text('Date fin de contrat: ${s.dateFinContrat != null ? "${s.dateFinContrat!.day}/${s.dateFinContrat!.month}/${s.dateFinContrat!.year}" : "Néant / CDI"}'),
-            pw.Text('Type de contrat: ${s.typeContrat}'),
-            pw.Text('Poste: ${s.emploiPoste}'),
-            pw.Text('Est Actif: ${s.estActif ? "Oui" : "Non (Archive)"}'),
+            pw.Text('${context.tr('Date d\'embauche: ', 'Hire Date: ')}${s.dateEmbauche != null ? "${s.dateEmbauche!.day}/${s.dateEmbauche!.month}/${s.dateEmbauche!.year}" : undefinedStr}'),
+            pw.Text('${context.tr('Date fin de contrat: ', 'Contract End Date: ')}${s.dateFinContrat != null ? "${s.dateFinContrat!.day}/${s.dateFinContrat!.month}/${s.dateFinContrat!.year}" : noneCdiStr}'),
+            pw.Text('${context.tr('Type de contrat: ', 'Contract Type: ')}${s.typeContrat}'),
+            pw.Text('${context.tr('Poste: ', 'Job Title: ')}${s.emploiPoste}'),
+            pw.Text('${context.tr('Est Actif: ', 'Is Active: ')}$activeStr'),
           ];
         },
       ),
@@ -296,7 +302,11 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerLowest, 
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
+            ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Icon(Icons.info_outline, size: 18, color: cs.primary),
@@ -331,7 +341,11 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerLowest, 
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
+            ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Icon(Icons.gavel_outlined, size: 18, color: cs.primary),
@@ -1798,7 +1812,14 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
     _emploiPosteController = TextEditingController(text: widget.salarie.emploiPoste);
     descriptionController = TextEditingController(text: widget.salarie.description);
 
-    _genre = widget.salarie.genre.isEmpty ? 'M' : widget.salarie.genre;
+    final g = widget.salarie.genre.trim().toUpperCase();
+    if (g.startsWith('M')) {
+      _genre = 'M';
+    } else if (g.startsWith('F')) {
+      _genre = 'F';
+    } else {
+      _genre = 'M';
+    }
     _typeContrat = widget.salarie.typeContrat.isEmpty ? 'CDI' : widget.salarie.typeContrat;
     _dateNaissance = widget.salarie.dateNaissance;
     _dateEmbauche = widget.salarie.dateEmbauche;

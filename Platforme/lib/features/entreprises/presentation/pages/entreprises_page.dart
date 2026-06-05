@@ -728,8 +728,8 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: _hovered 
-                  ? cs.primary.withValues(alpha: 0.3)
-                  : cs.outlineVariant.withValues(alpha: 0.3),
+                  ? cs.primary.withValues(alpha: 0.5)
+                  : cs.outline.withValues(alpha: 0.35),
               width: 1,
             ),
             boxShadow: _hovered
@@ -897,8 +897,8 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: _hovered 
-                  ? cs.primary.withValues(alpha: 0.3)
-                  : cs.outlineVariant.withValues(alpha: 0.3),
+                  ? cs.primary.withValues(alpha: 0.5)
+                  : cs.outline.withValues(alpha: 0.35),
               width: 1,
             ),
             boxShadow: _hovered
