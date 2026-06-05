@@ -423,21 +423,9 @@ class _MessageriePageState extends State<MessageriePage> {
                     : null,
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    liveEntreprise.nom,
-                    style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface),
-                  ),
-                  Text(
-                    liveEntreprise.email,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+              Text(
+                liveEntreprise.nom,
+                style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface),
               ),
               const Spacer(),
               Tooltip(
