@@ -155,10 +155,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ]),
             const SizedBox(height: 24),
 
-            // ─── Appearance Section ───
-            _buildAppearanceSection(),
-            const SizedBox(height: 24),
-
             // ─── Security Section ───
             _buildSecuritySection(),
           ],
@@ -253,6 +249,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildWorkspaceSection() {
     final cs = Theme.of(context).colorScheme;
+    final themeProvider = context.watch<ThemeProvider>();
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -266,74 +263,55 @@ class _SettingsPageState extends State<SettingsPage> {
         _lockedTextField(context.tr("Organisation", "Organization"), 'HMI Stars Consulting', Icons.corporate_fare),
         const SizedBox(height: 16),
         _staticDropdownField(context.tr('Langue par défaut', 'Default Language'), _selectedLangue, ['Français (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
+        const SizedBox(height: 16),
+        // Dark Mode Toggle
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    size: 20, 
+                    color: cs.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('Mode Sombre', 'Dark Mode'),
+                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      themeProvider.isDarkMode ? context.tr('Activé', 'Enabled') : context.tr('Désactivé', 'Disabled'),
+                      style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Switch(
+              value: themeProvider.isDarkMode,
+              onChanged: (val) => themeProvider.toggleTheme(val),
+              activeThumbColor: cs.primary,
+              activeTrackColor: cs.primary.withValues(alpha: 0.3),
+              inactiveThumbColor: cs.outline,
+              inactiveTrackColor: cs.surfaceContainerHigh,
+            ),
+          ],
+        ),
         const SizedBox(height: 20),
         _saveButton(_sauvegarderWorkspace),
       ]),
-    );
-  }
-
-  Widget _buildAppearanceSection() {
-    final cs = Theme.of(context).colorScheme;
-    final themeProvider = context.watch<ThemeProvider>();
-    
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.tr('APPARENCE', 'APPEARANCE'), style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      size: 20, 
-                      color: cs.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr('Mode Sombre', 'Dark Mode'),
-                        style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        themeProvider.isDarkMode ? context.tr('Activé', 'Enabled') : context.tr('Désactivé', 'Disabled'),
-                        style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Switch(
-                value: themeProvider.isDarkMode,
-                onChanged: (val) => themeProvider.toggleTheme(val),
-                activeThumbColor: cs.primary,
-                activeTrackColor: cs.primary.withValues(alpha: 0.3),
-                inactiveThumbColor: cs.outline,
-                inactiveTrackColor: cs.surfaceContainerHigh,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
