@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import 'app_sidebar.dart';
 import 'app_top_bar.dart';
 
@@ -25,8 +24,9 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: cs.surface,
       body: Row(
         children: [
           // ─── Sidebar (always the same) ───
@@ -67,7 +67,7 @@ class MainShell extends StatelessWidget {
                     },
                     child: Container(
                       key: ValueKey(currentRoute),
-                      color: AppColors.surface,
+                      color: cs.surface,
                       child: body,
                     ),
                   ),

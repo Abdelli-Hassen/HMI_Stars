@@ -52,6 +52,7 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.dashboard,
       title: 'HMI Stars - Tableau de Bord RH',
@@ -68,10 +69,10 @@ class _DashboardPageState extends State<DashboardPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Tableau de Bord RH', style: AppTextStyles.headlineMedium),
+                    Text('Tableau de Bord RH', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
                     const SizedBox(height: 4),
                     Text('Bienvenue, voici un aperçu de votre gestion actuelle.',
-                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
                   ],
                 ),
               ),
@@ -92,7 +93,7 @@ class _DashboardPageState extends State<DashboardPage>
                       child: Row(
                         children: [
                           _KpiCard(
-                            icon: Icons.business, iconColor: AppColors.primary,
+                            icon: Icons.business, iconColor: cs.primary,
                             value: (entrepriseProvider.totalEntreprises * t).round().toString(), label: 'Total Entreprises',
                             badge: "Portefeuille", badgeColor: AppColors.success,
                           ),
@@ -100,13 +101,13 @@ class _DashboardPageState extends State<DashboardPage>
                           _KpiCard(
                             icon: Icons.work_history, iconColor: AppColors.warning,
                             value: (entrepriseProvider.dossiersEnCours * t).round().toString(), label: 'En Cours',
-                            badge: "Aujourd'hui", badgeColor: AppColors.primary,
+                            badge: "Aujourd'hui", badgeColor: cs.primary,
                           ),
                           const SizedBox(width: 16),
                           _KpiCard(
-                            icon: Icons.hourglass_empty, iconColor: AppColors.primary,
+                            icon: Icons.hourglass_empty, iconColor: cs.primary,
                             value: (entrepriseProvider.dossiersEnAttente * t).round().toString(), label: 'En Attente',
-                            badge: 'Documents', badgeColor: AppColors.primary,
+                            badge: 'Documents', badgeColor: cs.primary,
                           ),
                           const SizedBox(width: 16),
                           _KpiCard(
@@ -146,10 +147,11 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildActionsCard() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -158,9 +160,9 @@ class _DashboardPageState extends State<DashboardPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Actions & Notifications', style: AppTextStyles.titleMedium),
+              Text('Actions & Notifications', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
               Text('Voir tout',
-                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
+                  style: AppTextStyles.labelMedium.copyWith(color: cs.primary)),
             ],
           ),
           const SizedBox(height: 20),
@@ -172,17 +174,17 @@ class _DashboardPageState extends State<DashboardPage>
           ),
           const SizedBox(height: 16),
           _actionItem(
-            Icons.assignment_outlined, AppColors.primary,
+            Icons.assignment_outlined, cs.primary,
             "Validation d'Entretien",
             'Candidat : Marc Lefebvre - Développeur Senior.',
-            badge: 'Valider', badgeColor: AppColors.primary,
+            badge: 'Valider', badgeColor: cs.primary,
           ),
           const SizedBox(height: 16),
           _actionItem(
-            Icons.calendar_today, AppColors.onSurfaceVariant,
+            Icons.calendar_today, cs.onSurfaceVariant,
             'Planning Annuel',
             "Mise à jour du calendrier des congés d'été.",
-            badge: 'IL Y A 2H', badgeColor: AppColors.outline,
+            badge: 'IL Y A 2H', badgeColor: cs.outline,
             hasBadgeBg: false,
           ),
         ],
@@ -192,6 +194,7 @@ class _DashboardPageState extends State<DashboardPage>
 
   Widget _actionItem(IconData icon, Color iconColor, String title, String subtitle,
       {String? badge, Color? badgeColor, bool hasBadgeBg = true}) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -207,8 +210,8 @@ class _DashboardPageState extends State<DashboardPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: AppTextStyles.labelLarge),
-              Text(subtitle, style: AppTextStyles.bodySmall),
+              Text(title, style: AppTextStyles.labelLarge.copyWith(color: cs.onSurface)),
+              Text(subtitle, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
             ],
           ),
         ),
@@ -231,10 +234,11 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildCalendarCard() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -243,10 +247,10 @@ class _DashboardPageState extends State<DashboardPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Calendrier', style: AppTextStyles.titleMedium),
+              Text('Calendrier', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
               Row(
                 children: [
-                  Icon(Icons.chevron_left, size: 18, color: AppColors.outline),
+                  Icon(Icons.chevron_left, size: 18, color: cs.outline),
                   const SizedBox(width: 8),
                   Container(
                     width: 36, height: 36,
@@ -263,7 +267,7 @@ class _DashboardPageState extends State<DashboardPage>
           const SizedBox(height: 8),
           Center(
             child: Text('Juin 2026',
-                style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
+                style: AppTextStyles.labelLarge.copyWith(color: cs.primary)),
           ),
           const SizedBox(height: 12),
 
@@ -277,6 +281,7 @@ class _DashboardPageState extends State<DashboardPage>
                           child: Text(d,
                               style: AppTextStyles.labelSmall.copyWith(
                                   fontWeight: FontWeight.w600,
+                                  color: cs.onSurfaceVariant,
                               ))),
                     ))
                 .toList(),
@@ -291,7 +296,7 @@ class _DashboardPageState extends State<DashboardPage>
           const SizedBox(height: 16),
 
           // Events
-          _calEvent(AppColors.primary, 'Réunion d\'équipe - 14:00'),
+          _calEvent(cs.primary, 'Réunion d\'équipe - 14:00'),
           const SizedBox(height: 8),
           _calEvent(AppColors.error, 'Clôture des congés - 17:00'),
         ],
@@ -303,6 +308,7 @@ class _DashboardPageState extends State<DashboardPage>
       {List<int> grayed = const [],
       List<int> highlighted = const [],
       List<int> accent = const []}) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -312,7 +318,7 @@ class _DashboardPageState extends State<DashboardPage>
                   width: 30, height: 30,
                   decoration: BoxDecoration(
                     color: highlighted.contains(d)
-                        ? AppColors.primary
+                        ? cs.primary
                         : accent.contains(d)
                             ? AppColors.error
                             : Colors.transparent,
@@ -325,8 +331,8 @@ class _DashboardPageState extends State<DashboardPage>
                           color: highlighted.contains(d) || accent.contains(d)
                               ? Colors.white
                               : grayed.contains(d)
-                                  ? AppColors.outline
-                                  : AppColors.onSurface,
+                                  ? cs.outline
+                                  : cs.onSurface,
                           fontWeight: highlighted.contains(d)
                               ? FontWeight.w700
                               : FontWeight.w400,
@@ -339,11 +345,12 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _calEvent(Color color, String text) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurface))),
+        Expanded(child: Text(text, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface))),
       ],
     );
   }
@@ -375,6 +382,7 @@ class _KpiCardState extends State<_KpiCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -386,12 +394,12 @@ class _KpiCardState extends State<_KpiCard> {
           padding: const EdgeInsets.all(24),
           transform: Matrix4.translationValues(0.0, _hovered ? -6.0 : 0.0, 0.0),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+            color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: _hovered 
                   ? widget.iconColor.withValues(alpha: 0.3)
-                  : AppColors.outlineVariant.withValues(alpha: 0.3),
+                  : cs.outlineVariant.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: _hovered
@@ -434,9 +442,9 @@ class _KpiCardState extends State<_KpiCard> {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(widget.value, style: AppTextStyles.headlineMedium),
+              Text(widget.value, style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
               const SizedBox(height: 2),
-              Text(widget.label, style: AppTextStyles.bodySmall),
+              Text(widget.label, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
             ],
           ),
         ),

@@ -158,6 +158,15 @@ class _ParametresPageState extends State<ParametresPage> {
     final raisonSocialeVal = _raisonSocialeController.text.trim();
     final nomGerantVal = _nomGerantController.text.trim();
     final emailVal = _emailController.text.trim();
+    final siretVal = _siretController.text.trim();
+    final sirenVal = _sirenController.text.trim();
+    final telephoneVal = _telephoneController.text.trim();
+    final adresseVal = _adresseController.text.trim();
+    final tvaVal = _tvaController.text.trim();
+    final formeJuridiqueVal = _formeJuridiqueController.text.trim();
+    final capitalSocialVal = _capitalSocialController.text.trim();
+    final codeApeVal = _codeAPEController.text.trim();
+    final rcsVal = _rcsController.text.trim();
 
     if (raisonSocialeVal.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -183,6 +192,136 @@ class _ParametresPageState extends State<ParametresPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('L\'adresse email est requise'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailVal)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez saisir une adresse e-mail valide.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (telephoneVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro de téléphone est requis'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^[+0-9\s-]{9,15}$').hasMatch(telephoneVal)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro de téléphone saisi est invalide.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (siretVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro SIRET est requis'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^\d{14}$').hasMatch(siretVal)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro SIRET doit comporter exactement 14 chiffres.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (sirenVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro SIREN est requis'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^\d{9}$').hasMatch(sirenVal)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro SIREN doit comporter exactement 9 chiffres.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (adresseVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('L\'adresse est requise'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (tvaVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro de TVA est requis'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (formeJuridiqueVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La forme juridique est requise'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (capitalSocialVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le capital social est requis'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (codeApeVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le code APE est requis'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (rcsVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le numéro RCS est requis'),
           backgroundColor: Colors.red,
         ),
       );
@@ -438,69 +577,132 @@ class _ParametresPageState extends State<ParametresPage> {
     AppState appState,
     bool isDark,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF2A2F3A)
-                  : Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isDark ? Icons.dark_mode : Icons.light_mode,
-              color: isDark
-                  ? const Color(0xFFEAC249)
-                  : Theme.of(context).colorScheme.primary,
-              size: 22,
-            ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isDark ? 'Mode Sombre' : 'Mode Clair',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF2A2F3A)
+                      : Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Text(
-                  isDark
-                      ? 'Interface en thème sombre'
-                      : 'Interface en thème clair',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                child: Icon(
+                  isDark ? Icons.dark_mode : Icons.light_mode,
+                  color: isDark
+                      ? const Color(0xFFEAC249)
+                      : Theme.of(context).colorScheme.primary,
+                  size: 22,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isDark ? 'Mode Sombre' : 'Mode Clair',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      isDark
+                          ? 'Interface en thème sombre'
+                          : 'Interface en thème clair',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isDark,
+                onChanged: (_) => appState.toggleDarkMode(),
+                activeThumbColor: const Color(0xFFEAC249),
+                activeTrackColor: const Color(0xFF574400),
+                inactiveThumbColor: Theme.of(context).colorScheme.primary,
+                inactiveTrackColor: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant,
+              ),
+            ],
           ),
-          Switch(
-            value: isDark,
-            onChanged: (_) => appState.toggleDarkMode(),
-            activeThumbColor: const Color(0xFFEAC249),
-            activeTrackColor: const Color(0xFF574400),
-            inactiveThumbColor: Theme.of(context).colorScheme.primary,
-            inactiveTrackColor: Theme.of(
-              context,
-            ).colorScheme.outlineVariant,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.translate,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Langue',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      'Sélectionner la langue de l\'application',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DropdownButton<String>(
+                value: appState.langue,
+                items: const [
+                  DropdownMenuItem(value: 'Français (FR)', child: Text('Français (FR)')),
+                  DropdownMenuItem(value: 'English (EN)', child: Text('English (EN)')),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    appState.setLangue(val);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

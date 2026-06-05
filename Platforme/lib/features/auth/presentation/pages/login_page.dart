@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/providers/theme_provider.dart';
+import '../../../../core/utils/translation_extension.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_hero_panel.dart';
 
@@ -35,7 +37,11 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
-    final success = await auth.signIn(email: email, password: password);
+    final success = await auth.signIn(
+      email: email,
+      password: password,
+      rememberMe: _rememberMe,
+    );
     if (!mounted) return;
     setState(() => _loading = false);
 
@@ -51,14 +57,17 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: Icon(Icons.mark_email_unread_outlined, size: 48, color: AppColors.primary),
+        icon: Icon(Icons.mark_email_unread_outlined, size: 48, color: cs.primary),
         title: Text(
-          'E-mail non confirmé',
+          context.tr('E-mail non confirmé', 'Email Unconfirmed'),
           style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
         ),
         content: Text(
-          'Votre adresse e-mail n\'a pas encore été vérifiée.\n\nVoulez-vous recevoir un nouvel e-mail de confirmation ?',
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+          context.tr(
+            'Votre adresse e-mail n\'a pas encore été vérifiée.\n\nVoulez-vous recevoir un nouvel e-mail de confirmation ?',
+            'Your email address has not been verified yet.\n\nWould you like to receive a new confirmation email?',
+          ),
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -69,8 +78,8 @@ class _LoginPageState extends State<LoginPage> {
               Navigator.pop(ctx);
             },
             child: Text(
-              'Non, plus tard',
-              style: AppTextStyles.labelMedium.copyWith(color: AppColors.outline),
+              context.tr('Non, plus tard', 'No, later'),
+              style: AppTextStyles.labelMedium.copyWith(color: cs.outline),
             ),
           ),
           const SizedBox(width: 8),
@@ -85,7 +94,9 @@ class _LoginPageState extends State<LoginPage> {
               if (sent) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('📧 E-mail de confirmation renvoyé ! Vérifiez votre boîte mail.'),
+                    content: Text(context.tr(
+                        '📧 E-mail de confirmation renvoyé ! Vérifiez votre boîte mail.',
+                        '📧 Confirmation email resent! Please check your inbox.')),
                     backgroundColor: Colors.green.shade700,
                     behavior: SnackBarBehavior.floating,
                     duration: const Duration(seconds: 5),
@@ -94,7 +105,9 @@ class _LoginPageState extends State<LoginPage> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Impossible de renvoyer l\'e-mail. Réessayez dans quelques secondes.'),
+                    content: Text(context.tr(
+                        'Impossible de renvoyer l\'e-mail. Réessayez dans quelques secondes.',
+                        'Unable to resend email. Please try again in a few seconds.')),
                     backgroundColor: Colors.red.shade700,
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -102,9 +115,9 @@ class _LoginPageState extends State<LoginPage> {
               }
             },
             icon: const Icon(Icons.send, size: 18),
-            label: const Text('Oui, renvoyer'),
+            label: Text(context.tr('Oui, renvoyer', 'Yes, resend')),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: cs.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -117,18 +130,43 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
+
+    if (auth.status == AuthStatus.initial) {
+      return Scaffold(
+        backgroundColor: cs.surface,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (auth.isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+      });
+      return Scaffold(
+        backgroundColor: cs.surface,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: cs.surface,
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 900),
           margin: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+            color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.onSurface.withValues(alpha: 0.06),
+                color: cs.onSurface.withValues(alpha: 0.06),
                 blurRadius: 24,
                 offset: const Offset(0, 4),
               ),
@@ -141,18 +179,21 @@ class _LoginPageState extends State<LoginPage> {
                 // ─── Left: Hero Panel ───
                 Expanded(
                   child: AuthHeroPanel(
-                    headline:
-                        "HMI Stars Consulting\nL'expertise à votre service.",
-                    subHeadline:
-                        "Cabinet de conseil spécialisé en gestion, création d'entreprise et accompagnement social. Accédez à votre espace dédié pour un pilotage optimal de votre activité.",
-                    bottomCard: const TrustBadgeCard(),
+                    headline: context.tr(
+                      "HMI Stars Consulting\nL'expertise à votre service.",
+                      "HMI Stars Consulting\nExpertise at your service.",
+                    ),
+                    subHeadline: context.tr(
+                      "Cabinet de conseil spécialisé en gestion, création d'entreprise et accompagnement social. Accédez à votre espace dédié pour un pilotage optimal de votre activité.",
+                      "Consulting firm specialized in management, business creation, and social support. Access your dedicated space for optimal management of your activity.",
+                    ),
                   ),
                 ),
 
                 // ─── Right: Login Form ───
                 Expanded(
                   child: Container(
-                    color: AppColors.surfaceContainerLowest,
+                    color: cs.surfaceContainerLowest,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 64,
                       vertical: 48,
@@ -162,25 +203,31 @@ class _LoginPageState extends State<LoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Espace Client',
+                          context.tr('Espace Client', 'Client Space'),
                           style:
                               AppTextStyles.headlineLarge.copyWith(fontSize: 30),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Veuillez saisir vos identifiants pour accéder à votre tableau de bord financier.',
+                          context.tr(
+                            'Veuillez saisir vos identifiants pour accéder à votre tableau de bord financier.',
+                            'Please enter your credentials to access your financial dashboard.',
+                          ),
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 36),
 
                         // ─── Email ───
                         Text(
-                          'Adresse e-mail professionnelle',
+                          context.tr(
+                            'Adresse e-mail professionnelle',
+                            'Professional email address',
+                          ),
                           style: AppTextStyles.labelMedium.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -189,8 +236,11 @@ class _LoginPageState extends State<LoginPage> {
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.email_outlined,
-                                size: 20, color: AppColors.outline),
-                            hintText: 'nom@entreprise.fr',
+                                size: 20, color: cs.outline),
+                            hintText: context.tr(
+                              'nom@entreprise.fr',
+                              'name@company.com',
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -200,10 +250,10 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Mot de passe',
+                              context.tr('Mot de passe', 'Password'),
                               style: AppTextStyles.labelMedium.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.onSurfaceVariant,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                             MouseRegion(
@@ -212,9 +262,12 @@ class _LoginPageState extends State<LoginPage> {
                                 onTap: () => Navigator.pushNamed(
                                     context, AppRoutes.forgotPassword),
                                 child: Text(
-                                  'Mot de passe oublié ?',
+                                  context.tr(
+                                    'Mot de passe oublié ?',
+                                    'Forgot password?',
+                                  ),
                                   style: AppTextStyles.labelSmall.copyWith(
-                                    color: AppColors.primary,
+                                    color: cs.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -229,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
                           onSubmitted: (_) => _signIn(),
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.lock_outline,
-                                size: 20, color: AppColors.outline),
+                                size: 20, color: cs.outline),
                             hintText: '••••••••••••',
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -237,7 +290,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
                                 size: 20,
-                                color: AppColors.outline,
+                                color: cs.outline,
                               ),
                               onPressed: () => setState(
                                   () => _obscurePassword = !_obscurePassword),
@@ -278,9 +331,12 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Rester connecté sur cet appareil',
+                              context.tr(
+                                'Rester connecté sur cet appareil',
+                                'Keep me signed in on this device',
+                              ),
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.onSurfaceVariant,
+                                color: cs.onSurfaceVariant,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -293,12 +349,12 @@ class _LoginPageState extends State<LoginPage> {
                           width: double.infinity,
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
+                              gradient: cs.primaryGradient,
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      AppColors.primary.withValues(alpha: 0.2),
+                                      cs.primary.withValues(alpha: 0.2),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -326,7 +382,7 @@ class _LoginPageState extends State<LoginPage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          'Se connecter',
+                                          context.tr('Se connecter', 'Sign In'),
                                           style: GoogleFonts.manrope(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w700,
@@ -350,7 +406,7 @@ class _LoginPageState extends State<LoginPage> {
                           decoration: BoxDecoration(
                             border: Border(
                               top: BorderSide(
-                                color: AppColors.surfaceContainer,
+                                color: cs.surfaceContainer,
                               ),
                             ),
                           ),
@@ -359,9 +415,9 @@ class _LoginPageState extends State<LoginPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Nouveau sur HMI Stars ?',
+                                  context.tr('Nouveau sur HMI Stars ?', 'New to HMI Stars?'),
                                   style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.onSurfaceVariant,
+                                    color: cs.onSurfaceVariant,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -372,10 +428,10 @@ class _LoginPageState extends State<LoginPage> {
                                     onTap: () => Navigator.pushNamed(
                                         context, AppRoutes.signUp),
                                     child: Text(
-                                      'Créer un compte',
+                                      context.tr('Créer un compte', 'Create an account'),
                                       style:
                                           AppTextStyles.labelMedium.copyWith(
-                                        color: AppColors.primary,
+                                        color: cs.primary,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -388,18 +444,35 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 24),
 
-                        // ─── Support / Language ───
+                        // ─── Support / Language / Theme Switcher ───
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _FooterLink(
                               icon: Icons.language,
-                              text: 'Français (FR)',
+                              text: auth.tempLanguage == 'English (EN)'
+                                  ? 'Français (FR)'
+                                  : 'English (EN)',
+                              onTap: () {
+                                auth.setTempLanguage(
+                                  auth.tempLanguage == 'English (EN)'
+                                      ? 'Français (FR)'
+                                      : 'English (EN)',
+                                );
+                              },
                             ),
                             const SizedBox(width: 24),
                             _FooterLink(
-                              icon: Icons.help_outline,
-                              text: "Besoin d'aide ?",
+                              icon: themeProvider.isDarkMode
+                                  ? Icons.light_mode
+                                  : Icons.dark_mode,
+                              text: themeProvider.isDarkMode
+                                  ? context.tr('Mode Jour ?', 'Light Mode ?')
+                                  : context.tr('Mode Nuit ?', 'Night Mode ?'),
+                              onTap: () {
+                                themeProvider.toggleTheme(
+                                    !themeProvider.isDarkMode);
+                              },
                             ),
                           ],
                         ),
@@ -419,8 +492,9 @@ class _LoginPageState extends State<LoginPage> {
 class _FooterLink extends StatefulWidget {
   final IconData icon;
   final String text;
+  final VoidCallback? onTap;
 
-  const _FooterLink({required this.icon, required this.text});
+  const _FooterLink({required this.icon, required this.text, this.onTap});
 
   @override
   State<_FooterLink> createState() => _FooterLinkState();
@@ -431,27 +505,31 @@ class _FooterLinkState extends State<_FooterLink> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            widget.icon,
-            size: 14,
-            color: _hovered ? AppColors.onSurface : AppColors.outline,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            widget.text,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: _hovered ? AppColors.onSurface : AppColors.outline,
-              fontWeight: FontWeight.w600,
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              widget.icon,
+              size: 14,
+              color: _hovered ? cs.onSurface : cs.outline,
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Text(
+              widget.text,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: _hovered ? cs.onSurface : cs.outline,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

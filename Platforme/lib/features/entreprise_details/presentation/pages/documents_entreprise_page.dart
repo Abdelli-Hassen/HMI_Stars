@@ -20,11 +20,12 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _staggerController;
   int _selectedFolder = 0;
-  String? _selectedEntrepriseId;
+  String? _selectedEntrepriseId = 'all';
   String _searchQuery = '';
-  int _visibleCount = 15;
-  static const int _pageSize = 15;
+  int _visibleCount = 20;
+  static const int _pageSize = 20;
   String _currentSort = 'recent';
+  bool _initialized = false;
 
   // Library folder structure definitions
   static const _folderLabels = [
@@ -196,9 +197,9 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
       position: position,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.outlineVariant, width: 1),
+        side: BorderSide(color: cs.outlineVariant, width: 1),
       ),
-      color: AppColors.surfaceContainerLowest,
+      color: cs.surfaceContainerLowest,
       items: [
         PopupMenuItem(
           value: 'recent',
@@ -234,6 +235,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
         String dialogSearchQuery = '';
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final cs = Theme.of(context).colorScheme;
             final filteredEntreprises = provider.entreprises
                 .where((e) => e.nom.toLowerCase().contains(dialogSearchQuery.toLowerCase()))
                 .toList();
@@ -246,9 +248,9 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                   maxHeight: 560,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.outlineVariant, width: 1),
+                  border: Border.all(color: cs.outlineVariant, width: 1),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
@@ -273,7 +275,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                           IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () => Navigator.of(context).pop(),
-                            color: AppColors.outline,
+                            color: cs.outline,
                           ),
                         ],
                       ),
@@ -284,9 +286,9 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                         autofocus: true,
                         decoration: InputDecoration(
                           hintText: "Cherchez votre entreprise",
-                          prefixIcon: Icon(Icons.search, color: AppColors.outline),
+                          prefixIcon: Icon(Icons.search, color: cs.outline),
                           filled: true,
-                          fillColor: AppColors.surfaceContainerLow,
+                          fillColor: cs.surfaceContainerLow,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -302,55 +304,90 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                     ),
                     const SizedBox(height: 16),
                     Expanded(
-                      child: filteredEntreprises.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Aucune entreprise trouvée',
-                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        itemCount: filteredEntreprises.length + 1,
+                        itemBuilder: (context, index) {
+                          final cs = Theme.of(context).colorScheme;
+                          if (index == 0) {
+                            final isSelected = _selectedEntrepriseId == 'all';
+                            return Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? cs.primary.withValues(alpha: 0.08)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              itemCount: filteredEntreprises.length,
-                              itemBuilder: (context, index) {
-                                final ent = filteredEntreprises[index];
-                                final isSelected = ent.id == (_selectedEntrepriseId ?? provider.entreprises.first.id);
+                              child: ListTile(
+                                hoverColor: cs.surfaceContainerLow,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                leading: CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: cs.primary.withValues(alpha: 0.1),
+                                  child: Icon(Icons.business, color: cs.primary, size: 16),
+                                ),
+                                title: Text(
+                                  'Toutes les entreprises',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                    color: isSelected ? cs.primary : cs.onSurface,
+                                  ),
+                                ),
+                                trailing: isSelected
+                                    ? Icon(Icons.check_circle, color: cs.primary, size: 20)
+                                    : null,
+                                onTap: () {
+                                  setState(() {
+                                    _selectedEntrepriseId = 'all';
+                                    _visibleCount = _pageSize;
+                                  });
+                                  provider.fetchDocumentsForEntreprise('all');
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            );
+                          }
+                          final ent = filteredEntreprises[index - 1];
+                          final isSelected = ent.id == _selectedEntrepriseId;
 
-                                return Container(
-                                  margin: const EdgeInsets.symmetric(vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? AppColors.primary.withValues(alpha: 0.08)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ListTile(
-                                    hoverColor: AppColors.surfaceContainerLow,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    title: Text(
-                                      ent.nom,
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                        color: isSelected ? AppColors.primary : AppColors.onSurface,
-                                      ),
-                                    ),
-                                    trailing: isSelected
-                                        ? Icon(Icons.check_circle, color: AppColors.primary, size: 20)
-                                        : null,
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedEntrepriseId = ent.id;
-                                        _visibleCount = _pageSize;
-                                      });
-                                      provider.fetchDocumentsForEntreprise(ent.id);
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                );
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? cs.primary.withValues(alpha: 0.08)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              hoverColor: cs.surfaceContainerLow,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                              ),
+                              title: Text(
+                                ent.nom,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  color: isSelected ? cs.primary : cs.onSurface,
+                                ),
+                              ),
+                              trailing: isSelected
+                                  ? Icon(Icons.check_circle, color: cs.primary, size: 20)
+                                  : null,
+                              onTap: () {
+                                setState(() {
+                                  _selectedEntrepriseId = ent.id;
+                                  _visibleCount = _pageSize;
+                                });
+                                provider.fetchDocumentsForEntreprise(ent.id);
+                                Navigator.of(context).pop();
                               },
                             ),
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -362,8 +399,6 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
       },
     );
   }
-
-
 
   @override
   void initState() {
@@ -383,10 +418,11 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         provider.fetchEntreprises();
       });
-    } else if (_selectedEntrepriseId == null) {
+    } else if (_selectedEntrepriseId == 'all' && !_initialized) {
       final routeArg = ModalRoute.of(context)?.settings.arguments as String?;
-      final initialId = routeArg ?? provider.entreprises.first.id;
+      final initialId = routeArg ?? 'all';
       _selectedEntrepriseId = initialId;
+      _initialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         provider.fetchDocumentsForEntreprise(initialId);
       });
@@ -401,6 +437,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final provider = Provider.of<EntrepriseProvider>(context);
 
     if (provider.entreprises.isEmpty) {
@@ -411,10 +448,10 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
       );
     }
 
-    final activeId = _selectedEntrepriseId ?? provider.entreprises.first.id;
+    final activeId = _selectedEntrepriseId ?? 'all';
     final allDocs = provider.documentsPourEntreprise(activeId);
     
-    // Count per category (for Accountant/Comptable use case)
+    // Count per category
     int totalCount = allDocs.length;
     int comptaCount = 0;
     int socialPaieCount = 0;
@@ -486,11 +523,13 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
   }
 
   Widget _buildHeader(EntrepriseProvider provider) {
-    final activeId = _selectedEntrepriseId ?? provider.entreprises.first.id;
-    final currentEntreprise = provider.entreprises.firstWhere(
-      (e) => e.id == activeId,
-      orElse: () => provider.entreprises.first,
-    );
+    final activeId = _selectedEntrepriseId ?? 'all';
+    final currentEntrepriseName = activeId == 'all'
+        ? 'Toutes les entreprises'
+        : provider.entreprises.firstWhere(
+            (e) => e.id == activeId,
+            orElse: () => provider.entreprises.first,
+          ).nom;
 
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(0, -0.3), end: Offset.zero).animate(
@@ -508,8 +547,8 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text('Gérez les documents contractuels et administratifs de ',
-                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                    Text('Gerez les documents contractuels et administratifs de ',
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
                     GestureDetector(
                       onTap: () => _showEntrepriseSearchDialog(context, provider),
                       child: MouseRegion(
@@ -518,22 +557,22 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.08),
+                              color: cs.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.24)),
+                              border: Border.all(color: cs.primary.withValues(alpha: 0.24)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  currentEntreprise.nom,
+                                  currentEntrepriseName,
                                   style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.primary,
+                                    color: cs.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 18),
+                                Icon(Icons.arrow_drop_down, color: cs.primary, size: 18),
                               ],
                             ),
                           ),
@@ -572,15 +611,15 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+            color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('BIBLIOTHÈQUE', style: AppTextStyles.labelSmall.copyWith(
-                letterSpacing: 1.5, fontWeight: FontWeight.w800, color: AppColors.primary,
+              Text('BIBLIOTHEQUE', style: AppTextStyles.labelSmall.copyWith(
+                letterSpacing: 1.5, fontWeight: FontWeight.w800, color: cs.primary,
               )),
               const SizedBox(height: 16),
               ...List.generate(folders.length, (i) => _FolderItem(
@@ -610,8 +649,8 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
         opacity: CurvedAnimation(parent: _staggerController, curve: const Interval(0.2, 0.7)),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            border: Border.all(color: AppColors.outlineVariant, width: 1),
+            color: cs.surfaceContainerLowest,
+            border: Border.all(color: cs.outlineVariant, width: 1),
             borderRadius: BorderRadius.circular(16),
           ),
           clipBehavior: Clip.antiAlias,
@@ -624,7 +663,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Documents récents', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+                    Text('Documents recents', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
                     SizedBox(
                       width: 240,
                       height: 36,
@@ -637,10 +676,10 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                         },
                         decoration: InputDecoration(
                           hintText: 'Rechercher un document...',
-                          hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
-                          prefixIcon: Icon(Icons.search, size: 18, color: AppColors.outline),
+                          hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+                          prefixIcon: Icon(Icons.search, size: 18, color: cs.outline),
                           filled: true,
-                          fillColor: AppColors.surfaceContainerLow,
+                          fillColor: cs.surfaceContainerLow,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                           contentPadding: const EdgeInsets.symmetric(vertical: 10),
                           isDense: true,
@@ -655,17 +694,16 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
               // Column Headers
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                color: AppColors.surfaceContainerLow.withValues(alpha: 0.5),
+                color: cs.surfaceContainerLow.withValues(alpha: 0.5),
                 child: Row(children: [
                   Expanded(flex: 3, child: Text('NOM DU DOCUMENT', style: _colHeader())),
                   Expanded(child: Text('TYPE', style: _colHeader())),
-                  Expanded(child: Text('DATE AJOUTÉ', style: _colHeader())),
-                  SizedBox(width: 100, child: Center(child: Text('STATUT', style: _colHeader()))),
+                  Expanded(child: Text('DATE AJOUTE', style: _colHeader())),
                   const SizedBox(width: 40),
                 ]),
               ),
 
-              // Document Rows (filtered + staggered)
+              // Document Rows
               ...List.generate(displayedDocs.length, (i) {
                 final start = 0.25 + (i * 0.08);
                 final end = (start + 0.3).clamp(0.0, 1.0);
@@ -687,10 +725,10 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                   child: Center(
                     child: Column(
                       children: [
-                        Icon(Icons.folder_open, size: 40, color: AppColors.outline),
+                        Icon(Icons.folder_open, size: 40, color: cs.outline),
                         const SizedBox(height: 8),
-                        Text('Aucun document dans cette catégorie',
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.outline)),
+                        Text('Aucun document dans cette categorie',
+                            style: AppTextStyles.bodySmall.copyWith(color: cs.outline)),
                       ],
                     ),
                   ),
@@ -699,13 +737,13 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
               // Pagination info / Charger plus
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                color: AppColors.surfaceContainerLow.withValues(alpha: 0.3),
+                color: cs.surfaceContainerLow.withValues(alpha: 0.3),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Affichage de ${displayedDocs.length} sur ${filteredDocs.length} documents',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
                     ),
                     if (hasMore)
                       MouseRegion(
@@ -719,7 +757,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: AppColors.primary,
+                              color: cs.primary,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -741,9 +779,9 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                       )
                     else
                       Text(
-                        'Tous les documents affichés',
+                        'Tous les documents affiches',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.outline,
+                          color: cs.outline,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -757,12 +795,10 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     );
   }
 
-
-
   TextStyle _colHeader() => AppTextStyles.labelSmall.copyWith(
         letterSpacing: 1.2,
         fontWeight: FontWeight.w700,
-        color: AppColors.onSurfaceVariant,
+        color: cs.onSurfaceVariant,
       );
 }
 
@@ -793,6 +829,7 @@ class _FolderItemState extends State<_FolderItem> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -806,32 +843,32 @@ class _FolderItemState extends State<_FolderItem> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: widget.isActive
-                ? AppColors.surfaceContainer
+                ? cs.surfaceContainer
                 : _hovered
-                    ? AppColors.surfaceContainerLow
+                    ? cs.surfaceContainerLow
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             children: [
               Icon(widget.data.icon, size: 20,
-                  color: widget.isActive ? AppColors.primary : AppColors.onSurfaceVariant),
+                  color: widget.isActive ? cs.primary : cs.onSurfaceVariant),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(widget.data.label, style: AppTextStyles.bodySmall.copyWith(
                   fontWeight: widget.isActive ? FontWeight.w700 : FontWeight.w500,
-                  color: widget.isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: widget.isActive ? cs.primary : cs.onSurfaceVariant,
                 )),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: widget.isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+                  color: widget.isActive ? cs.primary.withValues(alpha: 0.1) : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text('${widget.data.count}', style: AppTextStyles.labelSmall.copyWith(
                   fontSize: 10,
-                  color: widget.isActive ? AppColors.primary : AppColors.outline,
+                  color: widget.isActive ? cs.primary : cs.outline,
                   fontWeight: FontWeight.w700,
                 )),
               ),
@@ -863,19 +900,6 @@ class _DocumentRowState extends State<_DocumentRow> {
     return Icons.description;
   }
 
-  bool get _isVerified {
-    final nameLower = widget.doc.nom.toLowerCase();
-    return !nameLower.contains('vérifier') && !nameLower.contains('attente');
-  }
-
-  String get _statusLabel {
-    final nameLower = widget.doc.nom.toLowerCase();
-    if (nameLower.contains('contrat') || widget.doc.categorie.toLowerCase().contains('contrat')) {
-      return 'Signé';
-    }
-    return _isVerified ? 'Validé' : 'À vérifier';
-  }
-
   Future<void> _viewDocument() async {
     final url = widget.doc.url;
     if (url != null) {
@@ -888,6 +912,7 @@ class _DocumentRowState extends State<_DocumentRow> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final formattedDate = "${widget.doc.dateAjout.day}/${widget.doc.dateAjout.month}/${widget.doc.dateAjout.year}";
 
     return MouseRegion(
@@ -898,8 +923,8 @@ class _DocumentRowState extends State<_DocumentRow> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         decoration: BoxDecoration(
-          color: _hovered ? AppColors.primary.withValues(alpha: 0.02) : Colors.transparent,
-          border: Border(bottom: BorderSide(color: AppColors.surfaceContainer)),
+          color: _hovered ? cs.primary.withValues(alpha: 0.02) : Colors.transparent,
+          border: Border(bottom: BorderSide(color: cs.surfaceContainer)),
         ),
         child: Row(
           children: [
@@ -912,11 +937,11 @@ class _DocumentRowState extends State<_DocumentRow> {
                   curve: Curves.easeOutCubic,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _hovered ? AppColors.primary : AppColors.primary.withValues(alpha: 0.05),
+                    color: _hovered ? cs.primary : cs.primary.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(_docIcon, size: 20,
-                      color: _hovered ? Colors.white : AppColors.primary),
+                      color: _hovered ? Colors.white : cs.primary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -931,44 +956,11 @@ class _DocumentRowState extends State<_DocumentRow> {
             ),
             // Type
             Expanded(
-              child: Text(widget.doc.categorie, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              child: Text(widget.doc.categorie, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
             ),
             // Date
             Expanded(
-              child: Text(formattedDate, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-            ),
-            // Status badge
-            SizedBox(
-              width: 100,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _isVerified
-                        ? AppColors.secondaryContainer
-                        : const Color(0xFFA33500).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 6, height: 6, decoration: BoxDecoration(
-                        color: _isVerified ? AppColors.secondary : const Color(0xFFA33500),
-                        shape: BoxShape.circle,
-                      )),
-                      const SizedBox(width: 6),
-                      Text(_statusLabel, style: AppTextStyles.labelSmall.copyWith(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                        color: _isVerified
-                            ? AppColors.onSecondaryContainer
-                            : const Color(0xFFA33500),
-                      )),
-                    ],
-                  ),
-                ),
-              ),
+              child: Text(formattedDate, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
             ),
             // More menu
             SizedBox(
@@ -978,7 +970,7 @@ class _DocumentRowState extends State<_DocumentRow> {
                 duration: const Duration(milliseconds: 200),
                 child: IconButton(
                   icon: const Icon(Icons.more_vert, size: 18),
-                  color: _hovered ? AppColors.primary : AppColors.outline,
+                  color: _hovered ? cs.primary : cs.outline,
                   onPressed: () {
                     final RenderBox button = context.findRenderObject() as RenderBox;
                     final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
@@ -997,7 +989,7 @@ class _DocumentRowState extends State<_DocumentRow> {
                           value: 'view',
                           child: Row(
                             children: [
-                              Icon(Icons.open_in_new, size: 18, color: AppColors.primary),
+                              Icon(Icons.open_in_new, size: 18, color: cs.primary),
                               const SizedBox(width: 8),
                               Text('Ouvrir / Voir', style: AppTextStyles.bodyMedium),
                             ],
@@ -1040,6 +1032,7 @@ class _HoverButtonState extends State<_HoverButton> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -1054,20 +1047,20 @@ class _HoverButtonState extends State<_HoverButton> {
           transform: Matrix4.diagonal3Values(_pressed ? 0.95 : 1.0, _pressed ? 0.95 : 1.0, 1.0),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            gradient: widget.filled ? AppColors.primaryGradient : null,
-            color: widget.filled ? null : AppColors.surfaceContainerLow,
+            gradient: widget.filled ? cs.primaryGradient : null,
+            color: widget.filled ? null : cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8),
             boxShadow: widget.filled && _hovered
-                ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 4))]
+                ? [BoxShadow(color: cs.primary.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 4))]
                 : null,
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(widget.icon, size: 16,
-                color: widget.filled ? Colors.white : AppColors.onSurfaceVariant),
+                color: widget.filled ? Colors.white : cs.onSurfaceVariant),
             const SizedBox(width: 8),
             Text(widget.label, style: AppTextStyles.labelMedium.copyWith(
               fontWeight: FontWeight.w700,
-              color: widget.filled ? Colors.white : AppColors.onSurfaceVariant,
+              color: widget.filled ? Colors.white : cs.onSurfaceVariant,
             )),
           ]),
         ),

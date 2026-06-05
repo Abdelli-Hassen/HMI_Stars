@@ -44,11 +44,13 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.entreprises,
       title: 'Liste des Entreprises',
       body: Consumer<EntrepriseProvider>(
         builder: (context, ep, _) {
+          final cs = Theme.of(context).colorScheme;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(28),
             child: StaggeredColumn(
@@ -74,30 +76,30 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                             style: AppTextStyles.bodyMedium,
                             decoration: InputDecoration(
                               hintText: 'Rechercher (nom, email)...',
-                              hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
-                              prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.outline),
+                              hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
+                              prefixIcon: const Icon(Icons.search, size: 20, color: cs.outline),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.outlineVariant),
+                                borderSide: const BorderSide(color: cs.outlineVariant),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.outlineVariant),
+                                borderSide: const BorderSide(color: cs.outlineVariant),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.primary),
+                                borderSide: const BorderSide(color: cs.primary),
                               ),
                               filled: true,
-                              fillColor: AppColors.surfaceContainerLowest,
+                              fillColor: cs.surfaceContainerLowest,
                             ),
                           ),
                         ),
                         const SizedBox(width: 16),
                         Container(
                           decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
+                            gradient: cs.primaryGradient,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ElevatedButton.icon(
@@ -172,7 +174,7 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                   decoration: BoxDecoration(
                     border: Border(
                         bottom: BorderSide(
-                            color: AppColors.outlineVariant
+                            color: cs.outlineVariant
                                 .withValues(alpha: 0.15))),
                   ),
                   child: SingleChildScrollView(
@@ -363,9 +365,10 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: cs.surfaceContainerLowest,
       child: Container(
         width: 500,
         padding: const EdgeInsets.all(32),
@@ -447,7 +450,7 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
                   ElevatedButton(
                     onPressed: _creerEntreprise,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: cs.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -477,10 +480,10 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
           decoration: InputDecoration(
             isDense: true,
             hintText: 'Saisir $label',
-            hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.outlineVariant)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.outlineVariant)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primary)),
+            hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.primary)),
           ),
         ),
       ],
@@ -495,15 +498,16 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: active ? AppColors.success.withValues(alpha: 0.1) : AppColors.surfaceContainerLow,
+        color: active ? AppColors.success.withValues(alpha: 0.1) : cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(label, style: AppTextStyles.labelSmall.copyWith(
         fontSize: 10, letterSpacing: 0.8, fontWeight: FontWeight.w700,
-        color: active ? AppColors.success : AppColors.onSurfaceVariant,
+        color: active ? AppColors.success : cs.onSurfaceVariant,
       )),
     );
   }
@@ -531,7 +535,8 @@ class _StatCardState extends State<_StatCard> {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = widget.iconColor ?? AppColors.primary;
+    final cs = Theme.of(context).colorScheme;
+    final effectiveColor = widget.iconColor ?? cs.primary;
 
     return Expanded(
       child: MouseRegion(
@@ -543,7 +548,7 @@ class _StatCardState extends State<_StatCard> {
           transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+            color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: effectiveColor.withValues(alpha: _hovered ? 0.3 : 0.1),
@@ -622,15 +627,16 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: active ? AppColors.primary : AppColors.surfaceContainerLow,
+        color: active ? cs.primary : cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(label, style: AppTextStyles.labelSmall.copyWith(
         fontWeight: FontWeight.w600,
-        color: active ? Colors.white : AppColors.onSurfaceVariant,
+        color: active ? Colors.white : cs.onSurfaceVariant,
       )),
     );
   }
@@ -643,13 +649,14 @@ class _ViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 36, height: 36,
       decoration: BoxDecoration(
-        color: active ? AppColors.surfaceContainerLow : Colors.transparent,
+        color: active ? cs.surfaceContainerLow : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, size: 18, color: active ? AppColors.onSurface : AppColors.outline),
+      child: Icon(icon, size: 18, color: active ? cs.onSurface : cs.outline),
     );
   }
 }
@@ -666,14 +673,15 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
   bool _hovered = false;
 
   Color get _statusColor {
-    if (widget.entreprise.statut == 'EN COURS') return AppColors.primary;
+    if (widget.entreprise.statut == 'EN COURS') return cs.primary;
     if (widget.entreprise.statut == 'COMPLET') return AppColors.success;
-    if (widget.entreprise.statut == 'ARCHIVÉ') return AppColors.outlineVariant;
+    if (widget.entreprise.statut == 'ARCHIVÉ') return cs.outlineVariant;
     return AppColors.warning;
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -687,17 +695,17 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
           padding: const EdgeInsets.all(24),
           transform: Matrix4.translationValues(0.0, _hovered ? -6.0 : 0.0, 0.0),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+            color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: _hovered 
-                  ? AppColors.primary.withValues(alpha: 0.3)
-                  : AppColors.outlineVariant.withValues(alpha: 0.3),
+                  ? cs.primary.withValues(alpha: 0.3)
+                  : cs.outlineVariant.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: _hovered
                 ? [
-                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12)),
+                    BoxShadow(color: cs.primary.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12)),
                     BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4)),
                   ]
                 : [
@@ -716,14 +724,14 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
                     decoration: BoxDecoration(
                       gradient: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty ? null : LinearGradient(
                         colors: [
-                          AppColors.primary.withValues(alpha: _hovered ? 0.25 : 0.15),
-                          AppColors.primary.withValues(alpha: _hovered ? 0.1 : 0.05),
+                          cs.primary.withValues(alpha: _hovered ? 0.25 : 0.15),
+                          cs.primary.withValues(alpha: _hovered ? 0.1 : 0.05),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                      border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
                     ),
                     child: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty
                         ? Image.network(
@@ -731,9 +739,9 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
                             width: 52,
                             height: 52,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Icon(Icons.domain, size: 28, color: AppColors.primary),
+                            errorBuilder: (context, error, stackTrace) => Icon(Icons.domain, size: 28, color: cs.primary),
                           )
-                        : Icon(Icons.domain, size: 28, color: AppColors.primary),
+                        : Icon(Icons.domain, size: 28, color: cs.primary),
                   ),
                   const Spacer(),
                   PopupMenuButton<String>(
@@ -774,22 +782,22 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.person, size: 14, color: AppColors.onSurfaceVariant),
+                  Icon(Icons.person, size: 14, color: cs.onSurfaceVariant),
                   const SizedBox(width: 4),
                   Expanded(child: Text('Dirigeant: ${widget.entreprise.nomGerant}', style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
                 ],
               ),
               const SizedBox(height: 12),
-              Text(widget.entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+              Text(widget.entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.only(top: 14),
-                decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.15)))),
+                decoration: BoxDecoration(border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.15)))),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Voir le dossier', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
-                    const Icon(Icons.arrow_forward, size: 18, color: AppColors.primary),
+                    Text('Voir le dossier', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.w600)),
+                    const Icon(Icons.arrow_forward, size: 18, color: cs.primary),
                   ],
                 ),
               ),
@@ -813,14 +821,15 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
   bool _hovered = false;
 
   Color get _statusColor {
-    if (widget.entreprise.statut == 'EN COURS') return AppColors.primary;
+    if (widget.entreprise.statut == 'EN COURS') return cs.primary;
     if (widget.entreprise.statut == 'COMPLET') return AppColors.success;
-    if (widget.entreprise.statut == 'ARCHIVÉ') return AppColors.outlineVariant;
+    if (widget.entreprise.statut == 'ARCHIVÉ') return cs.outlineVariant;
     return AppColors.warning;
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -834,17 +843,17 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           transform: Matrix4.translationValues(0.0, _hovered ? -4.0 : 0.0, 0.0),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+            color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: _hovered 
-                  ? AppColors.primary.withValues(alpha: 0.3)
-                  : AppColors.outlineVariant.withValues(alpha: 0.3),
+                  ? cs.primary.withValues(alpha: 0.3)
+                  : cs.outlineVariant.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: _hovered
                 ? [
-                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.10), blurRadius: 24, offset: const Offset(0, 8)),
+                    BoxShadow(color: cs.primary.withValues(alpha: 0.10), blurRadius: 24, offset: const Offset(0, 8)),
                     BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 4)),
                   ]
                 : [
@@ -860,14 +869,14 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                 decoration: BoxDecoration(
                   gradient: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty ? null : LinearGradient(
                     colors: [
-                      AppColors.primary.withValues(alpha: _hovered ? 0.25 : 0.15),
-                      AppColors.primary.withValues(alpha: _hovered ? 0.1 : 0.05),
+                      cs.primary.withValues(alpha: _hovered ? 0.25 : 0.15),
+                      cs.primary.withValues(alpha: _hovered ? 0.1 : 0.05),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
                 ),
                 child: widget.entreprise.logoUrl != null && widget.entreprise.logoUrl!.isNotEmpty
                     ? Image.network(
@@ -877,10 +886,10 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Padding(
                           padding: const EdgeInsets.all(12.0),
-                          child: Icon(Icons.domain, size: 24, color: AppColors.primary),
+                          child: Icon(Icons.domain, size: 24, color: cs.primary),
                         ),
                       )
-                    : Icon(Icons.domain, size: 24, color: AppColors.primary),
+                    : Icon(Icons.domain, size: 24, color: cs.primary),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -890,7 +899,7 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                   children: [
                     Text(widget.entreprise.nom, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
-                    Text(widget.entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(widget.entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
@@ -899,7 +908,7 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                 flex: 1,
                 child: Row(
                   children: [
-                    Icon(Icons.person, size: 16, color: AppColors.onSurfaceVariant),
+                    Icon(Icons.person, size: 16, color: cs.onSurfaceVariant),
                     const SizedBox(width: 6),
                     Expanded(child: Text(widget.entreprise.nomGerant, style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
                   ],
@@ -938,7 +947,7 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                 ),
               ),
               const SizedBox(width: 24),
-              const Icon(Icons.chevron_right, size: 24, color: AppColors.outline),
+              const Icon(Icons.chevron_right, size: 24, color: cs.outline),
             ],
           ),
         ),

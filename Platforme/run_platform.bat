@@ -1,3 +1,3 @@
 @echo off
-cd Platforme
-flutter run -d chrome --release --wasm
+flutter run -d chrome --wasm
+ 

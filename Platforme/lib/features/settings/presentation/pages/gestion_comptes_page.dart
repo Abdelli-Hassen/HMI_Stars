@@ -78,7 +78,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: AppColors.surfaceContainerLowest,
+        backgroundColor: cs.surfaceContainerLowest,
         title: Text('Supprimer l\'utilisateur', style: AppTextStyles.titleMedium),
         content: Text('Voulez-vous vraiment supprimer définitivement le compte de ${user.nom} (${user.email}) ? Cette action est irréversible.', style: AppTextStyles.bodyMedium),
         actions: [
@@ -117,6 +117,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.gestionComptes,
       title: 'Gestion des Comptes',
@@ -128,7 +129,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
             Text('Comptes Utilisateurs', style: AppTextStyles.headlineMedium),
             const SizedBox(height: 4),
             Text('Gérez les rôles et les accès de tous les utilisateurs de la plateforme.',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: 28),
             
             // Search Bar
@@ -138,9 +139,9 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                 onChanged: _filterUsers,
                 decoration: InputDecoration(
                   hintText: 'Rechercher par nom ou email...',
-                  prefixIcon: const Icon(Icons.search, color: AppColors.onSurfaceVariant),
+                  prefixIcon: const Icon(Icons.search, color: cs.onSurfaceVariant),
                   filled: true,
-                  fillColor: AppColors.surfaceContainerLowest,
+                  fillColor: cs.surfaceContainerLowest,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -167,24 +168,25 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
   Widget _buildUsersTable() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: ListView.separated(
           itemCount: _filteredUsers.length,
-          separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.outlineVariant),
+          separatorBuilder: (context, index) => const Divider(height: 1, color: cs.outlineVariant),
           itemBuilder: (context, index) {
+            final cs = Theme.of(context).colorScheme;
             final user = _filteredUsers[index];
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: AppColors.primaryContainer,
-                    child: Text(user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?', style: const TextStyle(color: AppColors.onPrimaryContainer)),
+                    backgroundColor: cs.primaryContainer,
+                    child: Text(user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?', style: const TextStyle(color: cs.onPrimaryContainer)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -193,7 +195,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(user.nom.isNotEmpty ? user.nom : 'Sans Nom', style: AppTextStyles.titleSmall),
-                        Text(user.email, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                        Text(user.email, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                       ],
                     ),
                   ),
@@ -207,7 +209,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
+                      color: cs.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: DropdownButtonHideUnderline(

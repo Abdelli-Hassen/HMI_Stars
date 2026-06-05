@@ -6,15 +6,15 @@ class AppColors {
   AppColors._();
 
   // ─── Primary ───
-  static const Color primary = Color(0xFF003D9B);
-  static const Color primaryContainer = Color(0xFF0052CC);
-  static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFFC4D2FF);
-  static const Color onPrimaryFixed = Color(0xFF001848);
-  static const Color onPrimaryFixedVariant = Color(0xFF0040A2);
-  static const Color primaryFixed = Color(0xFFDAE2FF);
-  static const Color primaryFixedDim = Color(0xFFB2C5FF);
-  static const Color inversePrimary = Color(0xFFB2C5FF);
+  static const Color primary = Color(0xFFC59B27);
+  static const Color primaryContainer = Color(0xFFE5B83B);
+  static const Color onPrimary = Color(0xFF1C1917);
+  static const Color onPrimaryContainer = Color(0xFF3D2F00);
+  static const Color onPrimaryFixed = Color(0xFF3D2F00);
+  static const Color onPrimaryFixedVariant = Color(0xFF574400);
+  static const Color primaryFixed = Color(0xFFF2D574);
+  static const Color primaryFixedDim = Color(0xFFE5C060);
+  static const Color inversePrimary = Color(0xFFF2D574);
 
   // ─── Secondary ───
   static const Color secondary = Color(0xFF515F74);
@@ -74,7 +74,7 @@ class AppColors {
 
   // ─── Sidebar ───
   static const Color sidebarBg = Color(0xFFF7F9FB);
-  static const Color sidebarActiveBg = Color(0xFFDAE2FF);
+  static const Color sidebarActiveBg = Color(0xFFFDF7E7);
   static const Color sidebarActiveText = primary;
 
   // ─── Status ───

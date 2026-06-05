@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/providers/theme_provider.dart';
+import '../../../../core/utils/translation_extension.dart';
 import '../widgets/auth_hero_panel.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -27,7 +29,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   Future<void> _resetPassword() async {
     if (_emailController.text.isEmpty) {
-      setState(() => _errorMessage = "Veuillez entrer votre adresse e-mail.");
+      setState(() => _errorMessage = context.tr(
+          "Veuillez entrer votre adresse e-mail.",
+          "Please enter your email address."));
       return;
     }
 
@@ -49,13 +53,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       showDialog(
         barrierDismissible: false,
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Vérification d\'email requise'),
-          content: const Text('Un lien de réinitialisation a été envoyé. Veuillez vérifier votre boîte de réception et cliquer sur le lien avant de vous connecter.'),
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(context.tr(
+              'Vérification d\'email requise', 'Email Verification Required')),
+          content: Text(context.tr(
+              'Un lien de réinitialisation a été envoyé. Veuillez vérifier votre boîte de réception et cliquer sur le lien avant de vous connecter.',
+              'A reset link has been sent. Please check your inbox and click the link before logging in.')),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(ctx);
                 Navigator.pushReplacementNamed(context, AppRoutes.login);
               },
               child: const Text('OK'),
@@ -68,181 +76,243 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          Expanded(
+      backgroundColor: cs.surface,
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 900),
+          margin: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: cs.onSurface.withValues(alpha: 0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
             child: Row(
               children: [
                 // ─── Left Hero ───
                 Expanded(
                   child: AuthHeroPanel(
-                    headline:
-                        '"La rigueur financière est l\'architecte de la pérennité."',
-                    subHeadline: '— Vision Expertise\nPARTENAIRE DES LEADERS FRANÇAIS',
+                    headline: context.tr(
+                      "La rigueur financière est l'architecte de la pérennité.",
+                      "Financial rigor is the architect of sustainability.",
+                    ),
+                    subHeadline: context.tr(
+                      "— Vision Expertise\nPARTENAIRE DES LEADERS FRANÇAIS",
+                      "— Vision Expertise\nPARTNER OF FRENCH LEADERS",
+                    ),
                   ),
                 ),
 
                 // ─── Right Form ───
                 Expanded(
                   child: Container(
-                    color: AppColors.surface,
-                    child: Center(
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        padding: const EdgeInsets.all(48),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border(
-                            left: BorderSide(
-                              color: AppColors.primary,
-                              width: 3,
+                    color: cs.surfaceContainerLowest,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 64,
+                      vertical: 48,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.tr('Mot de passe oublié ?', 'Forgot Password?'),
+                            style: AppTextStyles.headlineLarge.copyWith(fontSize: 30),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            context.tr(
+                              'Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.',
+                              'Enter your email address to receive a reset link.',
+                            ),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Mot de passe oublié ?',
-                                style: AppTextStyles.headlineMedium),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.',
-                              style: AppTextStyles.bodyMedium
-                                  .copyWith(color: AppColors.onSurfaceVariant),
-                            ),
-                            const SizedBox(height: 28),
+                          const SizedBox(height: 36),
 
-                            if (_errorMessage != null)
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                margin: const EdgeInsets.only(bottom: 24),
-                                decoration: BoxDecoration(
-                                  color: AppColors.error.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                          if (_errorMessage != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 24),
+                              decoration: BoxDecoration(
+                                color: AppColors.error.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: TextStyle(color: AppColors.error),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          Text(
+                            context.tr(
+                              'ADRESSE E-MAIL PROFESSIONNELLE',
+                              'PROFESSIONAL EMAIL ADDRESS',
+                            ),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w700,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.email_outlined,
+                                  size: 20, color: cs.outline),
+                              hintText: context.tr(
+                                'nom@entreprise.fr',
+                                'name@company.com',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+
+                          // Submit Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: cs.primaryGradient,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: cs.primary.withValues(alpha: 0.2),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _loading ? null : _resetPassword,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 18),
                                 ),
+                                child: _loading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            context.tr(
+                                                'Envoyer le lien', 'Send Link'),
+                                            style: GoogleFonts.manrope(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Icon(Icons.arrow_forward,
+                                              size: 18, color: Colors.white),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 28),
+                          Divider(color: cs.surfaceContainer),
+                          const SizedBox(height: 16),
+
+                          // Back to login
+                          Center(
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(context),
                                 child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: Text(_errorMessage!, style: TextStyle(color: AppColors.error))),
+                                    const Icon(Icons.chevron_left,
+                                        size: 18, color: cs.primary),
+                                    Text(
+                                      context.tr(
+                                        'Retour à la connexion',
+                                        'Back to Login',
+                                      ),
+                                      style: AppTextStyles.labelMedium.copyWith(
+                                        color: cs.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
+                            ),
+                          ),
 
-                            Text(
-                              'ADRESSE E-MAIL PROFESSIONNELLE',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.onSurfaceVariant,
+                          const SizedBox(height: 36),
+
+                          // Support / Language footer (inside form block)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _FooterLink(
+                                icon: Icons.language,
+                                text: auth.tempLanguage == 'English (EN)'
+                                    ? 'Français (FR)'
+                                    : 'English (EN)',
+                                onTap: () {
+                                  auth.setTempLanguage(
+                                    auth.tempLanguage == 'English (EN)'
+                                        ? 'Français (FR)'
+                                        : 'English (EN)',
+                                  );
+                                },
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(
-                                prefixIcon: Icon(Icons.email_outlined,
-                                    size: 20, color: AppColors.outline),
-                                hintText: 'nom@entreprise.fr',
+                              const SizedBox(width: 24),
+                              _FooterLink(
+                                icon: themeProvider.isDarkMode
+                                    ? Icons.light_mode
+                                    : Icons.dark_mode,
+                                text: themeProvider.isDarkMode
+                                    ? context.tr('Mode Jour ?', 'Light Mode ?')
+                                    : context.tr('Mode Nuit ?', 'Night Mode ?'),
+                                onTap: () {
+                                  themeProvider.toggleTheme(
+                                      !themeProvider.isDarkMode);
+                                },
                               ),
-                            ),
-                            const SizedBox(height: 28),
-
-                            // Submit Button
-                            SizedBox(
-                              width: double.infinity,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.primaryGradient,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: _loading ? null : _resetPassword,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 18),
-                                  ),
-                                  child: _loading
-                                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                      : Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text('Envoyer le lien',
-                                                style: GoogleFonts.manrope(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Colors.white,
-                                                )),
-                                            const SizedBox(width: 8),
-                                            const Icon(Icons.arrow_forward,
-                                                size: 18, color: Colors.white),
-                                          ],
-                                        ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 28),
-
-                            // Divider
-                            Divider(color: AppColors.surfaceContainer),
-                            const SizedBox(height: 16),
-
-                            // Back to login
-                            Center(
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.chevron_left,
-                                          size: 18, color: AppColors.primary),
-                                      Text('Retour à la connexion',
-                                          style: AppTextStyles.labelMedium
-                                              .copyWith(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w600,
-                                          )),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Footer links
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('SUPPORT',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                        fontSize: 9,
-                                        letterSpacing: 1.5,
-                                        color: AppColors.outline)),
-                                const SizedBox(width: 16),
-                                Text('•',
-                                    style: AppTextStyles.labelSmall
-                                        .copyWith(color: AppColors.outline)),
-                                const SizedBox(width: 16),
-                                Text('CONFIDENTIALITÉ',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                        fontSize: 9,
-                                        letterSpacing: 1.5,
-                                        color: AppColors.outline)),
-                              ],
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -250,46 +320,53 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ],
             ),
           ),
-
-          // ─── Bottom Footer ───
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-            color: AppColors.surfaceContainerLowest,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '© 2026 HMI STARS. TOUS DROITS RÉSERVÉS.',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    fontSize: 9,
-                    letterSpacing: 1.2,
-                    color: AppColors.outline,
-                  ),
-                ),
-                Row(
-                  children: [
-                    _footerLink('MENTIONS LÉGALES'),
-                    const SizedBox(width: 24),
-                    _footerLink('CONFIDENTIALITÉ'),
-                    const SizedBox(width: 24),
-                    _footerLink('SUPPORT'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _footerLink(String text) {
-    return Text(
-      text,
-      style: AppTextStyles.labelSmall.copyWith(
-        fontSize: 9,
-        letterSpacing: 1.2,
-        color: AppColors.outline,
+class _FooterLink extends StatefulWidget {
+  final IconData icon;
+  final String text;
+  final VoidCallback? onTap;
+
+  const _FooterLink({required this.icon, required this.text, this.onTap});
+
+  @override
+  State<_FooterLink> createState() => _FooterLinkState();
+}
+
+class _FooterLinkState extends State<_FooterLink> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              widget.icon,
+              size: 14,
+              color: _hovered ? cs.onSurface : cs.outline,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              widget.text,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: _hovered ? cs.onSurface : cs.outline,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

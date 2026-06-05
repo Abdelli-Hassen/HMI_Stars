@@ -24,7 +24,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Future<void> _sendReset() async {
-    if (_emailController.text.trim().isEmpty) return;
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez saisir votre adresse e-mail.')),
+      );
+      return;
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez saisir une adresse e-mail valide.')),
+      );
+      return;
+    }
     setState(() => _loading = true);
     try {
       await context.read<AppState>().resetPassword(_emailController.text.trim());

@@ -10,6 +10,7 @@ class DetailsCalculsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.entreprises,
       title: 'Détails des Calculs',
@@ -26,8 +27,8 @@ class DetailsCalculsPage extends StatelessWidget {
                   onTap: () => Navigator.pop(context),
                   child: Container(
                     width: 36, height: 36,
-                    decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.arrow_back, size: 18, color: AppColors.onSurfaceVariant),
+                    decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.arrow_back, size: 18, color: cs.onSurfaceVariant),
                   ),
                 ),
               ),
@@ -35,7 +36,7 @@ class DetailsCalculsPage extends StatelessWidget {
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('Détails des Calculs de Congés', style: AppTextStyles.headlineMedium),
                 Text('Jean Dupont — Exercice 2026',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
               ]),
             ]),
             const SizedBox(height: 28),
@@ -47,8 +48,8 @@ class DetailsCalculsPage extends StatelessWidget {
                 _calcSection(
                   'CONGÉS PAYÉS (CP)',
                   [
-                    _calcRow('Droits acquis N', '25 jours', AppColors.primary),
-                    _calcRow('Report N-1', '3 jours', AppColors.primary),
+                    _calcRow('Droits acquis N', '25 jours', cs.primary),
+                    _calcRow('Report N-1', '3 jours', cs.primary),
                     _calcRow('Congés pris', '-10 jours', AppColors.error),
                     _calcRow('Solde restant', '18 jours', AppColors.success, bold: true),
                   ],
@@ -58,13 +59,13 @@ class DetailsCalculsPage extends StatelessWidget {
                 // Movement Table
                 Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('MOUVEMENTS DE CONGÉS', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(8)),
                       child: Row(children: [
                         SizedBox(width: 100, child: Text('DATE', style: _hdr())),
                         Expanded(child: Text('TYPE', style: _hdr())),
@@ -86,7 +87,7 @@ class DetailsCalculsPage extends StatelessWidget {
                 _calcSection(
                   'RÉDUCTION DU TEMPS DE TRAVAIL (RTT)',
                   [
-                    _calcRow('Droits annuels', '10 jours', AppColors.primary),
+                    _calcRow('Droits annuels', '10 jours', cs.primary),
                     _calcRow('RTT pris', '-4 jours', AppColors.error),
                     _calcRow('Solde restant', '6 jours', AppColors.success, bold: true),
                   ],
@@ -99,20 +100,20 @@ class DetailsCalculsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLowest,
+                    color: cs.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('RÉSUMÉ GLOBAL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 20),
-                    _globalRow('CP Restants', '18 j', AppColors.primary),
+                    _globalRow('CP Restants', '18 j', cs.primary),
                     const SizedBox(height: 12),
-                    _globalRow('RTT Restants', '6 j', AppColors.primaryContainer),
+                    _globalRow('RTT Restants', '6 j', cs.primaryContainer),
                     const SizedBox(height: 12),
                     _globalRow('Maladie utilisés', '2 j', AppColors.error),
                     const SizedBox(height: 12),
-                    Divider(color: AppColors.outlineVariant.withValues(alpha: 0.15)),
+                    Divider(color: cs.outlineVariant.withValues(alpha: 0.15)),
                     const SizedBox(height: 8),
                     _globalRow('Total disponible', '24 j', AppColors.success),
                   ]),
@@ -120,7 +121,7 @@ class DetailsCalculsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('MÉTHODE DE CALCUL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 16),
@@ -131,9 +132,9 @@ class DetailsCalculsPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     Container(
                       width: double.infinity, padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
                       child: Row(children: [
-                        Icon(Icons.info_outline, size: 14, color: AppColors.primary),
+                        Icon(Icons.info_outline, size: 14, color: cs.primary),
                         const SizedBox(width: 6),
                         Expanded(child: Text('Calculs conformes aux articles L.3141 du Code du Travail',
                             style: AppTextStyles.bodySmall.copyWith(fontSize: 10))),
@@ -154,7 +155,7 @@ class DetailsCalculsPage extends StatelessWidget {
   Widget _calcSection(String title, List<Widget> items) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title, style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
         const SizedBox(height: 16),
@@ -167,7 +168,7 @@ class DetailsCalculsPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(label, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+        Text(label, style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
         Text(value, style: (bold ? AppTextStyles.titleSmall : AppTextStyles.labelMedium).copyWith(fontWeight: FontWeight.w700, color: color)),
       ]),
     );
@@ -176,13 +177,13 @@ class DetailsCalculsPage extends StatelessWidget {
   Widget _movRow(String date, String type, String days, String balance) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.1)))),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.1)))),
       child: Row(children: [
-        SizedBox(width: 100, child: Text(date, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurface))),
-        Expanded(child: Text(type, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w500, color: AppColors.onSurface))),
+        SizedBox(width: 100, child: Text(date, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface))),
+        Expanded(child: Text(type, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w500, color: cs.onSurface))),
         SizedBox(width: 80, child: Text(days, textAlign: TextAlign.center, style: AppTextStyles.labelMedium.copyWith(
           fontWeight: FontWeight.w700,
-          color: days.startsWith('+') ? AppColors.success : days.startsWith('-') ? AppColors.error : AppColors.onSurface,
+          color: days.startsWith('+') ? AppColors.success : days.startsWith('-') ? AppColors.error : cs.onSurface,
         ))),
         SizedBox(width: 80, child: Text(balance, textAlign: TextAlign.center, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600))),
       ]),
@@ -191,7 +192,7 @@ class DetailsCalculsPage extends StatelessWidget {
 
   Widget _globalRow(String label, String value, Color color) {
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text(label, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w500, color: AppColors.onSurface)),
+      Text(label, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w500, color: cs.onSurface)),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
@@ -204,7 +205,7 @@ class DetailsCalculsPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(children: [
-        Container(width: 4, height: 4, decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
+        Container(width: 4, height: 4, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)),
         const SizedBox(width: 8),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),

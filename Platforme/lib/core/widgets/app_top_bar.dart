@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../router/app_router.dart';
+import '../utils/translation_extension.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/notification_provider.dart';
@@ -27,13 +28,14 @@ class AppTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       height: 64,
       padding: const EdgeInsets.only(left: 25, right: 25),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         border: Border(
-          bottom: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+          bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -54,10 +56,10 @@ class AppTopBar extends StatelessWidget {
                       width: 70,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: cs.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.business, size: 16, color: AppColors.primary),
+                      child: Icon(Icons.business, size: 16, color: cs.primary),
                     ),
                   ),
                 ),
@@ -73,7 +75,7 @@ class AppTopBar extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.titleMedium.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                          color: cs.primary,
                         ),
                       ),
                       if (subtitle != null)
@@ -82,7 +84,7 @@ class AppTopBar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                             fontSize: 10,
                           ),
                         ),
@@ -118,7 +120,7 @@ class AppTopBar extends StatelessWidget {
                     child: Icon(
                       themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
                       size: 20,
-                      color: AppColors.onSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -142,7 +144,7 @@ class AppTopBar extends StatelessWidget {
             builder: (context, auth, _) => Container(
               padding: const EdgeInsets.only(left: 16),
               decoration: BoxDecoration(
-                border: Border(left: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.2))),
+                border: Border(left: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.2))),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -151,18 +153,18 @@ class AppTopBar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(auth.userName, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
-                      Text(auth.userRole, style: AppTextStyles.labelSmall.copyWith(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                      Text(auth.userName, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
+                      Text(auth.userRole, style: AppTextStyles.labelSmall.copyWith(fontSize: 10, color: cs.onSurfaceVariant)),
                     ],
                   ),
                   const SizedBox(width: 10),
                   CircleAvatar(
                     key: ValueKey(auth.userAvatarUrl),
                     radius: 16,
-                    backgroundColor: AppColors.surfaceContainerHigh,
+                    backgroundColor: cs.surfaceContainerHigh,
                     backgroundImage: auth.userAvatarUrl != null && auth.userAvatarUrl!.isNotEmpty ? NetworkImage(auth.userAvatarUrl!) : null,
                     child: (auth.userAvatarUrl == null || auth.userAvatarUrl!.isEmpty) 
-                        ? const Icon(Icons.person, size: 18, color: AppColors.onSurfaceVariant) 
+                        ? Icon(Icons.person, size: 18, color: cs.onSurfaceVariant) 
                         : null,
                   ),
                 ],
@@ -299,6 +301,7 @@ class _NotificationBellState extends State<_NotificationBell>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final notifProvider = context.watch<NotificationProvider>();
     final unreadCount = notifProvider.notifications.where((n) => !n.estLu).length;
 
@@ -318,16 +321,16 @@ class _NotificationBellState extends State<_NotificationBell>
                 height: 36,
                 decoration: BoxDecoration(
                   color: _isOpen
-                      ? AppColors.primary.withValues(alpha: 0.1)
+                      ? cs.primary.withValues(alpha: 0.1)
                       : _hovered
-                          ? AppColors.primary.withValues(alpha: 0.05)
+                          ? cs.primary.withValues(alpha: 0.05)
                           : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   _isOpen ? Icons.notifications : Icons.notifications_outlined,
                   size: 20,
-                  color: _isOpen || _hovered ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: _isOpen || _hovered ? cs.primary : cs.onSurfaceVariant,
                 ),
               ),
               if (unreadCount > 0)
@@ -340,7 +343,7 @@ class _NotificationBellState extends State<_NotificationBell>
                     decoration: BoxDecoration(
                       color: AppColors.error,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.surfaceContainerLowest, width: 1.5),
+                      border: Border.all(color: cs.surfaceContainerLowest, width: 1.5),
                     ),
                     child: Center(
                       child: Text(
@@ -376,12 +379,15 @@ class _NotificationPanelState extends State<_NotificationPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final provider = context.watch<NotificationProvider>();
     final list = provider.notifications;
 
-    final filtered = _activeTab == 'Tous'
+    final allLabel = context.tr('Tous', 'All');
+    final urgentLabel = context.tr('Urgents', 'Urgent');
+    final filtered = _activeTab == allLabel
         ? list
-        : _activeTab == 'Urgents'
+        : _activeTab == urgentLabel
             ? list.where((n) => !n.estLu).toList()
             : list.where((n) => n.estLu).toList();
 
@@ -390,16 +396,16 @@ class _NotificationPanelState extends State<_NotificationPanel> {
     return Container(
       constraints: const BoxConstraints(maxHeight: 520),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.08),
+            color: cs.onSurface.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.04),
+            color: cs.onSurface.withValues(alpha: 0.04),
             blurRadius: 4,
           ),
         ],
@@ -412,7 +418,7 @@ class _NotificationPanelState extends State<_NotificationPanel> {
             padding: const EdgeInsets.fromLTRB(20, 18, 16, 0),
             child: Row(
               children: [
-                Text('Documents non vus', style: AppTextStyles.titleMedium),
+                Text(context.tr('Documents non vus', 'Unseen Documents'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
                 const SizedBox(width: 8),
                 if (unreadCount > 0)
                   Container(
@@ -432,9 +438,9 @@ class _NotificationPanelState extends State<_NotificationPanel> {
                   child: GestureDetector(
                     onTap: widget.onMarkAllRead,
                     child: Text(
-                      'Tout marquer comme lu',
+                      context.tr('Tout marquer comme lu', 'Mark all as read'),
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.primary,
+                        color: cs.primary,
                         fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
@@ -452,11 +458,15 @@ class _NotificationPanelState extends State<_NotificationPanel> {
             child: Container(
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
+                color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
-                children: ['Tous', 'Urgents', 'Traités'].map((tab) {
+                children: [
+                  context.tr('Tous', 'All'),
+                  context.tr('Urgents', 'Urgent'),
+                  context.tr('Traités', 'Processed'),
+                ].map((tab) {
                   final active = _activeTab == tab;
                   return Expanded(
                     child: MouseRegion(
@@ -467,10 +477,10 @@ class _NotificationPanelState extends State<_NotificationPanel> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 7),
                           decoration: BoxDecoration(
-                            color: active ? AppColors.surfaceContainerLowest : Colors.transparent,
+                            color: active ? cs.surfaceContainerLowest : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: active
-                                ? [BoxShadow(color: AppColors.onSurface.withValues(alpha: 0.04), blurRadius: 4)]
+                                ? [BoxShadow(color: cs.onSurface.withValues(alpha: 0.04), blurRadius: 4)]
                                 : null,
                           ),
                           child: Center(
@@ -478,7 +488,7 @@ class _NotificationPanelState extends State<_NotificationPanel> {
                               tab,
                               style: AppTextStyles.labelSmall.copyWith(
                                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                                color: active ? AppColors.primary : AppColors.onSurfaceVariant,
+                                color: active ? cs.primary : cs.onSurfaceVariant,
                                 fontSize: 11,
                               ),
                             ),
@@ -501,9 +511,9 @@ class _NotificationPanelState extends State<_NotificationPanel> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.notifications_off_outlined, size: 40, color: AppColors.outline),
+                        Icon(Icons.notifications_off_outlined, size: 40, color: cs.outline),
                         const SizedBox(height: 8),
-                        Text('Aucun fichier non vu', style: AppTextStyles.bodySmall.copyWith(color: AppColors.outline)),
+                        Text(context.tr('Aucun fichier non vu', 'No unseen files'), style: AppTextStyles.bodySmall.copyWith(color: cs.outline)),
                       ],
                     ),
                   )
@@ -534,7 +544,7 @@ class _NotificationPanelState extends State<_NotificationPanel> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.15))),
+              border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.15))),
             ),
             child: Center(
               child: MouseRegion(
@@ -545,9 +555,9 @@ class _NotificationPanelState extends State<_NotificationPanel> {
                     Navigator.pushReplacementNamed(context, AppRoutes.messagerie);
                   },
                   child: Text(
-                    'Voir tous les documents',
+                    context.tr('Voir tous les documents', 'View all documents'),
                     style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.primary,
+                      color: cs.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -579,6 +589,7 @@ class _NotificationItemState extends State<_NotificationItem> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final n = widget.data;
     
     // Map document type to icon and color
@@ -590,32 +601,32 @@ class _NotificationItemState extends State<_NotificationItem> {
       case 'fournisseur':
         icon = Icons.receipt_long;
         iconColor = const Color(0xFF2E7D32); // Green
-        docTitle = 'Facture Fournisseur';
+        docTitle = context.tr('Facture Fournisseur', 'Supplier Invoice');
         break;
       case 'banque':
         icon = Icons.account_balance;
         iconColor = const Color(0xFF1565C0); // Blue
-        docTitle = 'Relevé Bancaire';
+        docTitle = context.tr('Relevé Bancaire', 'Bank Statement');
         break;
       case 'chiffre_affaires':
         icon = Icons.monetization_on_outlined;
         iconColor = const Color(0xFFE65100); // Orange
-        docTitle = 'Déclaration CA';
+        docTitle = context.tr('Déclaration CA', 'Revenue Declaration');
         break;
       case 'kbis':
         icon = Icons.business_center;
         iconColor = const Color(0xFFC62828); // Red
-        docTitle = 'Extrait KBIS';
+        docTitle = context.tr('Extrait KBIS', 'KBIS Extract');
         break;
       case 'tva':
         icon = Icons.percent;
         iconColor = const Color(0xFF00695C); // Teal instead of purple (Purple Ban)
-        docTitle = 'Déclaration TVA';
+        docTitle = context.tr('Déclaration TVA', 'VAT Declaration');
         break;
       case 'siret':
         icon = Icons.info_outline;
         iconColor = const Color(0xFF37474F); // Blue grey
-        docTitle = 'Fiche SIRET';
+        docTitle = context.tr('Fiche SIRET', 'SIRET Record');
         break;
       case 'rib':
         icon = Icons.credit_card;
@@ -625,26 +636,27 @@ class _NotificationItemState extends State<_NotificationItem> {
       case 'statuts':
         icon = Icons.gavel;
         iconColor = const Color(0xFF4E342E); // Brown
-        docTitle = 'Statuts';
+        docTitle = context.tr('Statuts', 'Articles of Association');
         break;
       case 'media':
         icon = Icons.image;
         iconColor = const Color(0xFF0277BD); // Light blue
-        docTitle = 'Fichier Média';
+        docTitle = context.tr('Fichier Média', 'Media File');
         break;
       default:
         icon = Icons.description_outlined;
         iconColor = const Color(0xFF1E88E5);
-        docTitle = 'Nouveau Document';
+        docTitle = context.tr('Nouveau Document', 'New Document');
     }
 
     final entreprises = context.watch<EntrepriseProvider>().entreprises;
     final ent = entreprises.where((e) => e.id == n.entrepriseId).isNotEmpty
         ? entreprises.firstWhere((e) => e.id == n.entrepriseId)
         : null;
-    final entName = ent?.nom ?? 'Entreprise Inconnue';
+    final entName = ent?.nom ?? context.tr('Entreprise Inconnue', 'Unknown Company');
 
-    String relativeTime = formatRelativeTime(n.dateEnvoi);
+    final isEn = context.tr('fr', 'en') == 'en';
+    String relativeTime = formatRelativeTime(n.dateEnvoi, isEnglish: isEn);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -658,9 +670,9 @@ class _NotificationItemState extends State<_NotificationItem> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: _hovered
-                ? AppColors.primary.withValues(alpha: 0.04)
+                ? cs.primary.withValues(alpha: 0.04)
                 : !n.estLu
-                    ? AppColors.primaryFixed.withValues(alpha: 0.15)
+                    ? cs.primaryContainer.withValues(alpha: 0.15)
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -690,6 +702,7 @@ class _NotificationItemState extends State<_NotificationItem> {
                             docTitle,
                             style: AppTextStyles.labelMedium.copyWith(
                               fontWeight: !n.estLu ? FontWeight.w700 : FontWeight.w500,
+                              color: cs.onSurface,
                             ),
                           ),
                         ),
@@ -702,7 +715,7 @@ class _NotificationItemState extends State<_NotificationItem> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text(
-                              'NOUVEAU',
+                              context.tr('NOUVEAU', 'NEW'),
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
@@ -716,10 +729,10 @@ class _NotificationItemState extends State<_NotificationItem> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Fichier : ${n.nomFichier} reçu de $entName.',
+                      context.tr('Fichier : ${n.nomFichier} reçu de $entName.', 'File: ${n.nomFichier} received from $entName.'),
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 11,
-                        color: AppColors.onSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -729,7 +742,7 @@ class _NotificationItemState extends State<_NotificationItem> {
                       relativeTime,
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 10,
-                        color: AppColors.outline,
+                        color: cs.outline,
                       ),
                     ),
                   ],
@@ -741,8 +754,8 @@ class _NotificationItemState extends State<_NotificationItem> {
                   width: 8,
                   height: 8,
                   margin: const EdgeInsets.only(top: 6, left: 6),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
+                  decoration: BoxDecoration(
+                    color: cs.primary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -754,31 +767,31 @@ class _NotificationItemState extends State<_NotificationItem> {
   }
 }
 
-String formatRelativeTime(DateTime date) {
+String formatRelativeTime(DateTime date, {bool isEnglish = false}) {
   final diff = DateTime.now().difference(date);
   
   if (diff.isNegative) {
     final absDiff = diff.abs();
-    if (absDiff.inDays > 0) return 'Dans ${absDiff.inDays} jours';
+    if (absDiff.inDays > 0) return isEnglish ? 'In ${absDiff.inDays} days' : 'Dans ${absDiff.inDays} jours';
     if (absDiff.inHours > 0) {
       final minutes = absDiff.inMinutes % 60;
-      if (minutes == 0) return 'Dans ${absDiff.inHours} h';
-      return 'Dans ${absDiff.inHours} h et $minutes min';
+      if (minutes == 0) return isEnglish ? 'In ${absDiff.inHours}h' : 'Dans ${absDiff.inHours} h';
+      return isEnglish ? 'In ${absDiff.inHours}h ${minutes}min' : 'Dans ${absDiff.inHours} h et $minutes min';
     }
-    if (absDiff.inMinutes > 0) return 'Dans ${absDiff.inMinutes} min';
-    return 'À l\'instant';
+    if (absDiff.inMinutes > 0) return isEnglish ? 'In ${absDiff.inMinutes} min' : 'Dans ${absDiff.inMinutes} min';
+    return isEnglish ? 'Just now' : 'À l\'instant';
   }
 
-  if (diff.inSeconds < 60) return 'À l\'instant';
-  if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
+  if (diff.inSeconds < 60) return isEnglish ? 'Just now' : 'À l\'instant';
+  if (diff.inMinutes < 60) return isEnglish ? '${diff.inMinutes} min ago' : 'Il y a ${diff.inMinutes} min';
   if (diff.inHours < 24) {
     final heures = diff.inHours;
     final minutes = diff.inMinutes % 60;
-    if (minutes == 0) return 'Il y a $heures h';
-    return 'Il y a $heures h et $minutes min';
+    if (minutes == 0) return isEnglish ? '${heures}h ago' : 'Il y a $heures h';
+    return isEnglish ? '${heures}h ${minutes}min ago' : 'Il y a $heures h et $minutes min';
   }
-  if (diff.inDays == 1) return 'Hier';
-  if (diff.inDays < 7) return 'Il y a ${diff.inDays} jours';
+  if (diff.inDays == 1) return isEnglish ? 'Yesterday' : 'Hier';
+  if (diff.inDays < 7) return isEnglish ? '${diff.inDays} days ago' : 'Il y a ${diff.inDays} jours';
   return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 }
 
@@ -796,30 +809,31 @@ class _AnimatedSearchBarState extends State<_AnimatedSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
       width: _focused ? 280 : 220,
       height: 36,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(10),
         boxShadow: _focused
-            ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.1), blurRadius: 8)]
+            ? [BoxShadow(color: cs.primary.withValues(alpha: 0.1), blurRadius: 8)]
             : null,
       ),
       child: TextField(
         onTap: () => setState(() => _focused = true),
         onSubmitted: (_) => setState(() => _focused = false),
         decoration: InputDecoration(
-          hintText: 'Rechercher...',
-          hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
-          prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.outline),
+          hintText: context.tr('Rechercher...', 'Search...'),
+          hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+          prefixIcon: Icon(Icons.search, size: 18, color: cs.outline),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
           isDense: true,
         ),
-        style: AppTextStyles.bodySmall,
+        style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface),
       ),
     );
   }

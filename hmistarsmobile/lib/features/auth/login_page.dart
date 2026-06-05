@@ -137,8 +137,13 @@ class _LoginPageState extends State<LoginPage> {
                             decoration: const InputDecoration(
                               hintText: 'nom@hmistars.com',
                             ),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Email requis' : null,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Email requis';
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) {
+                                return 'Veuillez saisir un e-mail valide';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 20),
                           // Password
@@ -162,9 +167,13 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
-                            validator: (v) => v == null || v.isEmpty
-                                ? 'Mot de passe requis'
-                                : null,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Mot de passe requis';
+                              if (v.trim().length < 6) {
+                                return 'Au moins 6 caractères requis';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 12),
                           // Forgot Password

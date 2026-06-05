@@ -176,6 +176,15 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  // ─── Language ─────────────────────────────────────────────────────────────
+  String _langue = 'Français (FR)';
+  String get langue => _langue;
+
+  void setLangue(String val) {
+    _langue = val;
+    notifyListeners();
+  }
+
   // ─── Enterprise ──────────────────────────────────────────────────────────
   ClientParametres? _parametres;
   ClientParametres? get parametres => _parametres;

@@ -192,6 +192,17 @@ class PlatformDataService {
         .toList();
   }
 
+  Future<List<DocumentEntreprise>> fetchAllDocuments() async {
+    final data = await _client
+        .from('entreprise_documents_view')
+        .select()
+        .order('cree_le', ascending: false);
+    return (data as List)
+        .map((row) =>
+            DocumentEntreprise.fromJson(row as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<DocumentEntreprise>> fetchDocumentsForEntreprisePaginated(
       String entrepriseId, int offset, int limit) async {
     final data = await _client

@@ -10,7 +10,7 @@ This handbook serves as the definitive technical guide and reference documentati
 ### Monorepo Structure
 The system is built as a **Flutter Monorepo** containing two distinct clients connected to a unified backend:
 1. **Mobile Client Application (`hmistarsmobile`)**: A responsive mobile app compiled as an Android APK, dedicated to **Client Managers** (directors/managers of client companies).
-2. **Web Administration Platform (`Platforme`)**: A high-end web administration portal deployed on Vercel, dedicated to **HMI Stars Managers & Staff** (Admins, Moderators, Secretaries).
+2. **Web Administration Platform (`Platforme`)**: A high-end web administration portal running on a local web server, dedicated to **HMI Stars Managers & Staff** (Admins, Moderators, Secretaries).
 
 ---
 
@@ -117,7 +117,6 @@ Both the Mobile and Web clients leverage curated plugins from the Flutter ecosys
 | `go_router` | Both | Declarative routing mechanism handling URL path routing, deep linking, and guard checks. |
 | `table_calendar` | Mobile | Renders the interactive monthly attendance calendar check-in grid. |
 | `fl_chart` | Web | Renders business data charts on the web admin dashboard (leave ratios, employee counters). |
-| `google_generative_ai` | Web | Integrates **Google Gemini AI** to dynamically draft warning letters, summarize chats, and assist managers in composing answers. |
 | `flutter_document_scanner` | Mobile | Leverages the mobile camera to capture, crop, and scan physical paper records (receipts, bills) before uploading them. |
 | `pdf` & `printing` | Both | Compiles text documents into visual PDF pages and handles native document printing dialogues. |
 | `file_picker` & `image_picker` | Both | Handles visual media pickers for file uploads and avatar configurations. |
@@ -371,3 +370,13 @@ All tables have RLS enabled. Clients are restricted to row selections containing
   2. The returned public URL is registered as a row in the `fichiers` table.
   3. The final public URL paths are grouped as a comma-separated string (`fichier_url`) and inserted into the `messages` table.
 * **Replication**: Phoenix channels listen to the insert, match RLS requirements, and stream the message payload to active WebSocket connections on the web dashboard.
+
+### 4. Pre-Authentication Localization & Theme Toggling
+* **Dynamic Language Toggling**:
+  * Prior to login, language switches utilize a temporary locale stored inside `AuthProvider.tempLanguage`.
+  * The custom extension `context.tr(fr, en)` listens to changes in `AuthProvider`'s state and updates the UI text on Login, SignUp, Forgot Password, and Reset Password pages reactively.
+* **Pre-Login Theme Switcher**:
+  * Users can toggle between Light and Dark mode using the `ThemeProvider` toggler present in the footer of all entry-point screens before authentication.
+* **Simplified Hero Styling**:
+  * All authentication screens feature a consistent unified left-hand blue panel branding without complex third-party testimonial comments or security badges to ensure a clean client-facing portal.
+

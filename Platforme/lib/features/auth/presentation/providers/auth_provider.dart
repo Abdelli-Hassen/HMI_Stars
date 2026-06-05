@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/platform_auth_service.dart';
 import '../../../../core/services/platform_data_service.dart';
 import '../../../../core/router/app_router.dart';
@@ -18,6 +19,14 @@ class AuthProvider extends ChangeNotifier {
   UtilisateurPlateforme? _utilisateur;
   bool _emailNonConfirme = false;
   String? _emailEnAttente;
+  String _tempLanguage = 'Français (FR)';
+
+  String get tempLanguage => _tempLanguage;
+
+  void setTempLanguage(String lang) {
+    _tempLanguage = lang;
+    notifyListeners();
+  }
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -43,6 +52,18 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _init() async {
     debugPrint('[AuthProvider] init');
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool('remember_me') ?? false;
+      if (!rememberMe) {
+        debugPrint('[AuthProvider] remember_me is false, clearing initial session');
+        await _authService.signOut();
+      }
+    } catch (e) {
+      debugPrint('[AuthProvider] Error reading remember_me: $e');
+    }
+
     final session = _authService.currentSession;
 
     if (session == null || session.isExpired) {
@@ -126,12 +147,20 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signIn({
     required String email,
     required String password,
+    bool rememberMe = false,
   }) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('remember_me', rememberMe);
+      } catch (e) {
+        debugPrint('[AuthProvider] Error saving remember_me: $e');
+      }
+
       final response = await _authService.signIn(
         email: email,
         password: password,
@@ -266,6 +295,12 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('remember_me');
+    } catch (e) {
+      debugPrint('[AuthProvider] Error clearing remember_me on signOut: $e');
+    }
     await _authService.signOut();
     _user = null;
     _utilisateur = null;

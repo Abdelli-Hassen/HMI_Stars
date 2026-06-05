@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../router/app_router.dart';
+import '../utils/translation_extension.dart';
 import 'package:provider/provider.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/messagerie/presentation/providers/messagerie_provider.dart';
@@ -26,30 +27,28 @@ class AppSidebar extends StatelessWidget {
     required this.currentRoute,
   });
 
-  static const _baseNavItems = [
-    SidebarItem(icon: Icons.dashboard_outlined, label: 'Tableau de bord', route: AppRoutes.dashboard),
-    SidebarItem(icon: Icons.business, label: 'Entreprises', route: AppRoutes.entreprises),
-    SidebarItem(icon: Icons.warning_amber_outlined, label: 'Urgents', route: AppRoutes.urgents),
-    SidebarItem(icon: Icons.chat_bubble_outline, label: 'Messagerie', route: AppRoutes.messagerie),
-
-    SidebarItem(icon: Icons.description_outlined, label: 'Documents RH', route: AppRoutes.documentsEntreprise),
-    SidebarItem(icon: Icons.sticky_note_2_outlined, label: 'Notes & Rappels', route: AppRoutes.notesRappels),
-    SidebarItem(icon: Icons.settings_outlined, label: 'Paramètres', route: AppRoutes.settings),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     // Inject admin item if the user is admin
     final isAdmin = Provider.of<AuthProvider>(context).isAdmin;
-    final navItems = List<SidebarItem>.from(_baseNavItems);
+    final navItems = [
+      SidebarItem(icon: Icons.dashboard_outlined, label: context.tr('Tableau de bord', 'Dashboard'), route: AppRoutes.dashboard),
+      SidebarItem(icon: Icons.business, label: context.tr('Entreprises', 'Companies'), route: AppRoutes.entreprises),
+      SidebarItem(icon: Icons.warning_amber_outlined, label: context.tr('Urgents', 'Urgent'), route: AppRoutes.urgents),
+      SidebarItem(icon: Icons.chat_bubble_outline, label: context.tr('Messagerie', 'Messaging'), route: AppRoutes.messagerie),
+      SidebarItem(icon: Icons.description_outlined, label: context.tr('Documents RH', 'HR Documents'), route: AppRoutes.documentsEntreprise),
+      SidebarItem(icon: Icons.sticky_note_2_outlined, label: context.tr('Notes & Rappels', 'Notes & Reminders'), route: AppRoutes.notesRappels),
+      SidebarItem(icon: Icons.settings_outlined, label: context.tr('Paramètres', 'Settings'), route: AppRoutes.settings),
+    ];
     if (isAdmin) {
-      navItems.add(const SidebarItem(icon: Icons.people_outline, label: 'Comptes Admin', route: AppRoutes.gestionComptes));
+      navItems.add(SidebarItem(icon: Icons.people_outline, label: context.tr('Comptes Admin', 'Admin Accounts'), route: AppRoutes.gestionComptes));
     }
 
     return Container(
       width: 256,
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
       ),
       child: Column(
         children: [
@@ -69,10 +68,10 @@ class AppSidebar extends StatelessWidget {
                       width: 90,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: cs.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.business, size: 24, color: AppColors.primary),
+                      child: Icon(Icons.business, size: 24, color: cs.primary),
                     ),
                   ),
                 ),
@@ -86,7 +85,7 @@ class AppSidebar extends StatelessWidget {
                         style: AppTextStyles.titleMedium.copyWith(
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
-                          color: const Color(0xFF1A3A7D),
+                          color: cs.primary,
                         ),
                       ),
                       Text(
@@ -95,7 +94,7 @@ class AppSidebar extends StatelessWidget {
                           fontSize: 9,
                           letterSpacing: 1.2,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.onSurfaceVariant,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -116,7 +115,7 @@ class AppSidebar extends StatelessWidget {
                   
                   // Check unread condition if this is Messagerie item
                   bool hasUnread = false;
-                  if (item.label == 'Messagerie') {
+                  if (item.route == AppRoutes.messagerie) {
                     hasUnread = context.watch<MessagerieProvider>().hasUnreadForSidebar;
                   }
 
@@ -147,28 +146,25 @@ class AppSidebar extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                   top: BorderSide(
-                      color: AppColors.outlineVariant.withValues(alpha: 0.15))),
+                      color: cs.outlineVariant.withValues(alpha: 0.15))),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Column(
                 children: [
                   _SidebarNavItem(
-                    icon: Icons.help_outline,
-                    label: 'Aide',
-                    isActive: false,
-                    onTap: () {},
-                  ),
-                  _SidebarNavItem(
                     icon: Icons.logout,
-                    label: 'Déconnexion',
+                    label: context.tr('Déconnexion', 'Sign Out'),
                     isActive: false,
                     isDestructive: true,
-                    onTap: () {
+                    onTap: () async {
                       if (currentRoute == AppRoutes.messagerie) {
                         context.read<MessagerieProvider>().quitterMessagerie();
                       }
-                      Navigator.pushReplacementNamed(context, AppRoutes.login);
+                      await context.read<AuthProvider>().signOut();
+                      if (context.mounted) {
+                        Navigator.pushReplacementNamed(context, AppRoutes.login);
+                      }
                     },
                   ),
                 ],
@@ -231,13 +227,14 @@ class _SidebarNavItemState extends State<_SidebarNavItem>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final color = widget.isDestructive
-        ? (_hovered ? AppColors.error : AppColors.onSurfaceVariant)
+        ? (_hovered ? AppColors.error : cs.onSurfaceVariant)
         : widget.isActive
-            ? AppColors.primary
+            ? cs.primary
             : _hovered
-                ? AppColors.onSurface
-                : AppColors.onSurfaceVariant;
+                ? cs.onSurface
+                : cs.onSurfaceVariant;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -264,15 +261,15 @@ class _SidebarNavItemState extends State<_SidebarNavItem>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: widget.isActive
-                  ? AppColors.surfaceContainerLowest
+                  ? cs.surfaceContainerLowest
                   : _hovered
-                      ? AppColors.surfaceContainerLowest.withValues(alpha: 0.5)
+                      ? cs.surfaceContainerLowest.withValues(alpha: 0.5)
                       : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               boxShadow: widget.isActive
                   ? [
                       BoxShadow(
-                          color: AppColors.onSurface.withValues(alpha: 0.05),
+                          color: cs.onSurface.withValues(alpha: 0.05),
                           blurRadius: 2)
                     ]
                   : null,

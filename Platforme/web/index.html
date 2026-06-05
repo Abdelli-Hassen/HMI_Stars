@@ -31,6 +31,80 @@
 
   <title>hmi_stars</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    // WASM strict type-cast hotfix for Supabase/GoTrue broadcast events (expires_in/expires_at double to int cast)
+    if (typeof BroadcastChannel !== 'undefined') {
+      const originalPost = BroadcastChannel.prototype.postMessage;
+      BroadcastChannel.prototype.postMessage = function(message) {
+        if (message && typeof message === 'object') {
+          if (message.session) {
+            if (typeof message.session.expires_in === 'number') {
+              message.session.expires_in = Math.round(message.session.expires_in);
+            }
+            if (typeof message.session.expires_at === 'number') {
+              message.session.expires_at = Math.round(message.session.expires_at);
+            }
+          }
+        }
+        return originalPost.apply(this, arguments);
+      };
+      
+      // Also patch the event listener to catch any incoming messages and sanitize them
+      const originalAddEventListener = BroadcastChannel.prototype.addEventListener;
+      BroadcastChannel.prototype.addEventListener = function(type, listener, options) {
+        if (type === 'message') {
+          const originalListener = listener;
+          listener = function(event) {
+            if (event && event.data && typeof event.data === 'object') {
+              const data = event.data;
+              if (data.session) {
+                if (typeof data.session.expires_in === 'number') {
+                  data.session.expires_in = Math.round(data.session.expires_in);
+                }
+                if (typeof data.session.expires_at === 'number') {
+                  data.session.expires_at = Math.round(data.session.expires_at);
+                }
+              }
+            }
+            return originalListener.apply(this, arguments);
+          };
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+      };
+
+      // Also patch the onmessage getter/setter
+      Object.defineProperty(BroadcastChannel.prototype, 'onmessage', {
+        set: function(listener) {
+          if (listener) {
+            const originalListener = listener;
+            this._onmessage = function(event) {
+              if (event && event.data && typeof event.data === 'object') {
+                const data = event.data;
+                if (data.session) {
+                  if (typeof data.session.expires_in === 'number') {
+                    data.session.expires_in = Math.round(data.session.expires_in);
+                  }
+                  if (typeof data.session.expires_at === 'number') {
+                    data.session.expires_at = Math.round(data.session.expires_at);
+                  }
+                }
+              }
+              return originalListener.apply(this, arguments);
+            };
+            this.addEventListener('message', this._onmessage);
+          } else {
+            if (this._onmessage) {
+              this.removeEventListener('message', this._onmessage);
+              this._onmessage = null;
+            }
+          }
+        },
+        get: function() {
+          return this._onmessage;
+        }
+      });
+    }
+  </script>
 </head>
 <body>
   <!--

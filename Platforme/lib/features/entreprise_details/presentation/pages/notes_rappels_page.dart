@@ -116,6 +116,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final provider = Provider.of<EntrepriseProvider>(context);
     if (!_dataLoaded) {
       _dataLoaded = true;
@@ -140,7 +141,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                     Text('Notes & Rappels', style: AppTextStyles.headlineLarge.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                     const SizedBox(height: 4),
                     Text('Organisez vos tâches, notes et rappels professionnels.',
-                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
                   ],
                 ),
                 Row(children: [
@@ -153,10 +154,10 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
                         hintText: 'Rechercher...',
-                        hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
-                        prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.outline),
+                        hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+                        prefixIcon: const Icon(Icons.search, size: 18, color: cs.outline),
                         filled: true,
-                        fillColor: AppColors.surfaceContainerLow,
+                        fillColor: cs.surfaceContainerLow,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                         contentPadding: const EdgeInsets.symmetric(vertical: 10),
                         isDense: true,
@@ -175,11 +176,11 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
               curve: Curves.easeOutCubic,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLowest,
+                color: cs.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
                 boxShadow: [
-                  BoxShadow(color: AppColors.onSurface.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                  BoxShadow(color: cs.onSurface.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
                 ],
               ),
               child: Column(
@@ -206,7 +207,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
                           decoration: InputDecoration(
                             hintText: 'Titre de la note...',
-                            hintStyle: AppTextStyles.bodyLarge.copyWith(color: AppColors.outline, fontWeight: FontWeight.w500, fontSize: 16),
+                            hintStyle: AppTextStyles.bodyLarge.copyWith(color: cs.outline, fontWeight: FontWeight.w500, fontSize: 16),
                             border: InputBorder.none,
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -222,12 +223,12 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                             duration: const Duration(milliseconds: 200),
                             width: 32, height: 32,
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceContainerLow,
+                              color: cs.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               _inputExpanded ? Icons.expand_less : Icons.expand_more,
-                              size: 18, color: AppColors.onSurfaceVariant,
+                              size: 18, color: cs.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -247,7 +248,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceContainerLow,
+                              color: cs.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: TextField(
@@ -257,7 +258,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                               style: AppTextStyles.bodyMedium,
                               decoration: InputDecoration(
                                 hintText: 'Description (optionnel)...',
-                                hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+                                hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
                                 border: InputBorder.none,
                                 isDense: false,
                                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -268,7 +269,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
 
                           // Category label
                           Text('CATÉGORIE', style: AppTextStyles.labelSmall.copyWith(
-                            letterSpacing: 1.2, fontWeight: FontWeight.w800, color: AppColors.onSurfaceVariant,
+                            letterSpacing: 1.2, fontWeight: FontWeight.w800, color: cs.onSurfaceVariant,
                           )),
                           const SizedBox(height: 10),
 
@@ -304,7 +305,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     child: Text('Annuler', style: AppTextStyles.labelMedium.copyWith(
-                                      fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600, color: cs.onSurfaceVariant,
                                     )),
                                   ),
                                 ),
@@ -340,12 +341,12 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: active ? AppColors.primary : AppColors.surfaceContainerLow,
+                          color: active ? cs.primary : cs.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(tab, style: AppTextStyles.labelMedium.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: active ? Colors.white : AppColors.onSurfaceVariant,
+                          color: active ? Colors.white : cs.onSurfaceVariant,
                         )),
                       ),
                     ),
@@ -366,15 +367,15 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                       ? Container(
                           padding: const EdgeInsets.all(48),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerLowest,
+                            color: cs.surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Center(
                             child: Column(
                               children: [
-                                Icon(Icons.sticky_note_2_outlined, size: 48, color: AppColors.outline),
+                                Icon(Icons.sticky_note_2_outlined, size: 48, color: cs.outline),
                                 const SizedBox(height: 12),
-                                Text('Aucune note trouvée', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline)),
+                                Text('Aucune note trouvée', style: AppTextStyles.bodyMedium.copyWith(color: cs.outline)),
                               ],
                             ),
                           ),
@@ -420,9 +421,9 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLowest,
+                        color: cs.surfaceContainerLowest,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+                        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,18 +432,18 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('À FAIRE', style: AppTextStyles.labelSmall.copyWith(
-                                letterSpacing: 1.5, fontWeight: FontWeight.w800, color: AppColors.primary,
+                                letterSpacing: 1.5, fontWeight: FontWeight.w800, color: cs.primary,
                               )),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  color: cs.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
                                   '${_todos.where((t) => !t.done).length} restantes',
                                   style: AppTextStyles.labelSmall.copyWith(
-                                    fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary,
+                                    fontSize: 10, fontWeight: FontWeight.w700, color: cs.primary,
                                   ),
                                 ),
                               ),
@@ -453,12 +454,12 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceContainerLow,
+                              color: cs.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.add, size: 20, color: AppColors.outline),
+                                const Icon(Icons.add, size: 20, color: cs.outline),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: TextField(
@@ -467,7 +468,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                     style: AppTextStyles.bodyMedium,
                                     decoration: InputDecoration(
                                       hintText: 'Ajouter une tâche...',
-                                      hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.outline),
+                                      hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
                                       border: InputBorder.none,
                                       enabledBorder: InputBorder.none,
                                       focusedBorder: InputBorder.none,
@@ -485,7 +486,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary,
+                                        color: cs.primary,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(Icons.arrow_upward, size: 18, color: Colors.white),
@@ -509,7 +510,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                   onPressed: () => setState(() => _showAllTodos = !_showAllTodos),
                                   child: Text(
                                     _showAllTodos ? 'Voir moins' : 'Voir plus (${_todos.length - 10})',
-                                    style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary),
+                                    style: AppTextStyles.labelSmall.copyWith(color: cs.primary),
                                   ),
                                 ),
                               ),
@@ -535,8 +536,9 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
+          final cs = Theme.of(context).colorScheme;
           return AlertDialog(
-            backgroundColor: AppColors.surfaceContainerLowest,
+            backgroundColor: cs.surfaceContainerLowest,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Text('Modifier la note', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
             content: SizedBox(
@@ -546,7 +548,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Titre', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                    Text('Titre', style: AppTextStyles.labelSmall.copyWith(color: cs.onSurfaceVariant)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: titleCtrl,
@@ -557,7 +559,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                       style: AppTextStyles.bodyMedium,
                     ),
                     const SizedBox(height: 16),
-                    Text('Contenu', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                    Text('Contenu', style: AppTextStyles.labelSmall.copyWith(color: cs.onSurfaceVariant)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: contentCtrl,
@@ -569,7 +571,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                     ),
                     const SizedBox(height: 16),
                     Text('CATÉGORIE', style: AppTextStyles.labelSmall.copyWith(
-                      letterSpacing: 1.2, fontWeight: FontWeight.w800, color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.2, fontWeight: FontWeight.w800, color: cs.onSurfaceVariant,
                     )),
                     const SizedBox(height: 10),
                     Wrap(
@@ -585,21 +587,21 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: active ? cat.color.withValues(alpha: 0.15) : AppColors.surfaceContainerLow,
+                                color: active ? cat.color.withValues(alpha: 0.15) : cs.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: active ? cat.color : AppColors.outlineVariant,
+                                  color: active ? cat.color : cs.outlineVariant,
                                   width: active ? 2 : 1,
                                 ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(cat.icon, size: 14, color: active ? cat.color : AppColors.outline),
+                                  Icon(cat.icon, size: 14, color: active ? cat.color : cs.outline),
                                   const SizedBox(width: 6),
                                   Text(cat.label, style: AppTextStyles.labelSmall.copyWith(
                                     fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                                    color: active ? cat.color : AppColors.onSurfaceVariant,
+                                    color: active ? cat.color : cs.onSurfaceVariant,
                                   )),
                                 ],
                               ),
@@ -615,7 +617,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Annuler', style: AppTextStyles.labelMedium.copyWith(color: AppColors.outline)),
+                child: Text('Annuler', style: AppTextStyles.labelMedium.copyWith(color: cs.outline)),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -639,7 +641,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: cs.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -698,6 +700,7 @@ class _NoteCardState extends State<_NoteCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final d = widget.data;
     final color = _getColorForTag(d.tag);
     final dateStr = '${d.dateCreation.day}/${d.dateCreation.month}/${d.dateCreation.year}';
@@ -712,15 +715,15 @@ class _NoteCardState extends State<_NoteCard> {
         padding: const EdgeInsets.all(20),
         transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: cs.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _hovered ? color.withValues(alpha: 0.4) : AppColors.outlineVariant.withValues(alpha: 0.5),
+            color: _hovered ? color.withValues(alpha: 0.4) : cs.outlineVariant.withValues(alpha: 0.5),
             width: _hovered ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: _hovered ? color.withValues(alpha: 0.25) : AppColors.onSurface.withValues(alpha: 0.04),
+              color: _hovered ? color.withValues(alpha: 0.25) : cs.onSurface.withValues(alpha: 0.04),
               blurRadius: _hovered ? 20 : 4,
               spreadRadius: _hovered ? 3 : 0,
               offset: _hovered ? const Offset(0, 8) : const Offset(0, 2),
@@ -758,13 +761,13 @@ class _NoteCardState extends State<_NoteCard> {
                         onTap: widget.onPin,
                         child: Icon(
                           d.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                          size: 16, color: AppColors.onSurfaceVariant,
+                          size: 16, color: cs.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: widget.onEdit,
-                        child: const Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                        child: const Icon(Icons.edit_outlined, size: 16, color: cs.primary),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
@@ -781,7 +784,7 @@ class _NoteCardState extends State<_NoteCard> {
                 maxLines: 2, overflow: TextOverflow.ellipsis),
             if (d.contenu.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(d.contenu, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, height: 1.4),
+              Text(d.contenu, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant, height: 1.4),
                   maxLines: 3, overflow: TextOverflow.ellipsis),
             ],
             if (d.estRappel && d.dateRappel != null) ...[
@@ -803,7 +806,7 @@ class _NoteCardState extends State<_NoteCard> {
               ),
             ],
             const SizedBox(height: 10),
-            Text(dateStr, style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: AppColors.outline)),
+            Text(dateStr, style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: cs.outline)),
           ],
         ),
       ),
@@ -829,6 +832,7 @@ class _TodoRowState extends State<_TodoRow> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -840,7 +844,7 @@ class _TodoRowState extends State<_TodoRow> {
           margin: const EdgeInsets.only(bottom: 6),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           decoration: BoxDecoration(
-            color: _hovered ? AppColors.primary.withValues(alpha: 0.04) : Colors.transparent,
+            color: _hovered ? cs.primary.withValues(alpha: 0.04) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -849,9 +853,9 @@ class _TodoRowState extends State<_TodoRow> {
                 duration: const Duration(milliseconds: 200),
                 width: 20, height: 20,
                 decoration: BoxDecoration(
-                  color: widget.item.done ? AppColors.primary : Colors.transparent,
+                  color: widget.item.done ? cs.primary : Colors.transparent,
                   border: Border.all(
-                    color: widget.item.done ? AppColors.primary : AppColors.outline,
+                    color: widget.item.done ? cs.primary : cs.outline,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(6),
@@ -867,7 +871,7 @@ class _TodoRowState extends State<_TodoRow> {
                   style: AppTextStyles.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     decoration: widget.item.done ? TextDecoration.lineThrough : null,
-                    color: widget.item.done ? AppColors.outline : AppColors.onSurface,
+                    color: widget.item.done ? cs.outline : cs.onSurface,
                   ),
                 ),
               ),
@@ -906,6 +910,7 @@ class _AddButtonState extends State<_AddButton> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -916,10 +921,10 @@ class _AddButtonState extends State<_AddButton> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
+            gradient: cs.primaryGradient,
             borderRadius: BorderRadius.circular(10),
             boxShadow: _hovered
-                ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                ? [BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
                 : null,
           ),
           child: Row(
@@ -957,6 +962,7 @@ class _CategoryChipState extends State<_CategoryChip> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -970,8 +976,8 @@ class _CategoryChipState extends State<_CategoryChip> {
             color: widget.isActive
                 ? widget.cat.color.withValues(alpha: 0.12)
                 : _hovered
-                    ? AppColors.surfaceContainerHigh
-                    : AppColors.surfaceContainerLow,
+                    ? cs.surfaceContainerHigh
+                    : cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: widget.isActive ? widget.cat.color : Colors.transparent,
@@ -982,11 +988,11 @@ class _CategoryChipState extends State<_CategoryChip> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(widget.cat.icon, size: 14,
-                  color: widget.isActive ? widget.cat.color : AppColors.onSurfaceVariant),
+                  color: widget.isActive ? widget.cat.color : cs.onSurfaceVariant),
               const SizedBox(width: 6),
               Text(widget.cat.label, style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: widget.isActive ? FontWeight.w700 : FontWeight.w500,
-                color: widget.isActive ? widget.cat.color : AppColors.onSurfaceVariant,
+                color: widget.isActive ? widget.cat.color : cs.onSurfaceVariant,
               )),
             ],
           ),

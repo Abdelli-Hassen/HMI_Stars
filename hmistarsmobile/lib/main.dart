@@ -62,7 +62,10 @@ class _HMIStarsAppContentState extends State<_HMIStarsAppContent> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.watch<AppState>().isDarkMode;
+    final appState = context.watch<AppState>();
+    final isDark = appState.isDarkMode;
+    final isEn = appState.langue == 'English (EN)';
+    
     return MaterialApp.router(
       title: 'HMI Stars Consulting',
       debugShowCheckedModeBanner: false,
@@ -76,7 +79,7 @@ class _HMIStarsAppContentState extends State<_HMIStarsAppContent> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('fr', 'FR'), Locale('en', 'US')],
-      locale: const Locale('fr', 'FR'),
+      locale: isEn ? const Locale('en', 'US') : const Locale('fr', 'FR'),
     );
   }
 }

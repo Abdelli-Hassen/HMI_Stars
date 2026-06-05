@@ -7,6 +7,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
+import '../../../../core/providers/theme_provider.dart';
 import '../../../auth/domain/models/platform_user.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -139,10 +140,10 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(28),
         child: StaggeredColumn(
           children: [
-            Text('Paramètres', style: AppTextStyles.headlineMedium),
+            Text('Paramètres', style: AppTextStyles.headlineMedium.copyWith(color: Theme.of(context).colorScheme.onSurface)),
             const SizedBox(height: 4),
             Text('Gérez votre profil (Admin / Secrétaire), vos préférences et la sécurité de votre compte.',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 28),
 
             // ─── Profile Row ───
@@ -151,6 +152,10 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(width: 16),
               Expanded(child: _buildWorkspaceSection()),
             ]),
+            const SizedBox(height: 24),
+
+            // ─── Appearance Section ───
+            _buildAppearanceSection(),
             const SizedBox(height: 24),
 
             // ─── Security Section ───
@@ -162,18 +167,19 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildProfileSection() {
+    final cs = Theme.of(context).colorScheme;
     final auth = context.watch<AuthProvider>();
     final avatarUrl = auth.userAvatarUrl;
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('PROFIL UTILISATEUR', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+        Text('PROFIL UTILISATEUR', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
         const SizedBox(height: 20),
         Row(children: [
           Stack(
@@ -181,12 +187,12 @@ class _SettingsPageState extends State<SettingsPage> {
               CircleAvatar(
                 key: ValueKey(avatarUrl),
                 radius: 32,
-                backgroundColor: AppColors.surfaceContainerHigh,
+                backgroundColor: cs.surfaceContainerHigh,
                 backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
                     ? NetworkImage(avatarUrl)
                     : null,
                 child: avatarUrl == null || avatarUrl.isEmpty
-                    ? const Icon(Icons.person, size: 32, color: AppColors.onSurfaceVariant)
+                    ? Icon(Icons.person, size: 32, color: cs.onSurfaceVariant)
                     : null,
               ),
               if (_uploadingAvatar)
@@ -208,21 +214,21 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(width: 16),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_nomController.text.isNotEmpty ? _nomController.text : 'Utilisateur Actuel', style: AppTextStyles.titleSmall),
+            Text(_nomController.text.isNotEmpty ? _nomController.text : 'Utilisateur Actuel', style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _uploadingAvatar ? null : _modifierPhoto,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(border: Border.all(color: AppColors.outlineVariant), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(border: Border.all(color: cs.outlineVariant), borderRadius: BorderRadius.circular(8)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.camera_alt_outlined, size: 14, color: _uploadingAvatar ? AppColors.outline : AppColors.primary),
+                    Icon(Icons.camera_alt_outlined, size: 14, color: _uploadingAvatar ? cs.outline : cs.primary),
                     const SizedBox(width: 6),
                     Text(
                       _uploadingAvatar ? 'ENVOI EN COURS...' : 'MODIFIER LA PHOTO',
-                      style: AppTextStyles.labelSmall.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.w700),
+                      style: AppTextStyles.labelSmall.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.w700, color: cs.onSurface),
                     ),
                   ],
                 ),
@@ -245,14 +251,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildWorkspaceSection() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text("ESPACE DE TRAVAIL", style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+        Text("ESPACE DE TRAVAIL", style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
         const SizedBox(height: 20),
         _lockedTextField("Organisation", 'HMI Stars Consulting', Icons.corporate_fare),
         const SizedBox(height: 16),
@@ -260,6 +267,71 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _saveButton(_sauvegarderWorkspace),
       ]),
+    );
+  }
+
+  Widget _buildAppearanceSection() {
+    final cs = Theme.of(context).colorScheme;
+    final themeProvider = context.watch<ThemeProvider>();
+    
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('APPARENCE', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                      size: 20, 
+                      color: cs.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mode Sombre',
+                        style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        themeProvider.isDarkMode ? 'Activé' : 'Désactivé',
+                        style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (val) => themeProvider.toggleTheme(val),
+                activeColor: cs.primary,
+                activeTrackColor: cs.primary.withValues(alpha: 0.3),
+                inactiveThumbColor: cs.outline,
+                inactiveTrackColor: cs.surfaceContainerHigh,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -274,133 +346,139 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: AppColors.surfaceContainerLowest,
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-          actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: const Icon(Icons.lock_reset, color: AppColors.primary),
-              ),
-              const SizedBox(width: 12),
-              Text('Modifier le mot de passe', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Ancien mot de passe', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: ancienCtrl,
-                decoration: InputDecoration(
-                  hintText: '••••••••', 
-                  isDense: true,
-                  filled: true,
-                  fillColor: AppColors.surfaceContainerLow,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.password, size: 18, color: AppColors.outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(obscureAncien ? Icons.visibility_off : Icons.visibility, size: 18, color: AppColors.outline),
-                    onPressed: () => setStateDialog(() => obscureAncien = !obscureAncien),
-                  ),
-                ), 
-                obscureText: obscureAncien,
-              ),
-              const SizedBox(height: 20),
-              Text('Nouveau mot de passe', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: nouveauCtrl,
-                decoration: InputDecoration(
-                  hintText: '••••••••', 
-                  isDense: true,
-                  filled: true,
-                  fillColor: AppColors.surfaceContainerLow,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.lock_outline, size: 18, color: AppColors.outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(obscureNouveau ? Icons.visibility_off : Icons.visibility, size: 18, color: AppColors.outline),
-                    onPressed: () => setStateDialog(() => obscureNouveau = !obscureNouveau),
-                  ),
-                ), 
-                obscureText: obscureNouveau,
-              ),
-              const SizedBox(height: 12),
-              Text('Minimum 8 caractères, incluant des lettres et des chiffres.', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.pop(context), 
-              style: TextButton.styleFrom(foregroundColor: AppColors.onSurfaceVariant),
-              child: const Text('Annuler')
+        builder: (context, setStateDialog) {
+          final cs = Theme.of(context).colorScheme;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: cs.surfaceContainerLowest,
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+            actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: Icon(Icons.lock_reset, color: cs.primary),
+                ),
+                const SizedBox(width: 12),
+                Text('Modifier le mot de passe', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+              ],
             ),
-            ElevatedButton(
-              onPressed: isLoading ? null : () async {
-                final nouveau = nouveauCtrl.text.trim();
-                if (nouveau.length < 8) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Le mot de passe doit contenir au moins 8 caractères.'),
-                    backgroundColor: AppColors.error,
-                  ));
-                  return;
-                }
-                setStateDialog(() => isLoading = true);
-                try {
-                  final auth = Provider.of<AuthProvider>(context, listen: false);
-                  await auth.changePassword(nouveau);
-                  if (context.mounted) {
-                    Navigator.pop(context);
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Ancien mot de passe', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: ancienCtrl,
+                  decoration: InputDecoration(
+                    hintText: '••••••••', 
+                    isDense: true,
+                    filled: true,
+                    fillColor: cs.surfaceContainerLow,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    prefixIcon: Icon(Icons.password, size: 18, color: cs.outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureAncien ? Icons.visibility_off : Icons.visibility, size: 18, color: cs.outline),
+                      onPressed: () => setStateDialog(() => obscureAncien = !obscureAncien),
+                    ),
+                  ), 
+                  obscureText: obscureAncien,
+                  style: TextStyle(color: cs.onSurface),
+                ),
+                const SizedBox(height: 20),
+                Text('Nouveau mot de passe', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: nouveauCtrl,
+                  decoration: InputDecoration(
+                    hintText: '••••••••', 
+                    isDense: true,
+                    filled: true,
+                    fillColor: cs.surfaceContainerLow,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    prefixIcon: Icon(Icons.lock_outline, size: 18, color: cs.outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureNouveau ? Icons.visibility_off : Icons.visibility, size: 18, color: cs.outline),
+                      onPressed: () => setStateDialog(() => obscureNouveau = !obscureNouveau),
+                    ),
+                  ), 
+                  obscureText: obscureNouveau,
+                  style: TextStyle(color: cs.onSurface),
+                ),
+                const SizedBox(height: 12),
+                Text('Minimum 8 caractères, incluant des lettres et des chiffres.', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pop(context), 
+                style: TextButton.styleFrom(foregroundColor: cs.onSurfaceVariant),
+                child: const Text('Annuler')
+              ),
+              ElevatedButton(
+                onPressed: isLoading ? null : () async {
+                  final nouveau = nouveauCtrl.text.trim();
+                  if (nouveau.length < 8) {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Mot de passe mis à jour avec succès.'),
-                      backgroundColor: AppColors.success,
-                    ));
-                  }
-                } catch (e) {
-                  setStateDialog(() => isLoading = false);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Erreur: $e'),
+                      content: Text('Le mot de passe doit contenir au moins 8 caractères.'),
                       backgroundColor: AppColors.error,
                     ));
+                    return;
                   }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary, 
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  setStateDialog(() => isLoading = true);
+                  try {
+                    final auth = Provider.of<AuthProvider>(context, listen: false);
+                    await auth.changePassword(nouveau);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Mot de passe mis à jour avec succès.'),
+                        backgroundColor: AppColors.success,
+                      ));
+                    }
+                  } catch (e) {
+                    setStateDialog(() => isLoading = false);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Erreur: $e'),
+                        backgroundColor: AppColors.error,
+                      ));
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary, 
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: isLoading
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Mettre à jour'),
               ),
-              child: isLoading
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Mettre à jour'),
-            ),
-          ],
-        )
+            ],
+          );
+        }
       )
     );
   }
 
   Widget _buildSecuritySection() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('SÉCURITÉ', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+          Text('SÉCURITÉ', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -410,15 +488,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
+                      color: cs.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.lock_outline, size: 20, color: AppColors.primary),
+                    child: Icon(Icons.lock_outline, size: 20, color: cs.primary),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Mot de passe',
-                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant),
+                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -427,15 +505,15 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.outlineVariant),
+                    border: Border.all(color: cs.outlineVariant),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.lock_reset, size: 16, color: AppColors.primary),
+                      Icon(Icons.lock_reset, size: 16, color: cs.primary),
                       const SizedBox(width: 8),
-                      Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
+                      Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
                     ],
                   ),
                 ),
@@ -448,79 +526,84 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _textField(String label, TextEditingController controller, IconData icon) {
+    final cs = Theme.of(context).colorScheme;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
       const SizedBox(height: 6),
       TextFormField(
         controller: controller,
-        style: AppTextStyles.bodyMedium,
+        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
         decoration: InputDecoration(
             isDense: true,
-            prefixIcon: Icon(icon, size: 18, color: AppColors.outline),
+            prefixIcon: Icon(icon, size: 18, color: cs.outline),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             filled: true,
-            fillColor: AppColors.surfaceContainerLow,
+            fillColor: cs.surfaceContainerLow,
         ),
       ),
     ]);
   }
 
   Widget _disabledTextField(String label, TextEditingController controller, IconData icon) {
+    final cs = Theme.of(context).colorScheme;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
       const SizedBox(height: 6),
       TextFormField(
         controller: controller,
         readOnly: true,
         enabled: false,
-        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
         decoration: InputDecoration(
             isDense: true,
-            prefixIcon: Icon(icon, size: 18, color: AppColors.outline),
+            prefixIcon: Icon(icon, size: 18, color: cs.outline),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             filled: true,
-            fillColor: AppColors.surfaceContainerLow,
+            fillColor: cs.surfaceContainerLow,
         ),
       ),
     ]);
   }
 
   Widget _lockedTextField(String label, String value, IconData icon) {
+    final cs = Theme.of(context).colorScheme;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
       const SizedBox(height: 6),
       TextFormField(
         initialValue: value,
         readOnly: true,
-        style: AppTextStyles.bodyMedium,
+        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
         decoration: InputDecoration(
             isDense: true,
-            prefixIcon: Icon(icon, size: 18, color: AppColors.outline),
-            suffixIcon: const Icon(Icons.lock_outline, size: 16, color: AppColors.outline),
+            prefixIcon: Icon(icon, size: 18, color: cs.outline),
+            suffixIcon: Icon(Icons.lock_outline, size: 16, color: cs.outline),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             filled: true,
-            fillColor: AppColors.surfaceContainerLow,
+            fillColor: cs.surfaceContainerLow,
         ),
       ),
     ]);
   }
 
   Widget _staticDropdownField(String label, String value, List<String> items, ValueChanged<String?> onChanged) {
+    final cs = Theme.of(context).colorScheme;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
       const SizedBox(height: 6),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: value,
             isExpanded: true,
-            icon: const Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.outline),
+            dropdownColor: cs.surfaceContainerLowest,
+            icon: Icon(Icons.keyboard_arrow_down, size: 18, color: cs.outline),
             items: items.map((String item) {
               return DropdownMenuItem<String>(
                 value: item,
-                child: Text(item, style: AppTextStyles.bodyMedium),
+                child: Text(item, style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
               );
             }).toList(),
             onChanged: onChanged,

@@ -44,6 +44,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final provider = Provider.of<EntrepriseProvider>(context);
     // Filter to get only urgent rappels
     final urgentNotes = provider.allNotes.where((n) => n.estRappel).toList();
@@ -64,10 +65,10 @@ class _UrgentsPageState extends State<UrgentsPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Fichiers & Notes Urgentes', style: AppTextStyles.headlineMedium),
+                          Text('Fichiers & Notes Urgentes', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
                           const SizedBox(height: 4),
                           Text('Vérifiez rapidement les rappels urgents reçus des entreprises', 
-                              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
                       // View Toggle
@@ -77,7 +78,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                             onPressed: () => setState(() => _isListView = false),
                             icon: Icon(
                               Icons.grid_view_rounded,
-                              color: !_isListView ? AppColors.primary : AppColors.outline,
+                              color: !_isListView ? cs.primary : cs.outline,
                             ),
                             tooltip: 'Vue en blocs',
                           ),
@@ -85,7 +86,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                             onPressed: () => setState(() => _isListView = true),
                             icon: Icon(
                               Icons.view_list_rounded,
-                              color: _isListView ? AppColors.primary : AppColors.outline,
+                              color: _isListView ? cs.primary : cs.outline,
                             ),
                             tooltip: 'Vue en liste',
                           ),
@@ -98,9 +99,9 @@ class _UrgentsPageState extends State<UrgentsPage> {
                     Container(
                       padding: const EdgeInsets.all(40),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLowest,
+                        color: cs.surfaceContainerLowest,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.2)),
+                        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
                       ),
                       child: Center(
                         child: Column(
@@ -108,7 +109,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                           children: [
                             Icon(Icons.warning_amber_rounded, size: 64, color: AppColors.warning.withValues(alpha: 0.5)),
                             const SizedBox(height: 16),
-                            Text('Aucun rappel urgent pour le moment', style: AppTextStyles.titleMedium),
+                            Text('Aucun rappel urgent pour le moment', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
                           ],
                         ),
                       ),
@@ -178,6 +179,7 @@ class _UrgentNoteCardState extends State<_UrgentNoteCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final accentColor = AppColors.warning;
 
     return MouseRegion(
@@ -189,7 +191,7 @@ class _UrgentNoteCardState extends State<_UrgentNoteCard> {
         width: widget.isList ? double.infinity : null,
         transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: cs.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isHovered ? accentColor : accentColor.withValues(alpha: 0.4),
@@ -233,13 +235,13 @@ class _UrgentNoteCardState extends State<_UrgentNoteCard> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(widget.entrepriseNom, style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
+                  Text(widget.entrepriseNom, style: AppTextStyles.labelSmall.copyWith(color: cs.primary)),
                   const SizedBox(height: 4),
-                  Text(widget.note.titre, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+                  Text(widget.note.titre, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
                   const SizedBox(height: 8),
                   Text(
                     widget.note.contenu,
-                    style: AppTextStyles.bodyMedium,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
                     maxLines: widget.isList ? 10 : 3,
                     overflow: TextOverflow.ellipsis,
                   ),

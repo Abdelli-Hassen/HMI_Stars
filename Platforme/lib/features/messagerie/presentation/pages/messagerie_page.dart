@@ -97,7 +97,7 @@ class _MessageriePageState extends State<MessageriePage> {
         scaffoldMessenger.showSnackBar(
           const SnackBar(
             content: Text('Aucun fichier sélectionné ou sélection annulée.'),
-            backgroundColor: AppColors.outline,
+            backgroundColor: cs.outline,
           ),
         );
         return;
@@ -164,6 +164,7 @@ class _MessageriePageState extends State<MessageriePage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.messagerie,
       title: 'HMI Stars - Messagerie',
@@ -218,10 +219,10 @@ class _MessageriePageState extends State<MessageriePage> {
     return Container(
       width: 280,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         border: Border(
           right: BorderSide(
-            color: AppColors.outlineVariant.withValues(alpha: 0.15),
+            color: cs.outlineVariant.withValues(alpha: 0.15),
           ),
         ),
       ),
@@ -237,7 +238,7 @@ class _MessageriePageState extends State<MessageriePage> {
             child: Container(
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
+                color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -267,7 +268,7 @@ class _MessageriePageState extends State<MessageriePage> {
               _activeFilter == 'Favoris' ? 'ENTREPRISES FAVORITES' : 'ENTREPRISES CLIENTES',
               style: AppTextStyles.labelSmall.copyWith(
                 letterSpacing: 1.1,
-                color: AppColors.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -281,7 +282,7 @@ class _MessageriePageState extends State<MessageriePage> {
                         child: Text(
                           _activeFilter == 'Favoris' ? 'Aucun favori' : 'Aucune entreprise',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       )
@@ -325,7 +326,7 @@ class _MessageriePageState extends State<MessageriePage> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.surfaceContainerLowest : Colors.transparent,
+          color: isSelected ? cs.surfaceContainerLowest : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           boxShadow: isSelected
               ? [
@@ -342,7 +343,7 @@ class _MessageriePageState extends State<MessageriePage> {
         child: Text(
           label,
           style: AppTextStyles.labelMedium.copyWith(
-            color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+            color: isSelected ? cs.primary : cs.onSurfaceVariant,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -357,16 +358,16 @@ class _MessageriePageState extends State<MessageriePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.chat_bubble_outline, size: 56, color: AppColors.outlineVariant),
+            Icon(Icons.chat_bubble_outline, size: 56, color: cs.outlineVariant),
             SizedBox(height: 16),
             Text(
               'Sélectionnez une entreprise',
-              style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 15),
+              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
             ),
             SizedBox(height: 6),
             Text(
               'pour consulter et envoyer des messages',
-              style: TextStyle(color: AppColors.outline, fontSize: 12),
+              style: TextStyle(color: cs.outline, fontSize: 12),
             ),
           ],
         ),
@@ -385,10 +386,10 @@ class _MessageriePageState extends State<MessageriePage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+            color: cs.surfaceContainerLowest,
             border: Border(
               bottom: BorderSide(
-                color: AppColors.outlineVariant.withValues(alpha: 0.15),
+                color: cs.outlineVariant.withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -396,7 +397,7 @@ class _MessageriePageState extends State<MessageriePage> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: AppColors.primaryFixed,
+                backgroundColor: cs.primaryContainer,
                 backgroundImage: (liveEntreprise.logoUrl != null && liveEntreprise.logoUrl!.isNotEmpty)
                     ? NetworkImage(liveEntreprise.logoUrl!)
                     : null,
@@ -406,7 +407,7 @@ class _MessageriePageState extends State<MessageriePage> {
                             ? liveEntreprise.nom[0].toUpperCase()
                             : '?',
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.primary,
+                          color: cs.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       )
@@ -423,7 +424,7 @@ class _MessageriePageState extends State<MessageriePage> {
                   Text(
                     liveEntreprise.email,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                       fontSize: 11,
                     ),
                   ),
@@ -444,9 +445,9 @@ class _MessageriePageState extends State<MessageriePage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
+                      color: cs.primary.withValues(alpha: 0.08),
                       border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.2),
+                        color: cs.primary.withValues(alpha: 0.2),
                         width: 1,
                       ),
                       borderRadius: BorderRadius.circular(24),
@@ -457,13 +458,13 @@ class _MessageriePageState extends State<MessageriePage> {
                         const Icon(
                           Icons.info_outline_rounded,
                           size: 16,
-                          color: AppColors.primary,
+                          color: cs.primary,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           'Détails',
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.primary,
+                            color: cs.primary,
                             fontWeight: FontWeight.w700,
                             fontSize: 11,
                           ),
@@ -479,13 +480,13 @@ class _MessageriePageState extends State<MessageriePage> {
 
         Expanded(
           child: Container(
-            color: AppColors.surface,
+            color: cs.surface,
             child: messages.isEmpty
                 ? Center(
                     child: Text(
                       'Aucun message — commencez la conversation',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.outline,
+                        color: cs.outline,
                       ),
                     ),
                   )
@@ -544,7 +545,7 @@ class _MessageriePageState extends State<MessageriePage> {
         children: [
           Expanded(
             child: Divider(
-              color: AppColors.outlineVariant.withValues(alpha: 0.4),
+              color: cs.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
           Padding(
@@ -552,7 +553,7 @@ class _MessageriePageState extends State<MessageriePage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
+                color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -563,7 +564,7 @@ class _MessageriePageState extends State<MessageriePage> {
           ),
           Expanded(
             child: Divider(
-              color: AppColors.outlineVariant.withValues(alpha: 0.4),
+              color: cs.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
         ],
@@ -575,22 +576,22 @@ class _MessageriePageState extends State<MessageriePage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         border: Border(
           top: BorderSide(
-            color: AppColors.outlineVariant.withValues(alpha: 0.15),
+            color: cs.outlineVariant.withValues(alpha: 0.15),
           ),
         ),
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.attach_file, color: AppColors.outline),
+            icon: const Icon(Icons.attach_file, color: cs.outline),
             tooltip: 'Joindre un fichier',
             onPressed: () => _selectionnerEtEnvoyerFichier(false),
           ),
           IconButton(
-            icon: const Icon(Icons.image_outlined, color: AppColors.outline),
+            icon: const Icon(Icons.image_outlined, color: cs.outline),
             tooltip: 'Joindre une image',
             onPressed: () => _selectionnerEtEnvoyerFichier(true),
           ),
@@ -599,7 +600,7 @@ class _MessageriePageState extends State<MessageriePage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
+                color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: TextField(
@@ -610,7 +611,7 @@ class _MessageriePageState extends State<MessageriePage> {
                 decoration: InputDecoration(
                   hintText: 'Écrire un message...',
                   hintStyle: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.outline,
+                    color: cs.outline,
                   ),
                   border: InputBorder.none,
                   isDense: true,
@@ -632,8 +633,8 @@ class _MessageriePageState extends State<MessageriePage> {
               height: 40,
               decoration: BoxDecoration(
                 color: messagerie.envoi
-                    ? AppColors.outlineVariant
-                    : AppColors.primary,
+                    ? cs.outlineVariant
+                    : cs.primary,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: messagerie.envoi
@@ -660,10 +661,10 @@ class _MessageriePageState extends State<MessageriePage> {
       width: 240,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         border: Border(
           left: BorderSide(
-            color: AppColors.outlineVariant.withValues(alpha: 0.15),
+            color: cs.outlineVariant.withValues(alpha: 0.15),
           ),
         ),
       ),
@@ -673,7 +674,7 @@ class _MessageriePageState extends State<MessageriePage> {
           children: [
             CircleAvatar(
               radius: 32,
-              backgroundColor: AppColors.primaryFixed,
+              backgroundColor: cs.primaryContainer,
               backgroundImage: (liveEntreprise.logoUrl != null && liveEntreprise.logoUrl!.isNotEmpty)
                   ? NetworkImage(liveEntreprise.logoUrl!)
                   : null,
@@ -683,7 +684,7 @@ class _MessageriePageState extends State<MessageriePage> {
                           ? liveEntreprise.nom[0].toUpperCase()
                           : '?',
                       style: AppTextStyles.titleMedium.copyWith(
-                        color: AppColors.primary,
+                        color: cs.primary,
                         fontWeight: FontWeight.w800,
                       ),
                     )
@@ -698,7 +699,7 @@ class _MessageriePageState extends State<MessageriePage> {
                 IconButton(
                   icon: Icon(
                     messagerie.estFavori(liveEntreprise.id) ? Icons.star : Icons.star_border,
-                    color: messagerie.estFavori(liveEntreprise.id) ? Colors.amber : AppColors.outline,
+                    color: messagerie.estFavori(liveEntreprise.id) ? Colors.amber : cs.outline,
                   ),
                   tooltip: messagerie.estFavori(liveEntreprise.id)
                       ? 'Retirer des favoris'
@@ -712,7 +713,7 @@ class _MessageriePageState extends State<MessageriePage> {
               Text(
                 liveEntreprise.nomGerant,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],
@@ -746,7 +747,7 @@ class _MessageriePageState extends State<MessageriePage> {
               'FICHIERS RÉCENTS',
               style: AppTextStyles.labelSmall.copyWith(
                 letterSpacing: 1.1,
-                color: AppColors.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -765,7 +766,7 @@ class _MessageriePageState extends State<MessageriePage> {
         Text(
           'Aucun fichier partagé',
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: cs.onSurfaceVariant,
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -789,12 +790,12 @@ class _MessageriePageState extends State<MessageriePage> {
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
+              color: cs.surfaceContainerLow,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
               children: [
-                const Icon(Icons.insert_drive_file, size: 16, color: AppColors.primary),
+                const Icon(Icons.insert_drive_file, size: 16, color: cs.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -802,7 +803,7 @@ class _MessageriePageState extends State<MessageriePage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.onSurface,
+                      color: cs.onSurface,
                     ),
                   ),
                 ),
@@ -828,7 +829,7 @@ class _MessageriePageState extends State<MessageriePage> {
             label: Text(
               'Afficher tous les fichiers',
               style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primary,
+                color: cs.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -838,7 +839,7 @@ class _MessageriePageState extends State<MessageriePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
               ),
-              backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+              backgroundColor: cs.primary.withValues(alpha: 0.08),
             ),
           ),
         ),
@@ -864,13 +865,13 @@ class _MessageriePageState extends State<MessageriePage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15, color: AppColors.primary),
+          Icon(icon, size: 15, color: cs.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.onSurface,
+                color: cs.onSurface,
               ),
             ),
           ),
@@ -882,13 +883,13 @@ class _MessageriePageState extends State<MessageriePage> {
   Color _couleurStatut(String statut) {
     switch (statut) {
       case 'EN COURS':
-        return AppColors.primary;
+        return cs.primary;
       case 'ATTENTE DOCS':
         return AppColors.tertiary;
       case 'COMPLET':
         return AppColors.success;
       default:
-        return AppColors.outline;
+        return cs.outline;
     }
   }
 
@@ -942,17 +943,18 @@ class _EntrepriseContactItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: selected
-              ? AppColors.primaryFixed.withValues(alpha: 0.3)
+              ? cs.primaryContainer.withValues(alpha: 0.3)
               : Colors.transparent,
           border: selected
               ? const Border(
-                  left: BorderSide(color: AppColors.primary, width: 3),
+                  left: BorderSide(color: cs.primary, width: 3),
                 )
               : null,
         ),
@@ -961,8 +963,8 @@ class _EntrepriseContactItem extends StatelessWidget {
             CircleAvatar(
               radius: 20,
               backgroundColor: selected
-                  ? AppColors.primary
-                  : AppColors.surfaceContainerHighest,
+                  ? cs.primary
+                  : cs.surfaceContainerHighest,
               backgroundImage: (logoUrl != null && logoUrl!.isNotEmpty)
                   ? NetworkImage(logoUrl!)
                   : null,
@@ -974,7 +976,7 @@ class _EntrepriseContactItem extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: selected ? Colors.white : AppColors.onSurfaceVariant,
+                        color: selected ? Colors.white : cs.onSurfaceVariant,
                       ),
                     )
                   : null,
@@ -993,8 +995,8 @@ class _EntrepriseContactItem extends StatelessWidget {
                       fontWeight: (selected || aDesNonLus) ? FontWeight.w800 : FontWeight.w600,
                       fontSize: aDesNonLus ? 14 : 13,
                       color: selected
-                          ? AppColors.primary
-                          : (aDesNonLus ? AppColors.onSurface : AppColors.onSurface),
+                          ? cs.primary
+                          : (aDesNonLus ? cs.onSurface : cs.onSurface),
                     ),
                   ),
                   if (dernierMessage != null)
@@ -1005,8 +1007,8 @@ class _EntrepriseContactItem extends StatelessWidget {
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 12,
                         color: selected 
-                            ? AppColors.primary.withValues(alpha: 0.8) 
-                            : (aDesNonLus ? AppColors.onSurface : AppColors.onSurfaceVariant),
+                            ? cs.primary.withValues(alpha: 0.8) 
+                            : (aDesNonLus ? cs.onSurface : cs.onSurfaceVariant),
                         fontWeight: (aDesNonLus || (estEnvoyeParUser && !selected))
                             ? FontWeight.w700
                             : FontWeight.w400,
@@ -1017,7 +1019,7 @@ class _EntrepriseContactItem extends StatelessWidget {
                       'Aucun message',
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 12,
-                        color: AppColors.outline,
+                        color: cs.outline,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -1051,6 +1053,7 @@ class _BubbleMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final hasFile = message.estFichier && message.fichierUrl != null;
     final List<String> fileUrls = hasFile ? message.fichierUrl!.split(',') : [];
     final List<String> fileNames = hasFile ? (message.fichierNom?.split(',') ?? []) : [];
@@ -1071,7 +1074,7 @@ class _BubbleMessage extends StatelessWidget {
           if (!estMoi) ...[
             CircleAvatar(
               radius: 14,
-              backgroundColor: AppColors.surfaceContainer,
+              backgroundColor: cs.surfaceContainer,
               backgroundImage: (entrepriseLogoUrl != null && entrepriseLogoUrl!.isNotEmpty)
                   ? NetworkImage(entrepriseLogoUrl!)
                   : null,
@@ -1079,7 +1082,7 @@ class _BubbleMessage extends StatelessWidget {
                   ? const Icon(
                       Icons.business,
                       size: 14,
-                      color: AppColors.onSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                     )
                   : null,
             ),
@@ -1093,10 +1096,10 @@ class _BubbleMessage extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: 420),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  gradient: estMoi ? AppColors.primaryGradient : null,
+                  gradient: estMoi ? cs.primaryGradient : null,
                   color: estMoi
                       ? null
-                      : AppColors.surfaceContainerLowest,
+                      : cs.surfaceContainerLowest,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -1156,7 +1159,7 @@ class _BubbleMessage extends StatelessWidget {
                                             url,
                                             fit: BoxFit.cover,
                                             errorBuilder: (context, error, stackTrace) => Container(
-                                              color: AppColors.surfaceContainerHigh,
+                                              color: cs.surfaceContainerHigh,
                                               padding: const EdgeInsets.all(16),
                                               child: const Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -1182,7 +1185,7 @@ class _BubbleMessage extends StatelessWidget {
                                       decoration: BoxDecoration(
                                         color: estMoi
                                             ? Colors.white.withValues(alpha: 0.15)
-                                            : AppColors.surfaceContainerLow,
+                                            : cs.surfaceContainerLow,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
@@ -1190,7 +1193,7 @@ class _BubbleMessage extends StatelessWidget {
                                         children: [
                                           Icon(
                                             Icons.insert_drive_file,
-                                            color: estMoi ? Colors.white : AppColors.primary,
+                                            color: estMoi ? Colors.white : cs.primary,
                                           ),
                                           const SizedBox(width: 10),
                                           Flexible(
@@ -1201,7 +1204,7 @@ class _BubbleMessage extends StatelessWidget {
                                                 Text(
                                                   nom,
                                                   style: AppTextStyles.bodyMedium.copyWith(
-                                                    color: estMoi ? Colors.white : AppColors.onSurface,
+                                                    color: estMoi ? Colors.white : cs.onSurface,
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                   maxLines: 1,
@@ -1211,7 +1214,7 @@ class _BubbleMessage extends StatelessWidget {
                                                 Text(
                                                   'Télécharger le fichier',
                                                   style: AppTextStyles.bodySmall.copyWith(
-                                                    color: estMoi ? Colors.white70 : AppColors.onSurfaceVariant,
+                                                    color: estMoi ? Colors.white70 : cs.onSurfaceVariant,
                                                     fontSize: 10,
                                                   ),
                                                 ),
@@ -1232,7 +1235,7 @@ class _BubbleMessage extends StatelessWidget {
                       Text(
                         message.contenu,
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: estMoi ? Colors.white : AppColors.onSurface,
+                          color: estMoi ? Colors.white : cs.onSurface,
                           height: 1.4,
                         ),
                       ),
@@ -1257,7 +1260,7 @@ class _BubbleMessage extends StatelessWidget {
                     Icon(
                       Icons.done_all,
                       size: 14,
-                      color: message.estLu ? Colors.blue : AppColors.outline,
+                      color: message.estLu ? Colors.blue : cs.outline,
                     ),
                   ],
                 ],
@@ -1268,11 +1271,11 @@ class _BubbleMessage extends StatelessWidget {
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 14,
-              backgroundColor: AppColors.primaryFixed,
+              backgroundColor: cs.primaryContainer,
               child: const Icon(
                 Icons.support_agent,
                 size: 14,
-                color: AppColors.primary,
+                color: cs.primary,
               ),
             ),
           ],
@@ -1290,6 +1293,7 @@ class _LinkPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final uri = Uri.tryParse(url);
     final domain = uri?.host ?? 'Lien externe';
     
@@ -1315,10 +1319,10 @@ class _LinkPreviewCard extends StatelessWidget {
           width: 320,
           margin: const EdgeInsets.only(top: 4),
           decoration: BoxDecoration(
-            color: estMoi ? Colors.white.withValues(alpha: 0.1) : AppColors.surfaceContainerLow,
+            color: estMoi ? Colors.white.withValues(alpha: 0.1) : cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: estMoi ? Colors.white30 : AppColors.outlineVariant.withValues(alpha: 0.3),
+              color: estMoi ? Colors.white30 : cs.outlineVariant.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1329,7 +1333,7 @@ class _LinkPreviewCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: estMoi ? Colors.white.withValues(alpha: 0.05) : AppColors.surfaceContainerHigh,
+                  color: estMoi ? Colors.white.withValues(alpha: 0.05) : cs.surfaceContainerHigh,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -1340,14 +1344,14 @@ class _LinkPreviewCard extends StatelessWidget {
                     Icon(
                       Icons.link,
                       size: 14,
-                      color: estMoi ? Colors.white70 : AppColors.primary,
+                      color: estMoi ? Colors.white70 : cs.primary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         domain,
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: estMoi ? Colors.white70 : AppColors.onSurfaceVariant,
+                          color: estMoi ? Colors.white70 : cs.onSurfaceVariant,
                           fontWeight: FontWeight.w700,
                           fontSize: 10,
                         ),
@@ -1366,7 +1370,7 @@ class _LinkPreviewCard extends StatelessWidget {
                     Text(
                       title,
                       style: AppTextStyles.labelMedium.copyWith(
-                        color: estMoi ? Colors.white : AppColors.onSurface,
+                        color: estMoi ? Colors.white : cs.onSurface,
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -1377,7 +1381,7 @@ class _LinkPreviewCard extends StatelessWidget {
                     Text(
                       description,
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: estMoi ? Colors.white70 : AppColors.onSurfaceVariant,
+                        color: estMoi ? Colors.white70 : cs.onSurfaceVariant,
                         fontSize: 10,
                       ),
                       maxLines: 2,
@@ -1579,7 +1583,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
       case '.png':
         return Colors.purple.shade700;
       default:
-        return AppColors.primary;
+        return cs.primary;
     }
   }
 
@@ -1609,6 +1613,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -1617,10 +1622,10 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
           width: 550,
           height: 600,
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.outlineVariant.withValues(alpha: 0.15),
+              color: cs.outlineVariant.withValues(alpha: 0.15),
             ),
             boxShadow: [
               BoxShadow(
@@ -1639,10 +1644,10 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                      backgroundColor: cs.primary.withValues(alpha: 0.1),
                       child: const Icon(
                         Icons.folder_shared_outlined,
-                        color: AppColors.primary,
+                        color: cs.primary,
                         size: 20,
                       ),
                     ),
@@ -1660,7 +1665,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                           Text(
                             'Tous les documents partagés dans cette conversation',
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -1670,7 +1675,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                       icon: const Icon(Icons.close_rounded, size: 20),
                       onPressed: () => Navigator.pop(context),
                       style: IconButton.styleFrom(
-                        hoverColor: AppColors.surfaceContainerHigh,
+                        hoverColor: cs.surfaceContainerHigh,
                       ),
                     ),
                   ],
@@ -1692,13 +1697,13 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                                 Icon(
                                   Icons.folder_open_outlined,
                                   size: 48,
-                                  color: AppColors.outline.withValues(alpha: 0.5),
+                                  color: cs.outline.withValues(alpha: 0.5),
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
                                   'Aucun fichier partagé dans ce salon',
                                   style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.onSurfaceVariant,
+                                    color: cs.onSurfaceVariant,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -1716,6 +1721,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                               ),
                               itemCount: _files.length + (_hasMore ? 1 : 0),
                               itemBuilder: (context, index) {
+                                final cs = Theme.of(context).colorScheme;
                                 if (index == _files.length) {
                                   return const Padding(
                                     padding: EdgeInsets.symmetric(vertical: 16),
@@ -1739,10 +1745,10 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                                   padding: const EdgeInsets.only(bottom: 8),
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: AppColors.surfaceContainerLow,
+                                      color: cs.surfaceContainerLow,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: AppColors.outlineVariant.withValues(alpha: 0.08),
+                                        color: cs.outlineVariant.withValues(alpha: 0.08),
                                       ),
                                     ),
                                     child: ListTile(
@@ -1769,7 +1775,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                                       subtitle: Text(
                                         _formatDateAjout(doc.dateAjout),
                                         style: AppTextStyles.bodySmall.copyWith(
-                                          color: AppColors.onSurfaceVariant,
+                                          color: cs.onSurfaceVariant,
                                           fontSize: 11,
                                         ),
                                       ),

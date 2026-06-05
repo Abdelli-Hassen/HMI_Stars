@@ -19,6 +19,7 @@ import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 import '../../../../core/services/platform_data_service.dart';
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/utils/translation_extension.dart';
 
 class EntrepriseDetailsPage extends StatefulWidget {
   const EntrepriseDetailsPage({super.key});
@@ -119,6 +120,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final provider = Provider.of<EntrepriseProvider>(context);
 
     if (provider.entreprises.isEmpty) {
@@ -148,7 +150,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLowest,
+                color: cs.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -157,12 +159,12 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                   CircleAvatar(
                     key: ValueKey(entreprise.logoUrl),
                     radius: 44,
-                    backgroundColor: AppColors.surfaceContainerHigh,
+                    backgroundColor: cs.surfaceContainerHigh,
                     backgroundImage: (entreprise.logoUrl != null && entreprise.logoUrl!.isNotEmpty)
                         ? NetworkImage(entreprise.logoUrl!)
                         : null,
                     child: (entreprise.logoUrl == null || entreprise.logoUrl!.isEmpty)
-                        ? const Icon(Icons.domain, size: 44, color: AppColors.onSurfaceVariant)
+                        ? const Icon(Icons.domain, size: 44, color: cs.onSurfaceVariant)
                         : null,
                   ),
                   const SizedBox(width: 24),
@@ -178,13 +180,13 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                             const SizedBox(width: 12),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                              child: Text(entreprise.statut, style: AppTextStyles.labelSmall.copyWith(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 0.8)),
+                              decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                              child: Text(entreprise.statut, style: AppTextStyles.labelSmall.copyWith(fontSize: 10, fontWeight: FontWeight.w700, color: cs.primary, letterSpacing: 0.8)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(entreprise.description, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant), overflow: TextOverflow.ellipsis, maxLines: 2),
+                        Text(entreprise.description, style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant), overflow: TextOverflow.ellipsis, maxLines: 2),
                         const SizedBox(height: 16),
                         Row(
                           children: [
@@ -207,13 +209,13 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(border: Border.all(color: AppColors.outlineVariant), borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(border: Border.all(color: cs.outlineVariant), borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                          const Icon(Icons.edit_outlined, size: 16, color: cs.primary),
                           const SizedBox(width: 6),
-                          Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.primary)),
+                          Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
                         ],
                       ),
                     ),
@@ -224,7 +226,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                      // ─── Tab Bar ───
             Container(
               padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(12)),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(children: [
@@ -258,12 +260,12 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
           decoration: BoxDecoration(
-            color: active ? AppColors.surfaceContainerLowest : Colors.transparent,
+            color: active ? cs.surfaceContainerLowest : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: active ? [BoxShadow(color: AppColors.onSurface.withValues(alpha: 0.04), blurRadius: 4)] : null,
+            boxShadow: active ? [BoxShadow(color: cs.onSurface.withValues(alpha: 0.04), blurRadius: 4)] : null,
           ),
           child: Text(label, style: AppTextStyles.labelMedium.copyWith(
-            color: active ? AppColors.primary : AppColors.onSurfaceVariant,
+            color: active ? cs.primary : cs.onSurfaceVariant,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           )),
         ),
@@ -275,9 +277,9 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.primary),
+        Icon(icon, size: 14, color: cs.primary),
         const SizedBox(width: 4),
-        Flexible(child: Text(text, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurface), overflow: TextOverflow.ellipsis)),
+        Flexible(child: Text(text, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface), overflow: TextOverflow.ellipsis)),
       ],
     );
   }
@@ -290,10 +292,10 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                const Icon(Icons.info_outline, size: 18, color: cs.primary),
                 const SizedBox(width: 8),
                 Text('INFORMATIONS GÉNÉRALES', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
               ]),
@@ -325,10 +327,10 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                const Icon(Icons.gavel_outlined, size: 18, color: AppColors.primary),
+                const Icon(Icons.gavel_outlined, size: 18, color: cs.primary),
                 const SizedBox(width: 8),
                 Text('INFORMATIONS JURIDIQUES', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
               ]),
@@ -361,12 +363,12 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
 
   Widget _readField(String label, String value) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
+      Text(label, style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600)),
       const SizedBox(height: 4),
       Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(color: AppColors.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
         child: Text(value.isEmpty ? 'Non défini' : value, style: AppTextStyles.bodyMedium),
       ),
     ]);
@@ -376,7 +378,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
     if (salaries.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
         child: Column(
           children: [
             Center(child: Text('Aucun salarié actif.', style: AppTextStyles.bodyMedium)),
@@ -387,14 +389,14 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                   },
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Ajouter un salarié'),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
             ),
           ]
         )
       );
     }
     return Container(
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           Padding(
@@ -409,31 +411,32 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                   },
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Ajouter un salarié'),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
                 ),
               ],
             ),
           ),
-          Divider(color: AppColors.outlineVariant.withValues(alpha: 0.2), height: 1),
+          Divider(color: cs.outlineVariant.withValues(alpha: 0.2), height: 1),
           // Liste
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: salaries.length,
-            separatorBuilder: (context, index) => Divider(color: AppColors.outlineVariant.withValues(alpha: 0.1), height: 1),
+            separatorBuilder: (context, index) => Divider(color: cs.outlineVariant.withValues(alpha: 0.1), height: 1),
             itemBuilder: (context, index) {
+              final cs = Theme.of(context).colorScheme;
               final salarie = salaries[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundColor: cs.surfaceContainerLow,
                       backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
                           ? NetworkImage(salarie.avatarUrl!)
                           : null,
                       child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
-                          ? Icon(Icons.person, color: AppColors.onSurfaceVariant)
+                          ? Icon(Icons.person, color: cs.onSurfaceVariant)
                           : null,
                     ),
                     const SizedBox(width: 16),
@@ -442,7 +445,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('${salarie.nom} ${salarie.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700)),
-                          Text('Né(e): ${salarie.nomNaissance} | CIN: ${salarie.cin}', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                          Text('Né(e): ${salarie.nomNaissance} | CIN: ${salarie.cin}', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
                     ),
@@ -495,12 +498,12 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
     if (archives.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
         child: Center(child: Text('Aucune archive d\'employé.', style: AppTextStyles.bodyMedium)),
       );
     }
     return Container(
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           Padding(
@@ -513,31 +516,32 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                   children: [
                     Text('Employés Archivés (${archives.length})', style: AppTextStyles.titleMedium),
                     const SizedBox(height: 4),
-                    Text('Liste des employés inactifs (ayant quitté l\'entreprise).', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                    Text('Liste des employés inactifs (ayant quitté l\'entreprise).', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                   ],
                 ),
               ],
             ),
           ),
-          Divider(color: AppColors.outlineVariant.withValues(alpha: 0.2), height: 1),
+          Divider(color: cs.outlineVariant.withValues(alpha: 0.2), height: 1),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: archives.length,
-            separatorBuilder: (context, index) => Divider(color: AppColors.outlineVariant.withValues(alpha: 0.1), height: 1),
+            separatorBuilder: (context, index) => Divider(color: cs.outlineVariant.withValues(alpha: 0.1), height: 1),
             itemBuilder: (context, index) {
+              final cs = Theme.of(context).colorScheme;
               final s = archives[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundColor: cs.surfaceContainerLow,
                       backgroundImage: (s.avatarUrl != null && s.avatarUrl!.isNotEmpty)
                           ? NetworkImage(s.avatarUrl!)
                           : null,
                       child: (s.avatarUrl == null || s.avatarUrl!.isEmpty)
-                          ? const Icon(Icons.person_off, color: AppColors.onSurfaceVariant)
+                          ? const Icon(Icons.person_off, color: cs.onSurfaceVariant)
                           : null,
                     ),
                     const SizedBox(width: 16),
@@ -546,7 +550,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('${s.nom} ${s.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700, decoration: TextDecoration.lineThrough)),
-                          Text('Né(e): ${s.nomNaissance} | CIN: ${s.cin}', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                          Text('Né(e): ${s.nomNaissance} | CIN: ${s.cin}', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
                     ),
@@ -597,7 +601,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
   Widget _buildNotesTab(BuildContext context, List<NoteEntreprise> notes, String entrepriseId) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -611,7 +615,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Ajouter'),
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
               ),
             ],
           ),
@@ -625,24 +629,25 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               itemCount: notes.length,
               separatorBuilder: (_, i) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
+                final cs = Theme.of(context).colorScheme;
                 final note = notes[index];
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: note.estRappel ? AppColors.warning.withValues(alpha: 0.08) : AppColors.surfaceContainerLow,
+                    color: note.estRappel ? AppColors.warning.withValues(alpha: 0.08) : cs.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: note.estRappel ? AppColors.warning.withValues(alpha: 0.4) : AppColors.outlineVariant.withValues(alpha: 0.3)),
+                    border: Border.all(color: note.estRappel ? AppColors.warning.withValues(alpha: 0.4) : cs.outlineVariant.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
                         Icon(note.estRappel ? Icons.notifications_active : Icons.sticky_note_2_outlined,
-                            color: note.estRappel ? AppColors.warning : AppColors.primary, size: 20),
+                            color: note.estRappel ? AppColors.warning : cs.primary, size: 20),
                         const SizedBox(width: 8),
                         Expanded(child: Text(note.titre, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700))),
                         Text('${note.dateCreation.day}/${note.dateCreation.month}/${note.dateCreation.year}',
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                            style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
@@ -728,9 +733,10 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: cs.surfaceContainerLowest,
       child: Container(
         width: 500,
         padding: const EdgeInsets.all(32),
@@ -756,7 +762,7 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
               subtitle: const Text('Marquer comme rappel important'),
               value: _isRappel,
               onChanged: (v) => setState(() => _isRappel = v),
-              activeThumbColor: AppColors.primary,
+              activeThumbColor: cs.primary,
               contentPadding: EdgeInsets.zero,
             ),
             const SizedBox(height: 24),
@@ -767,7 +773,7 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _ajouter,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
                   child: _isLoading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Text('Ajouter'),
@@ -936,9 +942,10 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: cs.surfaceContainerLowest,
       child: Container(
         width: 500,
         height: 700,
@@ -953,12 +960,12 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                   CircleAvatar(
                     key: ValueKey(_logoUrl),
                     radius: 40,
-                    backgroundColor: AppColors.surfaceContainerHigh,
+                    backgroundColor: cs.surfaceContainerHigh,
                     backgroundImage: (_logoUrl != null && _logoUrl!.isNotEmpty)
                         ? NetworkImage(_logoUrl!)
                         : null,
                     child: (_logoUrl == null || _logoUrl!.isEmpty)
-                        ? const Icon(Icons.domain, size: 40, color: AppColors.onSurfaceVariant)
+                        ? const Icon(Icons.domain, size: 40, color: cs.onSurfaceVariant)
                         : null,
                   ),
                   if (_isUploadingLogo)
@@ -980,7 +987,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                       elevation: 2,
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
-                      color: AppColors.primary,
+                      color: cs.primary,
                       child: InkWell(
                         onTap: _changeLogo,
                         child: const Padding(
@@ -1072,7 +1079,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                 ElevatedButton(
                   onPressed: _sauvegarder,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: cs.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -1101,10 +1108,10 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
           decoration: InputDecoration(
             isDense: true,
             hintText: 'Saisir $label',
-            hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.outlineVariant)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.outlineVariant)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primary)),
+            hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.primary)),
           ),
         ),
       ],
@@ -1304,9 +1311,10 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: cs.surfaceContainerLowest,
       child: Container(
         width: 650,
         padding: const EdgeInsets.all(32),
@@ -1322,12 +1330,12 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundColor: cs.surfaceContainerLow,
                       backgroundImage: _avatarBytes != null
                           ? MemoryImage(_avatarBytes!)
                           : null,
                       child: _avatarBytes == null
-                          ? const Icon(Icons.person, size: 50, color: AppColors.onSurfaceVariant)
+                          ? const Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
                           : null,
                     ),
                     Positioned(
@@ -1335,7 +1343,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                       right: 0,
                       child: CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: cs.primary,
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
@@ -1460,7 +1468,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
 
               Text('Pièces jointes', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              Text('Formats acceptés : PDF, JPG, PNG, DOCX', style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              Text('Formats acceptés : PDF, JPG, PNG, DOCX', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
               const SizedBox(height: 12),
 
               Wrap(
@@ -1482,7 +1490,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                   const SizedBox(width: 16),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _ajouter,
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
                     child: _isLoading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Text('Ajouter le Salarié'),
@@ -1509,7 +1517,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
         ),
         child: Text(
           _formatDate(value),
-          style: AppTextStyles.bodyMedium.copyWith(color: value != null ? AppColors.onSurface : AppColors.outline),
+          style: AppTextStyles.bodyMedium.copyWith(color: value != null ? cs.onSurface : cs.outline),
         ),
       ),
     );
@@ -1524,9 +1532,9 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : AppColors.surfaceContainerLow,
+          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : AppColors.outlineVariant),
+          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outlineVariant),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1534,14 +1542,14 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
             Icon(
               hasFile ? Icons.check_circle : Icons.upload_file,
               size: 16,
-              color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+              color: hasFile ? AppColors.success : cs.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               hasFile ? fileName : label,
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+                color: hasFile ? AppColors.success : cs.onSurfaceVariant,
               ),
             ),
           ],
@@ -1779,7 +1787,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
       children: [
         Row(
           children: [
-            Text(label, style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+            Text(label, style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
             if (required) Text(' *', style: const TextStyle(color: AppColors.error)),
           ],
         ),
@@ -1790,8 +1798,8 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.outline)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outline)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.primary, width: 2)),
           ),
           style: AppTextStyles.bodyMedium,
         ),
@@ -1809,9 +1817,9 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : AppColors.surfaceContainerLow,
+          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : AppColors.outlineVariant),
+          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outlineVariant),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1819,14 +1827,14 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
             Icon(
               hasFile ? Icons.check_circle : Icons.upload_file,
               size: 16,
-              color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+              color: hasFile ? AppColors.success : cs.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               hasFile ? (hasNewFile ? fileName : '$label (Existant - Modifier)') : label,
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: hasFile ? AppColors.success : AppColors.onSurfaceVariant,
+                color: hasFile ? AppColors.success : cs.onSurfaceVariant,
               ),
             ),
           ],
@@ -1837,9 +1845,10 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: cs.surfaceContainerLowest,
       child: Container(
         width: 650,
         padding: const EdgeInsets.all(32),
@@ -1861,14 +1870,14 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: AppColors.surfaceContainerLow,
+                      backgroundColor: cs.surfaceContainerLow,
                       backgroundImage: _avatarBytes != null
                           ? MemoryImage(_avatarBytes!)
                           : (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty
                               ? NetworkImage(widget.salarie.avatarUrl!) as ImageProvider
                               : null),
                       child: (_avatarBytes == null && (widget.salarie.avatarUrl == null || widget.salarie.avatarUrl!.isEmpty))
-                          ? const Icon(Icons.person, size: 50, color: AppColors.onSurfaceVariant)
+                          ? const Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
                           : null,
                     ),
                     Positioned(
@@ -1876,7 +1885,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                       right: 0,
                       child: CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: cs.primary,
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
@@ -1888,7 +1897,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text('État Civil', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              Text('État Civil', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1896,7 +1905,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Genre', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        Text('Genre', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
                           initialValue: _genre,
@@ -1943,18 +1952,18 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Date de naissance', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        Text('Date de naissance', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         InkWell(
                           onTap: () => _pickDate('naissance'),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(border: Border.all(color: AppColors.outline), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(border: Border.all(color: cs.outline), borderRadius: BorderRadius.circular(8)),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(_dateNaissance != null ? "${_dateNaissance!.day}/${_dateNaissance!.month}/${_dateNaissance!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
-                                const Icon(Icons.calendar_today, size: 16, color: AppColors.onSurfaceVariant),
+                                const Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                               ],
                             ),
                           ),
@@ -1975,7 +1984,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                 ],
               ),
               const SizedBox(height: 24),
-              Text('Coordonnées', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              Text('Coordonnées', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildField('Adresse postale', _adressePostaleController),
               const SizedBox(height: 16),
@@ -1987,7 +1996,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                 ],
               ),
               const SizedBox(height: 24),
-              Text('Contrat & Poste', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              Text('Contrat & Poste', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1995,18 +2004,18 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Date d\'embauche', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        Text('Date d\'embauche', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         InkWell(
                           onTap: () => _pickDate('embauche'),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(border: Border.all(color: AppColors.outline), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(border: Border.all(color: cs.outline), borderRadius: BorderRadius.circular(8)),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(_dateEmbauche != null ? "${_dateEmbauche!.day}/${_dateEmbauche!.month}/${_dateEmbauche!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
-                                const Icon(Icons.calendar_today, size: 16, color: AppColors.onSurfaceVariant),
+                                const Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                               ],
                             ),
                           ),
@@ -2019,7 +2028,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Type de contrat', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                        Text('Type de contrat', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
                           initialValue: _typeContrat,
@@ -2051,18 +2060,18 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Date de fin de contrat', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600)),
+                          Text('Date de fin de contrat', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 6),
                           InkWell(
                             onTap: () => _pickDate('fin'),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              decoration: BoxDecoration(border: Border.all(color: AppColors.outline), borderRadius: BorderRadius.circular(8)),
+                              decoration: BoxDecoration(border: Border.all(color: cs.outline), borderRadius: BorderRadius.circular(8)),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(_dateFinContrat != null ? "${_dateFinContrat!.day}/${_dateFinContrat!.month}/${_dateFinContrat!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
-                                  const Icon(Icons.calendar_today, size: 16, color: AppColors.onSurfaceVariant),
+                                  const Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                                 ],
                               ),
                             ),
@@ -2080,7 +2089,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
               const SizedBox(height: 24),
               _buildField('Description / Note sur le salarié', descriptionController),
               const SizedBox(height: 24),
-              Text('Pièces Jointes (Modifier/Ajouter)', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              Text('Pièces Jointes (Modifier/Ajouter)', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 12,
@@ -2104,7 +2113,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _enregistrer,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: cs.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -2190,14 +2199,16 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
           final estPointe = p['est_pointe'] as bool? ?? false;
           note = p['note'] as String? ?? '';
           if (estPointe) {
-            status = 'Présent';
+            status = context.trStatic('Présent', 'Present');
             presents++;
           } else {
-            status = note.isNotEmpty ? 'Congé' : 'Absent';
+            status = note.isNotEmpty 
+                ? context.trStatic('Congé', 'Leave') 
+                : context.trStatic('Absent', 'Absent');
             absents++;
           }
         } else {
-          status = 'Non renseigné';
+          status = context.trStatic('Non renseigné', 'Unreported');
           nonRenseignes++;
         }
 
@@ -2206,16 +2217,27 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
 
       final buffer = StringBuffer();
       
-      buffer.writeln('Rapport de Pointage Mensuel$separator');
-      buffer.writeln('Salarié$separator${escapeCsv("${widget.salarie.prenom} ${widget.salarie.nom}", separator)}');
-      buffer.writeln('Entreprise$separator${escapeCsv(widget.entrepriseNom, separator)}');
-      buffer.writeln('Période$separator${_months[_selectedMonth - 1]} $_selectedYear');
-      buffer.writeln('Jours Présents$separator$presents');
-      buffer.writeln('Jours Absents/Congés$separator$absents');
-      buffer.writeln('Jours Non Renseignés$separator$nonRenseignes');
+      final title = context.trStatic('Rapport de Pointage Mensuel', 'Monthly Attendance Report');
+      final employeeLbl = context.trStatic('Salarié', 'Employee');
+      final companyLbl = context.trStatic('Entreprise', 'Company');
+      final periodLbl = context.trStatic('Période', 'Period');
+      final presentLbl = context.trStatic('Jours Présents', 'Days Present');
+      final absentLbl = context.trStatic('Jours Absents/Congés', 'Days Absent/Leave');
+      final unrepLbl = context.trStatic('Jours Non Renseignés', 'Days Unreported');
+      final dateLbl = context.trStatic('Date', 'Date');
+      final statusLbl = context.trStatic('Statut', 'Status');
+      final noteLbl = context.trStatic('Note / Description', 'Note / Description');
+
+      buffer.writeln('$title$separator');
+      buffer.writeln('$employeeLbl$separator${escapeCsv("${widget.salarie.prenom} ${widget.salarie.nom}", separator)}');
+      buffer.writeln('$companyLbl$separator${escapeCsv(widget.entrepriseNom, separator)}');
+      buffer.writeln('$periodLbl$separator${_months[_selectedMonth - 1]} $_selectedYear');
+      buffer.writeln('$presentLbl$separator$presents');
+      buffer.writeln('$absentLbl$separator$absents');
+      buffer.writeln('$unrepLbl$separator$nonRenseignes');
       buffer.writeln('');
       
-      buffer.writeln('Date${separator}Statut${separator}Note / Description');
+      buffer.writeln('$dateLbl$separator$statusLbl$separator$noteLbl');
       
       for (final row in rows) {
         final dateEsc = escapeCsv(row[0], separator);
@@ -2230,7 +2252,8 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
       final bytes = Uint8List.fromList([...utf8BOM, ...utf8.encode(csvContent)]);
 
       final monthStr = _selectedMonth.toString().padLeft(2, '0');
-      final fileName = 'pointage_${widget.salarie.nom.replaceAll(' ', '_')}_${widget.salarie.prenom.replaceAll(' ', '_')}_${monthStr}_$_selectedYear.csv';
+      final filePrefix = context.trStatic('pointage', 'attendance');
+      final fileName = '${filePrefix}_${widget.salarie.nom.replaceAll(' ', '_')}_${widget.salarie.prenom.replaceAll(' ', '_')}_${monthStr}_$_selectedYear.csv';
 
       await FileSaver.instance.saveFile(
         name: fileName,
@@ -2242,7 +2265,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Rapport exporté avec succès : $fileName'),
+            content: Text(context.trStatic('Rapport exporté avec succès : ', 'Report exported successfully: ') + fileName),
             backgroundColor: AppColors.success,
           ),
         );
@@ -2251,7 +2274,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de l\'export : $e'),
+            content: Text(context.trStatic('Erreur lors de l\'export : ', 'Error during export: ') + e.toString()),
             backgroundColor: AppColors.error,
           ),
         );
@@ -2272,9 +2295,10 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: cs.surfaceContainerLowest,
       child: Container(
         width: 450,
         padding: const EdgeInsets.all(32),
@@ -2289,7 +2313,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
             const SizedBox(height: 8),
             Text(
               'Salarié : ${widget.salarie.prenom} ${widget.salarie.nom}',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: 24),
 
@@ -2346,7 +2370,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
                   ElevatedButton(
                     onPressed: () => _export(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: cs.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('Exporter'),
@@ -2439,7 +2463,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
         Text(
           label,
           style: AppTextStyles.labelMedium.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: cs.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -2448,7 +2472,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
+            color: cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -2466,7 +2490,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
       child: Text(
         title,
         style: AppTextStyles.labelMedium.copyWith(
-          color: AppColors.primary,
+          color: cs.primary,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -2548,10 +2572,11 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final salarie = widget.salarie;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: AppColors.surfaceContainerLowest,
+      backgroundColor: cs.surfaceContainerLowest,
       child: Container(
         width: 600,
         padding: const EdgeInsets.all(32),
@@ -2577,7 +2602,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
                         icon: const Icon(Icons.edit, size: 16),
                         label: const Text('Modifier'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: cs.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -2596,12 +2621,12 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
               Center(
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundColor: AppColors.surfaceContainerLow,
+                  backgroundColor: cs.surfaceContainerLow,
                   backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
                       ? NetworkImage(salarie.avatarUrl!)
                       : null,
                   child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
-                      ? const Icon(Icons.person, size: 50, color: AppColors.onSurfaceVariant)
+                      ? const Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
                       : null,
                 ),
               ),
@@ -2681,7 +2706,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
               _buildSectionTitle('Pièces jointes'),
               Text(
                 'Les pièces jointes en vert souligné sont téléchargeables. Cliquez pour les ouvrir.',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant, fontStyle: FontStyle.italic),
+                style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 12),
               Wrap(

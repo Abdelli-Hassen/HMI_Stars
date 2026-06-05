@@ -18,9 +18,20 @@ import 'features/messagerie/presentation/providers/messagerie_provider.dart';
 import 'features/auth/presentation/pages/reset_password_page.dart';
 
 
+import 'dart:js_interop';
+
+@JS('eval')
+external void _jsEval(String code);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
+
+  if (kIsWeb) {
+    try {
+      _jsEval('window.BroadcastChannel = undefined;');
+    } catch (_) {}
+  }
 
   await Supabase.initialize(
     url: SupabaseConfig.url,
@@ -32,6 +43,7 @@ Future<void> main() async {
 
   runApp(const HmiStarsApp());
 }
+
 
 class HmiStarsApp extends StatelessWidget {
   const HmiStarsApp({super.key});
@@ -72,6 +84,7 @@ class HmiStarsApp extends StatelessWidget {
       child: Consumer2<AuthProvider, ThemeProvider>(
         builder: (context, auth, themeProvider, _) {
           return MaterialApp(
+            key: ValueKey(themeProvider.themeMode),
             navigatorKey: AppRoutes.navigatorKey,
             title: 'HMI Stars',
             debugShowCheckedModeBanner: false,

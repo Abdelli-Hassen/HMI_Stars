@@ -1,1 +1,1 @@
-CreateObject("WScript.Shell").Run "hmistarsmobile\run_app.bat", 0
+CreateObject("WScript.Shell").Run ".\hmistarsmobile\run_app.bat", 0

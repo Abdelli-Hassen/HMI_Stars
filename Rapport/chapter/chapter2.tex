@@ -138,8 +138,7 @@ The use case design maps objects to the logical class diagram. Figure \ref{fig:c
 \section{Phase of Construction}
 
 \subsection{Database Mapping}
-The logical class models are mapped to physical PostgreSQL tables in the Supabase database schema:
-\\
+The logical classes are mapped to physical PostgreSQL tables.\\
 \textbf{entreprises} : Stores client company registration data, legal details (SIRET, SIREN, legal form, capital), contact information, and logo URLs.\\
 \textbf{salaries} : Contains employee registry files including personal credentials (social security number, birth details) and contract statuses.\\
 \textbf{pointages} : Records daily attendance and check-in logs for registered company employees.\\
@@ -163,16 +162,26 @@ To enforce complete security isolation, PostgreSQL \textbf{Row Level Security (R
 The code is modularized into feature folders following clean architecture guidelines:
 \textbf{1. Core Subsystem :} Theme configurations, routing services, and Supabase client helpers.\\
 \textbf{2. Auth Feature Subsystem :}  Sign-in, sign-up, and password recovery controllers.
-\textbf{3. Client Management Subsystem :} Employees list, attendance pointage forms, and leave requests.\\
+\textbf{3. Client Management Subsystem :} Employees list, attendance forms, and leave requests.\\
 \textbf{4. Messaging Subsystem :} Real-time chat widget, WebSocket listeners, and file upload services.
 
+\subsection{Design Pattern & Architectural Layers}
+The codebase of both the mobile and web client applications is structured around a decoupled **Model-View-Controller (MVC)** design pattern to separate business logic from the user interface presentation:
+\textbf{Model Layer}: Contains Dart entity models mapping our database records. They manage JSON serialization and deserialization (`fromJson`/`toJson` factories).
+\textbf{View Layer}: Renders UI screens using responsive Flutter widgets. Views observe state changes and rebuild when notified.
+\textbf{Controller/State Layer (AppState)}: Exposes actions, processes asynchronous transactions, and dispatches data change signals to UI consumers.
+
 \subsection{Deployment of the Computerized System}
-\textbf{web application : } Deployed on Vercel hosting.\\
-\textbf{Mobile Client App : }Compiled as an Android APK.\\
-\textbf{Database and API : } Hosted on Supabase cloud.
+During development and testing, the components were deployed and compiled as follows:
+\\
+\textbf{Web Application} : Deployed and run locally on a Web Server for administration.
+\\
+\textbf{Mobile Client App} : Compiled and deployed as an Android package (APK).
+\\
+\textbf{Database \& API} : Connected to the cloud-hosted Supabase backend instance.
 
 \subsection{Use Case Implementation}
-We implemented the features iteratively, starting with model classes, then integrating database API calls, and finally completing the user interface components.
+We adopted an iterative, bottom-up development cycle to translate our system use cases into functional software. Each iteration started with defining Dart model classes to secure consistency, followed by constructing the service adapters to hook database API queries and Supabase CRUD logic. Finally, we developed the responsive user interfaces and visual views, binding them directly to the state controllers. This modular approach allowed us to isolate and validate database Row Level Security rules, state management triggers, and offline caching routines before compiling the final client user interface layouts.
 
 \section{Conclusion}
-This chapter detailed the design development using the Unified Process structure. The next chapter will focus on theTransition phase, functional testing, and user evaluation of the implemented system.
+This chapter detailed the design development using the Unified Process structure. The next chapter will focus on the Transition phase, functional testing, and user evaluation of the implemented system.

@@ -168,8 +168,9 @@ class EntrepriseProvider extends ChangeNotifier {
 
   Future<void> fetchDocumentsForEntreprise(String entrepriseId) async {
     try {
-      final list =
-          await _dataService.fetchDocumentsForEntreprise(entrepriseId);
+      final list = entrepriseId == 'all'
+          ? await _dataService.fetchAllDocuments()
+          : await _dataService.fetchDocumentsForEntreprise(entrepriseId);
       _documentsCache[entrepriseId] = list;
       notifyListeners();
     } catch (_) {}
