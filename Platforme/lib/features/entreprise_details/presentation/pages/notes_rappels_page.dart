@@ -5,6 +5,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
+import '../../../../core/utils/translation_extension.dart';
 import '../../../entreprises/domain/models/note_entreprise.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 
@@ -26,6 +27,11 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
   bool _dataLoaded = false;
   bool _showAllTodos = false;
 
+  String _translateTab(BuildContext context, String tab) {
+    if (tab == 'Toutes') return context.tr('Toutes', 'All');
+    if (tab == 'Épinglées') return context.tr('Épinglées', 'Pinned');
+    return context.tr('Rappels', 'Reminders');
+  }
 
   // Todos remain local (no DB table for them)
   final List<_TodoItem> _todos = [];
@@ -64,7 +70,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
     final targetId = entreprises.isNotEmpty ? entreprises.first.id : '';
 
     if (targetId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aucune entreprise disponible pour créer une note.'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Aucune entreprise disponible pour créer une note.', 'No companies available to create a note.')), backgroundColor: AppColors.error));
       return;
     }
 
@@ -88,7 +94,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
           _selectedCategory = 'Note';
           _inputExpanded = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note ajoutée !'), backgroundColor: AppColors.success));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note ajoutée !', 'Note added!')), backgroundColor: AppColors.success));
       }
     } catch (e) {
       if (mounted) {
@@ -126,7 +132,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
     final filteredNotes = _getFilteredNotes(allNotes);
     return MainShell(
       currentRoute: AppRoutes.notesRappels,
-      title: 'Notes & Rappels',
+      title: context.tr('Notes & Rappels', 'Notes & Reminders'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: StaggeredColumn(
@@ -138,10 +144,15 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Notes & Rappels', style: AppTextStyles.headlineLarge.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+                    Text(
+                      context.tr('Notes & Rappels', 'Notes & Reminders'), 
+                      style: AppTextStyles.headlineLarge.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5, color: cs.onSurface)
+                    ),
                     const SizedBox(height: 4),
-                    Text('Organisez vos tâches, notes et rappels professionnels.',
-                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
+                    Text(
+                      context.tr('Organisez vos tâches, notes et rappels professionnels.', 'Organize your professional tasks, notes, and reminders.'),
+                      style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)
+                    ),
                   ],
                 ),
                 Row(children: [
@@ -153,7 +164,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                       controller: _searchCtrl,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'Rechercher...',
+                        hintText: context.tr('Rechercher...', 'Search...'),
                         hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
                         prefixIcon: Icon(Icons.search, size: 18, color: cs.outline),
                         filled: true,
@@ -162,7 +173,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                         contentPadding: const EdgeInsets.symmetric(vertical: 10),
                         isDense: true,
                       ),
-                      style: AppTextStyles.bodySmall,
+                      style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface),
                     ),
                   ),
                 ]),
@@ -204,9 +215,9 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           controller: _newNoteCtrl,
                           onTap: () { if (!_inputExpanded) setState(() => _inputExpanded = true); },
                           onSubmitted: (_) => _addNote(),
-                          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
+                          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: cs.onSurface),
                           decoration: InputDecoration(
-                            hintText: 'Titre de la note...',
+                            hintText: context.tr('Titre de la note...', 'Note title...'),
                             hintStyle: AppTextStyles.bodyLarge.copyWith(color: cs.outline, fontWeight: FontWeight.w500, fontSize: 16),
                             border: InputBorder.none,
                             isDense: true,
@@ -255,9 +266,9 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                               controller: _newNoteBodyCtrl,
                               maxLines: 5,
                               minLines: 3,
-                              style: AppTextStyles.bodyMedium,
+                              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
                               decoration: InputDecoration(
-                                hintText: 'Description (optionnel)...',
+                                hintText: context.tr('Description (optionnel)...', 'Description (optional)...'),
                                 hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
                                 border: InputBorder.none,
                                 isDense: false,
@@ -268,7 +279,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           const SizedBox(height: 16),
 
                           // Category label
-                          Text('CATÉGORIE', style: AppTextStyles.labelSmall.copyWith(
+                          Text(context.tr('CATÉGORIE', 'CATEGORY'), style: AppTextStyles.labelSmall.copyWith(
                             letterSpacing: 1.2, fontWeight: FontWeight.w800, color: cs.onSurfaceVariant,
                           )),
                           const SizedBox(height: 10),
@@ -304,7 +315,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                   }),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    child: Text('Annuler', style: AppTextStyles.labelMedium.copyWith(
+                                    child: Text(context.tr('Annuler', 'Cancel'), style: AppTextStyles.labelMedium.copyWith(
                                       fontWeight: FontWeight.w600, color: cs.onSurfaceVariant,
                                     )),
                                   ),
@@ -344,7 +355,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           color: active ? cs.primary : cs.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(tab, style: AppTextStyles.labelMedium.copyWith(
+                        child: Text(_translateTab(context, tab), style: AppTextStyles.labelMedium.copyWith(
                           fontWeight: FontWeight.w600,
                           color: active ? Colors.white : cs.onSurfaceVariant,
                         )),
@@ -375,7 +386,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                               children: [
                                 Icon(Icons.sticky_note_2_outlined, size: 48, color: cs.outline),
                                 const SizedBox(height: 12),
-                                Text('Aucune note trouvée', style: AppTextStyles.bodyMedium.copyWith(color: cs.outline)),
+                                Text(context.tr('Aucune note trouvée', 'No notes found'), style: AppTextStyles.bodyMedium.copyWith(color: cs.outline)),
                               ],
                             ),
                           ),
@@ -400,7 +411,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                               try {
                                 await provider.supprimerNote(note.id, note.entrepriseId);
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note supprimée.'), backgroundColor: AppColors.success));
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note supprimée.', 'Note deleted.')), backgroundColor: AppColors.success));
                                 }
                               } catch (e) {
                                 if (context.mounted) {
@@ -960,6 +971,16 @@ class _CategoryChip extends StatefulWidget {
 class _CategoryChipState extends State<_CategoryChip> {
   bool _hovered = false;
 
+  String _translateCategory(BuildContext context, String cat) {
+    if (cat == 'Note') return context.tr('Note', 'Note');
+    if (cat == 'Rappel') return context.tr('Rappel', 'Reminder');
+    if (cat == 'Contrats') return context.tr('Contrats', 'Contracts');
+    if (cat == 'RH') return context.tr('RH', 'HR');
+    if (cat == 'Congés') return context.tr('Congés', 'Leave');
+    if (cat == 'Recrutement') return context.tr('Recrutement', 'Recruitment');
+    return cat;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -990,7 +1011,7 @@ class _CategoryChipState extends State<_CategoryChip> {
               Icon(widget.cat.icon, size: 14,
                   color: widget.isActive ? widget.cat.color : cs.onSurfaceVariant),
               const SizedBox(width: 6),
-              Text(widget.cat.label, style: AppTextStyles.labelSmall.copyWith(
+              Text(_translateCategory(context, widget.cat.label), style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: widget.isActive ? FontWeight.w700 : FontWeight.w500,
                 color: widget.isActive ? widget.cat.color : cs.onSurfaceVariant,
               )),

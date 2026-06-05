@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
+import '../../../../core/utils/translation_extension.dart';
 import '../../domain/models/entreprise.dart';
 import '../providers/entreprise_provider.dart';
 
@@ -25,6 +26,23 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
     'Archivées',
   ];
   bool _isListMode = false;
+
+  String _translateFilter(BuildContext context, String filter) {
+    switch (filter) {
+      case 'Toutes les entreprises':
+        return context.tr('Toutes les entreprises', 'All Companies');
+      case 'En cours de travail':
+        return context.tr('En cours de travail', 'In Progress');
+      case 'En attente des besoins':
+        return context.tr('En attente des besoins', 'Awaiting Docs');
+      case 'Travail complet':
+        return context.tr('Travail complet', 'Completed');
+      case 'Archivées':
+        return context.tr('Archivées', 'Archived');
+      default:
+        return filter;
+    }
+  }
 
   @override
   void initState() {
@@ -46,7 +64,7 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
   Widget build(BuildContext context) {
     return MainShell(
       currentRoute: AppRoutes.entreprises,
-      title: 'Liste des Entreprises',
+      title: context.tr('Liste des Entreprises', 'List of Companies'),
       body: Consumer<EntrepriseProvider>(
         builder: (context, ep, _) {
           final cs = Theme.of(context).colorScheme;
@@ -61,9 +79,12 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Entreprises', style: AppTextStyles.headlineMedium),
+                        Text(
+                          context.tr('Entreprises', 'Companies'), 
+                          style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)
+                        ),
                         const SizedBox(height: 4),
-                        _Chip(label: "PORTEFEUILLE CLIENT", active: false),
+                        _Chip(label: context.tr("PORTEFEUILLE CLIENT", "CLIENT PORTFOLIO"), active: false),
                       ],
                     ),
                     Row(
@@ -72,23 +93,23 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                           width: 280,
                           child: TextField(
                             onChanged: (val) => context.read<EntrepriseProvider>().setSearchQuery(val),
-                            style: AppTextStyles.bodyMedium,
+                            style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
                             decoration: InputDecoration(
-                              hintText: 'Rechercher (nom, email)...',
+                              hintText: context.tr('Rechercher (nom, email)...', 'Search (name, email)...'),
                               hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
                               prefixIcon: Icon(Icons.search, size: 20, color: cs.outline),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: cs.outlineVariant),
+                                borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35)),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: cs.outlineVariant),
+                                borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: cs.primary),
+                                borderSide: BorderSide(color: cs.primary, width: 1.5),
                               ),
                               filled: true,
                               fillColor: cs.surfaceContainerLowest,
@@ -104,7 +125,7 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                           child: ElevatedButton.icon(
                             onPressed: () => _showAddDialog(context),
                             icon: const Icon(Icons.add_business, size: 18),
-                            label: const Text('Ajouter une Entreprise'),
+                            label: Text(context.tr('Ajouter une Entreprise', 'Add Company')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
@@ -124,26 +145,26 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                 Row(
                   children: [
                     _StatCard(
-                        label: 'TOTAL (PORTEFEUILLE)',
+                        label: context.tr('TOTAL (PORTEFEUILLE)', 'TOTAL (PORTFOLIO)'),
                         value: ep.totalEntreprises.toString(),
                         icon: Icons.domain),
                     const SizedBox(width: 16),
                     _StatCard(
-                        label: 'EN ATTENTE (BLOQUÉS)',
+                        label: context.tr('EN ATTENTE (BLOQUÉS)', 'AWAITING DOCS'),
                         value: ep.dossiersEnAttente.toString(),
                         icon: Icons.hourglass_top,
                         iconBg: AppColors.errorContainer,
                         iconColor: AppColors.error),
                     const SizedBox(width: 16),
                     _StatCard(
-                        label: 'EN COURS (TRAITEMENT)',
+                        label: context.tr('EN COURS (TRAITEMENT)', 'IN PROGRESS'),
                         value: ep.dossiersEnCours.toString(),
                         icon: Icons.work_history,
                         iconBg: AppColors.tertiaryFixed,
                         iconColor: AppColors.tertiary),
                     const SizedBox(width: 16),
                     _StatCard(
-                        label: 'TRAVAIL COMPLET',
+                        label: context.tr('TRAVAIL COMPLET', 'COMPLETED'),
                         value: ep.dossiersComplets.toString(),
                         icon: Icons.check_circle_outline,
                         iconBg: AppColors.successLight,
@@ -161,7 +182,7 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
-                      'Erreur de chargement: ${ep.error}',
+                      context.tr('Erreur de chargement: ${ep.error}', 'Load error: ${ep.error}'),
                       style: TextStyle(color: AppColors.error),
                     ),
                   ),
@@ -187,7 +208,7 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                             child: GestureDetector(
                               onTap: () => ep.setFiltre(filter),
                               child:
-                                  _FilterChip(label: filter, active: isActive),
+                                  _FilterChip(label: _translateFilter(context, filter), active: isActive),
                             ),
                           );
                         }),
@@ -224,8 +245,8 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(32.0),
                           child: Text(
-                              'Aucune entreprise trouvée avec ce filtre.',
-                              style: AppTextStyles.bodyMedium),
+                              context.tr('Aucune entreprise trouvée avec ce filtre.', 'No companies found with this filter.'),
+                              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
                         ),
                       )
                     : (_isListMode
@@ -290,12 +311,10 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
   Future<void> _creerEntreprise() async {
     if (_nomController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Le nom de l\'entreprise est obligatoire.')),
+        SnackBar(content: Text(context.tr('Le nom de l\'entreprise est obligatoire.', 'Company name is required.'))),
       );
       return;
     }
-
-
 
     // id is a placeholder; Supabase will generate the real UUID
     final nouvelleEntreprise = Entreprise(
@@ -326,8 +345,8 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Entreprise ajoutée avec succès !'),
+        SnackBar(
+          content: Text(context.tr('Entreprise ajoutée avec succès !', 'Company added successfully!')),
           backgroundColor: AppColors.success,
         ),
       );
@@ -336,7 +355,7 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: ${e.toString()}'),
+          content: Text(context.tr('Erreur: ', 'Error: ') + e.toString()),
           backgroundColor: AppColors.error,
         ),
       );
@@ -377,74 +396,74 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Nouvelle Entreprise', style: AppTextStyles.headlineSmall),
+              Text(context.tr('Nouvelle Entreprise', 'New Company'), style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface)),
               const SizedBox(height: 8),
-              Text('Renseignez les informations de base ainsi que les identifiants d\'accès pour l\'application.', style: AppTextStyles.bodyMedium),
+              Text(context.tr('Renseignez les informations de base ainsi que les identifiants d\'accès pour l\'application.', 'Fill in the basic information and access credentials for the application.'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
               const SizedBox(height: 24),
-              Text('1. Informations générales et accès', style: AppTextStyles.titleMedium),
+              Text(context.tr('1. Informations générales et accès', '1. General information & access'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
               const SizedBox(height: 16),
-              _buildField('Nom complet de l\'entreprise', _nomController),
+              _buildField(context.tr('Nom complet de l\'entreprise', 'Company full name'), _nomController),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('Adresse Email de connexion', _emailController, keyboardType: TextInputType.emailAddress)),
+                  Expanded(child: _buildField(context.tr('Adresse Email de connexion', 'Login Email address'), _emailController, keyboardType: TextInputType.emailAddress)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Mot de passe', _mdpController, isPassword: true)),
+                  Expanded(child: _buildField(context.tr('Mot de passe', 'Password'), _mdpController, isPassword: true)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('Nom du dirigeant/gérant', _gerantController)),
+                  Expanded(child: _buildField(context.tr('Nom du dirigeant/gérant', 'Manager/director name'), _gerantController)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Nombre d\'effectif', _effectifController, keyboardType: TextInputType.number)),
+                  Expanded(child: _buildField(context.tr('Nombre d\'effectif', 'Employee count'), _effectifController, keyboardType: TextInputType.number)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('Téléphone de l\'entreprise', _telephoneController, keyboardType: TextInputType.phone)),
+                  Expanded(child: _buildField(context.tr('Téléphone de l\'entreprise', 'Company phone number'), _telephoneController, keyboardType: TextInputType.phone)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Adresse physique', _adresseController)),
+                  Expanded(child: _buildField(context.tr('Adresse physique', 'Physical address'), _adresseController)),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildField('Description générale', _descController),
+              _buildField(context.tr('Description générale', 'General description'), _descController),
               const SizedBox(height: 24),
-              Text('2. Informations juridiques', style: AppTextStyles.titleMedium),
+              Text(context.tr('2. Informations juridiques', '2. Legal information'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('N° SIREN', _sirenController)),
+                  Expanded(child: _buildField(context.tr('N° SIREN', 'SIREN Number'), _sirenController)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('N° SIRET', _siretController)),
+                  Expanded(child: _buildField(context.tr('N° SIRET', 'SIRET Number'), _siretController)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('Forme juridique', _formeController)),
+                  Expanded(child: _buildField(context.tr('Forme juridique', 'Legal form'), _formeController)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Capital social', _capitalController)),
+                  Expanded(child: _buildField(context.tr('Capital social', 'Share capital'), _capitalController)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('N° de TVA', _tvaController)),
+                  Expanded(child: _buildField(context.tr('N° de TVA', 'VAT Number'), _tvaController)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('N° RCS', _rcsController)),
+                  Expanded(child: _buildField(context.tr('N° RCS', 'RCS Number'), _rcsController)),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildField('Code APE / NAF', _codeApeController),
+              _buildField(context.tr('Code APE / NAF', 'APE / NAF Code'), _codeApeController),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('Annuler', style: TextStyle(color: AppColors.error)),
+                    child: Text(context.tr('Annuler', 'Cancel'), style: TextStyle(color: AppColors.error)),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
@@ -455,7 +474,7 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    child: const Text('Créer l\'Entreprise'),
+                    child: Text(context.tr('Créer l\'Entreprise', 'Create Company')),
                   ),
                 ],
               ),
@@ -467,23 +486,24 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
   }
 
   Widget _buildField(String label, TextEditingController controller, {bool isPassword = false, TextInputType? keyboardType}) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelMedium),
+        Text(label, style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
-          style: AppTextStyles.bodyMedium,
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
           decoration: InputDecoration(
             isDense: true,
-            hintText: 'Saisir $label',
+            hintText: context.tr('Saisir ', 'Enter ') + label,
             hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
           ),
         ),
       ],
@@ -580,13 +600,14 @@ class _StatCardState extends State<_StatCard> {
                       style: AppTextStyles.labelSmall.copyWith(
                         letterSpacing: 1,
                         fontWeight: FontWeight.w700,
+                        color: cs.onSurfaceVariant,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.value,
-                      style: AppTextStyles.headlineMedium,
+                      style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -680,6 +701,13 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
     return AppColors.warning;
   }
 
+  String _translateStatus(String status) {
+    if (status == 'EN COURS') return context.tr('EN COURS', 'IN PROGRESS');
+    if (status == 'COMPLET') return context.tr('COMPLET', 'COMPLETED');
+    if (status == 'ARCHIVÉ') return context.tr('ARCHIVÉ', 'ARCHIVED');
+    return context.tr('ATTENTE DOCS', 'AWAITING DOCS');
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -746,17 +774,17 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
                   ),
                   const Spacer(),
                   PopupMenuButton<String>(
-                    tooltip: 'Changer le statut',
+                    tooltip: context.tr('Changer le statut', 'Change status'),
                     offset: const Offset(0, 30),
                     onSelected: (newStatus) {
                        final updated = widget.entreprise.copyWith(statut: newStatus);
                        Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(updated);
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'EN COURS', child: Text('En cours de travail')),
-                      const PopupMenuItem(value: 'ATTENTE DOCS', child: Text('En attente des besoins')),
-                      const PopupMenuItem(value: 'COMPLET', child: Text('Travail complet')),
-                      const PopupMenuItem(value: 'ARCHIVÉ', child: Text('Archiver')),
+                      PopupMenuItem(value: 'EN COURS', child: Text(context.tr('En cours de travail', 'In Progress'))),
+                      PopupMenuItem(value: 'ATTENTE DOCS', child: Text(context.tr('En attente des besoins', 'Awaiting Docs'))),
+                      PopupMenuItem(value: 'COMPLET', child: Text(context.tr('Travail complet', 'Completed'))),
+                      PopupMenuItem(value: 'ARCHIVÉ', child: Text(context.tr('Archiver', 'Archive'))),
                     ],
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -767,7 +795,7 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(widget.entreprise.statut, style: AppTextStyles.labelSmall.copyWith(
+                          Text(_translateStatus(widget.entreprise.statut), style: AppTextStyles.labelSmall.copyWith(
                             fontSize: 9, fontWeight: FontWeight.w700, color: _statusColor, letterSpacing: 0.8,
                           )),
                           const SizedBox(width: 4),
@@ -779,13 +807,23 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
                 ],
               ),
               const SizedBox(height: 18),
-              Text(widget.entreprise.nom, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
+              Text(
+                widget.entreprise.nom, 
+                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface), 
+                overflow: TextOverflow.ellipsis
+              ),
               const SizedBox(height: 4),
               Row(
                 children: [
                   Icon(Icons.person, size: 14, color: cs.onSurfaceVariant),
                   const SizedBox(width: 4),
-                  Expanded(child: Text('Dirigeant: ${widget.entreprise.nomGerant}', style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
+                  Expanded(
+                    child: Text(
+                      context.tr('Dirigeant: ${widget.entreprise.nomGerant}', 'Manager: ${widget.entreprise.nomGerant}'), 
+                      style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant), 
+                      overflow: TextOverflow.ellipsis
+                    )
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -797,7 +835,10 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Voir le dossier', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.w600)),
+                    Text(
+                      context.tr('Voir le dossier', 'View details'), 
+                      style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.w600)
+                    ),
                     Icon(Icons.arrow_forward, size: 18, color: cs.primary),
                   ],
                 ),
@@ -827,6 +868,13 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
     if (widget.entreprise.statut == 'COMPLET') return AppColors.success;
     if (widget.entreprise.statut == 'ARCHIVÉ') return cs.outlineVariant;
     return AppColors.warning;
+  }
+
+  String _translateStatus(String status) {
+    if (status == 'EN COURS') return context.tr('EN COURS', 'IN PROGRESS');
+    if (status == 'COMPLET') return context.tr('COMPLET', 'COMPLETED');
+    if (status == 'ARCHIVÉ') return context.tr('ARCHIVÉ', 'ARCHIVED');
+    return context.tr('ATTENTE DOCS', 'AWAITING DOCS');
   }
 
   @override
@@ -899,7 +947,11 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.entreprise.nom, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
+                    Text(
+                      widget.entreprise.nom, 
+                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface), 
+                      overflow: TextOverflow.ellipsis
+                    ),
                     const SizedBox(height: 4),
                     Text(widget.entreprise.description, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
@@ -912,23 +964,29 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                   children: [
                     Icon(Icons.person, size: 16, color: cs.onSurfaceVariant),
                     const SizedBox(width: 6),
-                    Expanded(child: Text(widget.entreprise.nomGerant, style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
+                    Expanded(
+                      child: Text(
+                        widget.entreprise.nomGerant, 
+                        style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface), 
+                        overflow: TextOverflow.ellipsis
+                      )
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 16),
               PopupMenuButton<String>(
-                tooltip: 'Changer le statut',
+                tooltip: context.tr('Changer le statut', 'Change status'),
                 offset: const Offset(0, 30),
                 onSelected: (newStatus) {
                    final updated = widget.entreprise.copyWith(statut: newStatus);
                    Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(updated);
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'EN COURS', child: Text('En cours de travail')),
-                  const PopupMenuItem(value: 'ATTENTE DOCS', child: Text('En attente des besoins')),
-                  const PopupMenuItem(value: 'COMPLET', child: Text('Travail complet')),
-                  const PopupMenuItem(value: 'ARCHIVÉ', child: Text('Archiver')),
+                  PopupMenuItem(value: 'EN COURS', child: Text(context.tr('En cours de travail', 'In Progress'))),
+                  PopupMenuItem(value: 'ATTENTE DOCS', child: Text(context.tr('En attente des besoins', 'Awaiting Docs'))),
+                  PopupMenuItem(value: 'COMPLET', child: Text(context.tr('Travail complet', 'Completed'))),
+                  PopupMenuItem(value: 'ARCHIVÉ', child: Text(context.tr('Archiver', 'Archive'))),
                 ],
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -939,7 +997,7 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(widget.entreprise.statut, style: AppTextStyles.labelSmall.copyWith(
+                      Text(_translateStatus(widget.entreprise.statut), style: AppTextStyles.labelSmall.copyWith(
                         fontSize: 10, fontWeight: FontWeight.w700, color: _statusColor, letterSpacing: 0.8,
                       )),
                       const SizedBox(width: 6),

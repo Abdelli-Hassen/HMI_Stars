@@ -8,6 +8,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 import '../../../entreprises/domain/models/document_entreprise.dart';
+import '../../../../core/utils/translation_extension.dart';
 
 class DocumentsEntreprisePage extends StatefulWidget {
   const DocumentsEntreprisePage({super.key});
@@ -170,14 +171,14 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
   String _getSortLabel(String sortKey) {
     switch (sortKey) {
       case 'ancien':
-        return 'Date (plus ancien)';
+        return context.tr('Date (plus ancien)', 'Date (oldest)');
       case 'nom_asc':
-        return 'Nom (A-Z)';
+        return context.tr('Nom (A-Z)', 'Name (A-Z)');
       case 'nom_desc':
-        return 'Nom (Z-A)';
+        return context.tr('Nom (Z-A)', 'Name (Z-A)');
       case 'recent':
       default:
-        return 'Date (plus récent)';
+        return context.tr('Date (plus récent)', 'Date (newest)');
     }
   }
 
@@ -204,19 +205,19 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
       items: [
         PopupMenuItem(
           value: 'recent',
-          child: Text('Date (plus récent)', style: AppTextStyles.bodyMedium),
+          child: Text(context.tr('Date (plus récent)', 'Date (newest)'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
         ),
         PopupMenuItem(
           value: 'ancien',
-          child: Text('Date (plus ancien)', style: AppTextStyles.bodyMedium),
+          child: Text(context.tr('Date (plus ancien)', 'Date (oldest)'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
         ),
         PopupMenuItem(
           value: 'nom_asc',
-          child: Text('Nom (A-Z)', style: AppTextStyles.bodyMedium),
+          child: Text(context.tr('Nom (A-Z)', 'Name (A-Z)'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
         ),
         PopupMenuItem(
           value: 'nom_desc',
-          child: Text('Nom (Z-A)', style: AppTextStyles.bodyMedium),
+          child: Text(context.tr('Nom (Z-A)', 'Name (Z-A)'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
         ),
       ],
       initialValue: _currentSort,
@@ -270,8 +271,8 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Sélectionner une entreprise',
-                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800),
+                            context.tr('Sélectionner une entreprise', 'Select a company'),
+                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close),
@@ -286,7 +287,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                       child: TextField(
                         autofocus: true,
                         decoration: InputDecoration(
-                          hintText: "Cherchez votre entreprise",
+                          hintText: context.tr("Cherchez votre entreprise", "Search your company"),
                           prefixIcon: Icon(Icons.search, color: cs.outline),
                           filled: true,
                           fillColor: cs.surfaceContainerLow,
@@ -331,7 +332,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                                   child: Icon(Icons.business, color: cs.primary, size: 16),
                                 ),
                                 title: Text(
-                                  'Toutes les entreprises',
+                                  context.tr('Toutes les entreprises', 'All companies'),
                                   style: AppTextStyles.bodyMedium.copyWith(
                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                     color: isSelected ? cs.primary : cs.onSurface,
@@ -441,10 +442,10 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     final provider = Provider.of<EntrepriseProvider>(context);
 
     if (provider.entreprises.isEmpty) {
-      return const MainShell(
+      return MainShell(
         currentRoute: AppRoutes.documentsEntreprise,
-        title: 'Documents RH',
-        body: Center(child: CircularProgressIndicator()),
+        title: context.tr('Documents RH', 'HR Documents'),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -481,21 +482,21 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     }
 
     final folders = [
-      _FolderData(Icons.folder, 'Tous les fichiers', totalCount),
-      _FolderData(Icons.receipt_long, 'Comptabilité', comptaCount),
-      _FolderData(Icons.supervised_user_circle, 'Social & Paie', socialPaieCount),
-      _FolderData(Icons.gavel, 'Fiscalité', fiscaliteCount),
-      _FolderData(Icons.account_balance, 'Banque & Relevés', banqueCount),
-      _FolderData(Icons.business_center, 'Juridique', juridiqueCount),
-      _FolderData(Icons.photo_library, 'Médias & Photos', mediaCount),
-      _FolderData(Icons.more_horiz, 'Autres documents', autresCount),
+      _FolderData(Icons.folder, 'Tous les fichiers', totalCount, context.tr('Tous les fichiers', 'All files')),
+      _FolderData(Icons.receipt_long, 'Comptabilité', comptaCount, context.tr('Comptabilité', 'Accounting')),
+      _FolderData(Icons.supervised_user_circle, 'Social & Paie', socialPaieCount, context.tr('Social & Paie', 'Social & Payroll')),
+      _FolderData(Icons.gavel, 'Fiscalité', fiscaliteCount, context.tr('Fiscalité', 'Taxation')),
+      _FolderData(Icons.account_balance, 'Banque & Relevés', banqueCount, context.tr('Banque & Relevés', 'Bank & Statements')),
+      _FolderData(Icons.business_center, 'Juridique', juridiqueCount, context.tr('Juridique', 'Legal')),
+      _FolderData(Icons.photo_library, 'Médias & Photos', mediaCount, context.tr('Médias & Photos', 'Media & Photos')),
+      _FolderData(Icons.more_horiz, 'Autres documents', autresCount, context.tr('Autres documents', 'Other documents')),
     ];
 
     final filteredDocs = getFilteredDocuments(allDocs);
 
     return MainShell(
       currentRoute: AppRoutes.documentsEntreprise,
-      title: 'Documents RH',
+      title: context.tr('Documents RH', 'HR Documents'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -526,7 +527,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     final cs = Theme.of(context).colorScheme;
     final activeId = _selectedEntrepriseId ?? 'all';
     final currentEntrepriseName = activeId == 'all'
-        ? 'Toutes les entreprises'
+        ? context.tr('Toutes les entreprises', 'All companies')
         : provider.entreprises.firstWhere(
             (e) => e.id == activeId,
             orElse: () => provider.entreprises.first,
@@ -544,11 +545,11 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Documents RH', style: AppTextStyles.headlineLarge.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+                Text(context.tr('Documents RH', 'HR Documents'), style: AppTextStyles.headlineLarge.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5, color: cs.onSurface)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text('Gerez les documents contractuels et administratifs de ',
+                    Text(context.tr('Gerez les documents contractuels et administratifs de ', 'Manage the contractual and administrative documents of '),
                         style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
                     GestureDetector(
                       onTap: () => _showEntrepriseSearchDialog(context, provider),
@@ -620,7 +621,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('BIBLIOTHEQUE', style: AppTextStyles.labelSmall.copyWith(
+              Text(context.tr('BIBLIOTHEQUE', 'LIBRARY'), style: AppTextStyles.labelSmall.copyWith(
                 letterSpacing: 1.5, fontWeight: FontWeight.w800, color: cs.primary,
               )),
               const SizedBox(height: 16),
@@ -666,7 +667,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Documents recents', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+                    Text(context.tr('Documents recents', 'Recent documents'), style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface)),
                     SizedBox(
                       width: 240,
                       height: 36,
@@ -678,7 +679,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                           });
                         },
                         decoration: InputDecoration(
-                          hintText: 'Rechercher un document...',
+                          hintText: context.tr('Rechercher un document...', 'Search a document...'),
                           hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
                           prefixIcon: Icon(Icons.search, size: 18, color: cs.outline),
                           filled: true,
@@ -687,7 +688,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                           contentPadding: const EdgeInsets.symmetric(vertical: 10),
                           isDense: true,
                         ),
-                        style: AppTextStyles.bodySmall,
+                        style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface),
                       ),
                     ),
                   ],
@@ -699,9 +700,9 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 color: cs.surfaceContainerLow.withValues(alpha: 0.5),
                 child: Row(children: [
-                  Expanded(flex: 3, child: Text('NOM DU DOCUMENT', style: _colHeader())),
-                  Expanded(child: Text('TYPE', style: _colHeader())),
-                  Expanded(child: Text('DATE AJOUTE', style: _colHeader())),
+                  Expanded(flex: 3, child: Text(context.tr('NOM DU DOCUMENT', 'DOCUMENT NAME'), style: _colHeader())),
+                  Expanded(child: Text(context.tr('TYPE', 'TYPE'), style: _colHeader())),
+                  Expanded(child: Text(context.tr('DATE AJOUTE', 'DATE ADDED'), style: _colHeader())),
                   const SizedBox(width: 40),
                 ]),
               ),
@@ -730,7 +731,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                       children: [
                         Icon(Icons.folder_open, size: 40, color: cs.outline),
                         const SizedBox(height: 8),
-                        Text('Aucun document dans cette categorie',
+                        Text(context.tr('Aucun document dans cette categorie', 'No documents in this category'),
                             style: AppTextStyles.bodySmall.copyWith(color: cs.outline)),
                       ],
                     ),
@@ -745,7 +746,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Affichage de ${displayedDocs.length} sur ${filteredDocs.length} documents',
+                      context.tr('Affichage de ${displayedDocs.length} sur ${filteredDocs.length} documents', 'Showing ${displayedDocs.length} of ${filteredDocs.length} documents'),
                       style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
                     ),
                     if (hasMore)
@@ -769,7 +770,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                                 const Icon(Icons.add, size: 14, color: Colors.white),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Charger plus',
+                                  context.tr('Charger plus', 'Load more'),
                                   style: AppTextStyles.labelSmall.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: Colors.white,
@@ -782,7 +783,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
                       )
                     else
                       Text(
-                        'Tous les documents affiches',
+                        context.tr('Tous les documents affiches', 'All documents displayed'),
                         style: AppTextStyles.bodySmall.copyWith(
                           color: cs.outline,
                           fontStyle: FontStyle.italic,
@@ -814,7 +815,8 @@ class _FolderData {
   final IconData icon;
   final String label;
   final int count;
-  const _FolderData(this.icon, this.label, this.count);
+  final String displayLabel;
+  const _FolderData(this.icon, this.label, this.count, this.displayLabel);
 }
 
 // ─── Animated Folder Item ───
@@ -861,7 +863,7 @@ class _FolderItemState extends State<_FolderItem> {
                   color: widget.isActive ? cs.primary : cs.onSurfaceVariant),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(widget.data.label, style: AppTextStyles.bodySmall.copyWith(
+                child: Text(widget.data.displayLabel, style: AppTextStyles.bodySmall.copyWith(
                   fontWeight: widget.isActive ? FontWeight.w700 : FontWeight.w500,
                   color: widget.isActive ? cs.primary : cs.onSurfaceVariant,
                 )),
@@ -916,6 +918,17 @@ class _DocumentRowState extends State<_DocumentRow> {
     }
   }
 
+  String _translateDocCategory(BuildContext context, String cat) {
+    if (cat == 'Comptabilité') return context.tr('Comptabilité', 'Accounting');
+    if (cat == 'Social & Paie') return context.tr('Social & Paie', 'Social & Payroll');
+    if (cat == 'Fiscalité') return context.tr('Fiscalité', 'Taxation');
+    if (cat == 'Banque & Relevés') return context.tr('Banque & Relevés', 'Bank & Statements');
+    if (cat == 'Juridique') return context.tr('Juridique', 'Legal');
+    if (cat == 'Médias & Photos') return context.tr('Médias & Photos', 'Media & Photos');
+    if (cat == 'Autres documents' || cat == 'Autres') return context.tr('Autres documents', 'Other documents');
+    return cat;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -953,7 +966,7 @@ class _DocumentRowState extends State<_DocumentRow> {
                 Expanded(
                   child: Text(
                     widget.doc.nom,
-                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -962,7 +975,7 @@ class _DocumentRowState extends State<_DocumentRow> {
             ),
             // Type
             Expanded(
-              child: Text(widget.doc.categorie, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+              child: Text(_translateDocCategory(context, widget.doc.categorie), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
             ),
             // Date
             Expanded(
@@ -997,7 +1010,7 @@ class _DocumentRowState extends State<_DocumentRow> {
                             children: [
                               Icon(Icons.open_in_new, size: 18, color: cs.primary),
                               const SizedBox(width: 8),
-                              Text('Ouvrir / Voir', style: AppTextStyles.bodyMedium),
+                              Text(context.tr('Ouvrir / Voir', 'Open / View'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
                             ],
                           ),
                         ),

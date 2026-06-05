@@ -4,6 +4,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
+import '../../../../core/utils/translation_extension.dart';
 
 class DetailsCalculsPage extends StatelessWidget {
   const DetailsCalculsPage({super.key});
@@ -13,7 +14,7 @@ class DetailsCalculsPage extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.entreprises,
-      title: 'Détails des Calculs',
+      title: context.tr('Détails des Calculs', 'Leave Calculation Details'),
       sidebarVariant: 'employee',
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
@@ -34,9 +35,14 @@ class DetailsCalculsPage extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Détails des Calculs de Congés', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
-                Text('Jean Dupont — Exercice 2026',
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
+                Text(
+                  context.tr('Détails des Calculs de Congés', 'Leave Calculation Details'), 
+                  style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)
+                ),
+                Text(
+                  context.tr('Jean Dupont — Exercice 2026', 'Jean Dupont — Fiscal Year 2026'),
+                  style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)
+                ),
               ]),
             ]),
             const SizedBox(height: 28),
@@ -46,12 +52,12 @@ class DetailsCalculsPage extends StatelessWidget {
               Expanded(flex: 2, child: Column(children: [
                 // CP Section
                 _calcSection(cs,
-                  'CONGÉS PAYÉS (CP)',
+                  context.tr('CONGÉS PAYÉS (CP)', 'PAID LEAVE (CP)'),
                   [
-                    _calcRow(cs, 'Droits acquis N', '25 jours', cs.primary),
-                    _calcRow(cs, 'Report N-1', '3 jours', cs.primary),
-                    _calcRow(cs, 'Congés pris', '-10 jours', AppColors.error),
-                    _calcRow(cs, 'Solde restant', '18 jours', AppColors.success, bold: true),
+                    _calcRow(cs, context.tr('Droits acquis N', 'Acquired Rights N'), '25 jours', cs.primary),
+                    _calcRow(cs, context.tr('Report N-1', 'Carry-forward N-1'), '3 jours', cs.primary),
+                    _calcRow(cs, context.tr('Congés pris', 'Leave Taken'), '-10 jours', AppColors.error),
+                    _calcRow(cs, context.tr('Solde restant', 'Remaining Balance'), '18 jours', AppColors.success, bold: true),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -61,35 +67,38 @@ class DetailsCalculsPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('MOUVEMENTS DE CONGÉS', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                    Text(
+                      context.tr('MOUVEMENTS DE CONGÉS', 'LEAVE TRANSACTIONS'), 
+                      style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)
+                    ),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(8)),
                       child: Row(children: [
-                        SizedBox(width: 100, child: Text('DATE', style: _hdr(cs))),
-                        Expanded(child: Text('TYPE', style: _hdr(cs))),
-                        SizedBox(width: 80, child: Text('JOURS', textAlign: TextAlign.center, style: _hdr(cs))),
-                        SizedBox(width: 80, child: Text('SOLDE', textAlign: TextAlign.center, style: _hdr(cs))),
+                        SizedBox(width: 100, child: Text(context.tr('DATE', 'DATE'), style: _hdr(cs))),
+                        Expanded(child: Text(context.tr('TYPE', 'TYPE'), style: _hdr(cs))),
+                        SizedBox(width: 80, child: Text(context.tr('JOURS', 'DAYS'), textAlign: TextAlign.center, style: _hdr(cs))),
+                        SizedBox(width: 80, child: Text(context.tr('SOLDE', 'BALANCE'), textAlign: TextAlign.center, style: _hdr(cs))),
                       ]),
                     ),
-                    _movRow(cs, '01 Jan', 'Acquisition', '+2.08', '27.08'),
-                    _movRow(cs, '01 Fév', 'Acquisition', '+2.08', '29.16'),
-                    _movRow(cs, '15 Mar', 'Congé Maladie', '-2', '27.16'),
-                    _movRow(cs, '01 Avr', 'Acquisition', '+2.08', '29.24'),
-                    _movRow(cs, '22 Mai', 'RTT posé', '-1', '28.24'),
-                    _movRow(cs, '01 Juin', 'Congé Payé', '-10', '18.24'),
+                    _movRow(cs, '01 Jan', context.tr('Acquisition', 'Acquisition'), '+2.08', '27.08'),
+                    _movRow(cs, '01 Fév', context.tr('Acquisition', 'Acquisition'), '+2.08', '29.16'),
+                    _movRow(cs, '15 Mar', context.tr('Congé Maladie', 'Sick Leave'), '-2', '27.16'),
+                    _movRow(cs, '01 Avr', context.tr('Acquisition', 'Acquisition'), '+2.08', '29.24'),
+                    _movRow(cs, '22 Mai', context.tr('RTT posé', 'RTT Taken'), '-1', '28.24'),
+                    _movRow(cs, '01 Juin', context.tr('Congé Payé', 'Paid Leave'), '-10', '18.24'),
                   ]),
                 ),
                 const SizedBox(height: 16),
 
                 // RTT Section
                 _calcSection(cs,
-                  'RÉDUCTION DU TEMPS DE TRAVAIL (RTT)',
+                  context.tr('RÉDUCTION DU TEMPS DE TRAVAIL (RTT)', 'REDUCTION OF WORKING TIME (RTT)'),
                   [
-                    _calcRow(cs, 'Droits annuels', '10 jours', cs.primary),
-                    _calcRow(cs, 'RTT pris', '-4 jours', AppColors.error),
-                    _calcRow(cs, 'Solde restant', '6 jours', AppColors.success, bold: true),
+                    _calcRow(cs, context.tr('Droits annuels', 'Annual Rights'), '10 jours', cs.primary),
+                    _calcRow(cs, context.tr('RTT pris', 'RTT Taken'), '-4 jours', AppColors.error),
+                    _calcRow(cs, context.tr('Solde restant', 'Remaining Balance'), '6 jours', AppColors.success, bold: true),
                   ],
                 ),
               ])),
@@ -105,17 +114,20 @@ class DetailsCalculsPage extends StatelessWidget {
                     border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('RÉSUMÉ GLOBAL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                    Text(
+                      context.tr('RÉSUMÉ GLOBAL', 'GLOBAL SUMMARY'), 
+                      style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)
+                    ),
                     const SizedBox(height: 20),
-                    _globalRow(cs, 'CP Restants', '18 j', cs.primary),
+                    _globalRow(cs, context.tr('CP Restants', 'Remaining CP'), '18 j', cs.primary),
                     const SizedBox(height: 12),
-                    _globalRow(cs, 'RTT Restants', '6 j', cs.primaryContainer),
+                    _globalRow(cs, context.tr('RTT Restants', 'Remaining RTT'), '6 j', cs.primaryContainer),
                     const SizedBox(height: 12),
-                    _globalRow(cs, 'Maladie utilisés', '2 j', AppColors.error),
+                    _globalRow(cs, context.tr('Maladie utilisés', 'Sick Days Used'), '2 j', AppColors.error),
                     const SizedBox(height: 12),
                     Divider(color: cs.outlineVariant.withValues(alpha: 0.15)),
                     const SizedBox(height: 8),
-                    _globalRow(cs, 'Total disponible', '24 j', AppColors.success),
+                    _globalRow(cs, context.tr('Total disponible', 'Total Available'), '24 j', AppColors.success),
                   ]),
                 ),
                 const SizedBox(height: 16),
@@ -123,12 +135,15 @@ class DetailsCalculsPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('MÉTHODE DE CALCUL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                    Text(
+                      context.tr('MÉTHODE DE CALCUL', 'CALCULATION METHOD'), 
+                      style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)
+                    ),
                     const SizedBox(height: 16),
-                    _methodItem(cs, 'Acquisition', '2.08 j/mois (25j/an)'),
-                    _methodItem(cs, 'Période', '1 Juin N-1 → 31 Mai N'),
-                    _methodItem(cs, 'Convention', 'SYNTEC – IDCC 1486'),
-                    _methodItem(cs, 'Report max', '5 jours N-1'),
+                    _methodItem(cs, context.tr('Acquisition', 'Acquisition'), '2.08 j/mois (25j/an)'),
+                    _methodItem(cs, context.tr('Période', 'Period'), '1 Juin N-1 → 31 Mai N'),
+                    _methodItem(cs, context.tr('Convention', 'Agreement'), 'SYNTEC – IDCC 1486'),
+                    _methodItem(cs, context.tr('Report max', 'Max carry-forward'), '5 jours N-1'),
                     const SizedBox(height: 12),
                     Container(
                       width: double.infinity, padding: const EdgeInsets.all(12),
@@ -136,8 +151,10 @@ class DetailsCalculsPage extends StatelessWidget {
                       child: Row(children: [
                         Icon(Icons.info_outline, size: 14, color: cs.primary),
                         const SizedBox(width: 6),
-                        Expanded(child: Text('Calculs conformes aux articles L.3141 du Code du Travail',
-                            style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: cs.onSurfaceVariant))),
+                        Expanded(child: Text(
+                          context.tr('Calculs conformes aux articles L.3141 du Code du Travail', 'Calculations comply with articles L.3141 of the Labor Code'),
+                          style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: cs.onSurfaceVariant)
+                        )),
                       ]),
                     ),
                   ]),

@@ -142,7 +142,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
 
     return MainShell(
       currentRoute: AppRoutes.entrepriseDetails,
-      title: 'Dossier Entreprise',
+      title: context.tr('Dossier Entreprise', 'Company Folder'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: StaggeredColumn(
@@ -176,13 +176,16 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(entreprise.nom, style: AppTextStyles.headlineMedium, overflow: TextOverflow.ellipsis),
+                              child: Text(entreprise.nom, style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface), overflow: TextOverflow.ellipsis),
                             ),
                             const SizedBox(width: 12),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                              child: Text(entreprise.statut, style: AppTextStyles.labelSmall.copyWith(fontSize: 10, fontWeight: FontWeight.w700, color: cs.primary, letterSpacing: 0.8)),
+                              child: Text(
+                                context.tr(entreprise.statut, entreprise.statut == 'EN COURS' ? 'IN PROGRESS' : (entreprise.statut == 'COMPLET' ? 'COMPLETED' : (entreprise.statut == 'ARCHIVÉ' ? 'ARCHIVED' : 'AWAITING DOCS'))),
+                                style: AppTextStyles.labelSmall.copyWith(fontSize: 10, fontWeight: FontWeight.w700, color: cs.primary, letterSpacing: 0.8)
+                              ),
                             ),
                           ],
                         ),
@@ -191,7 +194,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Flexible(child: _infoChip(Icons.person_outline, 'Gérant: ${entreprise.nomGerant}')),
+                            Flexible(child: _infoChip(Icons.person_outline, context.tr('Gérant: ${entreprise.nomGerant}', 'Manager: ${entreprise.nomGerant}'))),
                             const SizedBox(width: 16),
                             Flexible(child: _infoChip(Icons.email_outlined, entreprise.email)),
                           ],
@@ -216,7 +219,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         children: [
                           Icon(Icons.edit_outlined, size: 16, color: cs.primary),
                           const SizedBox(width: 6),
-                          Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
+                          Text(context.tr('Modifier', 'Edit'), style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
                         ],
                       ),
                     ),
@@ -231,10 +234,10 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(children: [
-                  _tabButton('Informations'),
-                  _tabButton('Salariés'),
-                  _tabButton('Archives des employés'),
-                  _tabButton('Notes & Rappels'),
+                  _tabButton('Informations', context.tr('Informations', 'Information')),
+                  _tabButton('Salariés', context.tr('Salariés', 'Employees')),
+                  _tabButton('Archives des employés', context.tr('Archives des employés', 'Employee Archives')),
+                  _tabButton('Notes & Rappels', context.tr('Notes & Rappels', 'Notes & Reminders')),
                 ]),
               ),
             ),
@@ -251,10 +254,10 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
     );
   }
 
-  Widget _tabButton(String label) {
-    bool active = _activeTab == label;
+  Widget _tabButton(String key, String displayLabel) {
+    bool active = _activeTab == key;
     return GestureDetector(
-      onTap: () => setState(() => _activeTab = label),
+      onTap: () => setState(() => _activeTab = key),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: AnimatedContainer(
@@ -265,7 +268,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: active ? [BoxShadow(color: cs.onSurface.withValues(alpha: 0.04), blurRadius: 4)] : null,
           ),
-          child: Text(label, style: AppTextStyles.labelMedium.copyWith(
+          child: Text(displayLabel, style: AppTextStyles.labelMedium.copyWith(
             color: active ? cs.primary : cs.onSurfaceVariant,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           )),
@@ -298,27 +301,27 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               Row(children: [
                 Icon(Icons.info_outline, size: 18, color: cs.primary),
                 const SizedBox(width: 8),
-                Text('INFORMATIONS GÉNÉRALES', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+                Text(context.tr('INFORMATIONS GÉNÉRALES', 'GENERAL INFORMATION'), style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
               ]),
               const SizedBox(height: 24),
-              _readField('Nom complet de l\'entreprise', entreprise.nom),
+              _readField(context.tr('Nom complet de l\'entreprise', 'Company full name'), entreprise.nom),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: _readField('Date de création', "${entreprise.dateCreation.day}/${entreprise.dateCreation.month}/${entreprise.dateCreation.year}")),
+                Expanded(child: _readField(context.tr('Date de création', 'Creation Date'), "${entreprise.dateCreation.day}/${entreprise.dateCreation.month}/${entreprise.dateCreation.year}")),
                 const SizedBox(width: 16),
-                Expanded(child: _readField('N° d\'effectif', entreprise.effectif == 0 ? 'Non défini' : '${entreprise.effectif}')),
+                Expanded(child: _readField(context.tr('N° d\'effectif', 'Employee count'), entreprise.effectif == 0 ? 'Non défini' : '${entreprise.effectif}')),
               ]),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: _readField('Téléphone', entreprise.telephone.isEmpty ? 'Non défini' : entreprise.telephone)),
+                Expanded(child: _readField(context.tr('Téléphone', 'Phone Number'), entreprise.telephone.isEmpty ? 'Non défini' : entreprise.telephone)),
                 const SizedBox(width: 16),
-                Expanded(child: _readField('Adresse physique', entreprise.adressePhysique.isEmpty ? 'Non défini' : entreprise.adressePhysique)),
+                Expanded(child: _readField(context.tr('Adresse physique', 'Physical address'), entreprise.adressePhysique.isEmpty ? 'Non défini' : entreprise.adressePhysique)),
               ]),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: _readField('Adresse Email', entreprise.email)),
+                Expanded(child: _readField(context.tr('Adresse Email', 'Email Address'), entreprise.email)),
                 const SizedBox(width: 16),
-                Expanded(child: _readField('Nom de dirigeant', entreprise.nomGerant)),
+                Expanded(child: _readField(context.tr('Nom de dirigeant', 'Manager name'), entreprise.nomGerant)),
               ]),
             ]),
           ),
@@ -333,28 +336,28 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               Row(children: [
                 Icon(Icons.gavel_outlined, size: 18, color: cs.primary),
                 const SizedBox(width: 8),
-                Text('INFORMATIONS JURIDIQUES', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+                Text(context.tr('INFORMATIONS JURIDIQUES', 'LEGAL INFORMATION'), style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
               ]),
               const SizedBox(height: 24),
               Row(children: [
-                Expanded(child: _readField('N° SIREN', entreprise.nSiren.isEmpty ? 'Non défini' : entreprise.nSiren)),
+                Expanded(child: _readField(context.tr('N° SIREN', 'SIREN Number'), entreprise.nSiren.isEmpty ? 'Non défini' : entreprise.nSiren)),
                 const SizedBox(width: 16),
-                Expanded(child: _readField('N° SIRET', entreprise.nSiret.isEmpty ? 'Non défini' : entreprise.nSiret)),
+                Expanded(child: _readField(context.tr('N° SIRET', 'SIRET Number'), entreprise.nSiret.isEmpty ? 'Non défini' : entreprise.nSiret)),
               ]),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: _readField('Forme juridique', entreprise.formeJuridique.isEmpty ? 'Non défini' : entreprise.formeJuridique)),
+                Expanded(child: _readField(context.tr('Forme juridique', 'Legal form'), entreprise.formeJuridique.isEmpty ? 'Non défini' : entreprise.formeJuridique)),
                 const SizedBox(width: 16),
-                Expanded(child: _readField('Capital social', entreprise.capitaleSocial.isEmpty ? 'Non défini' : entreprise.capitaleSocial)),
+                Expanded(child: _readField(context.tr('Capital social', 'Share capital'), entreprise.capitaleSocial.isEmpty ? 'Non défini' : entreprise.capitaleSocial)),
               ]),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: _readField('N° TVA Intracommunautaire', entreprise.nTva.isEmpty ? 'Non défini' : entreprise.nTva)),
+                Expanded(child: _readField(context.tr('N° TVA Intracommunautaire', 'VAT Number'), entreprise.nTva.isEmpty ? 'Non défini' : entreprise.nTva)),
                 const SizedBox(width: 16),
-                Expanded(child: _readField('N° RCS', entreprise.nRcs.isEmpty ? 'Non défini' : entreprise.nRcs)),
+                Expanded(child: _readField(context.tr('N° RCS', 'RCS Number'), entreprise.nRcs.isEmpty ? 'Non défini' : entreprise.nRcs)),
               ]),
               const SizedBox(height: 16),
-              _readField('Code APE / NAF', entreprise.codeApe.isEmpty ? 'Non défini' : entreprise.codeApe),
+              _readField(context.tr('Code APE / NAF', 'APE / NAF Code'), entreprise.codeApe.isEmpty ? 'Non défini' : entreprise.codeApe),
             ]),
           ),
         ),
@@ -370,7 +373,10 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
-        child: Text(value.isEmpty ? 'Non défini' : value, style: AppTextStyles.bodyMedium),
+        child: Text(
+          (value.isEmpty || value == 'Non défini') ? context.tr('Non défini', 'Not defined') : value,
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)
+        ),
       ),
     ]);
   }
@@ -382,14 +388,14 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
         decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
         child: Column(
           children: [
-            Center(child: Text('Aucun salarié actif.', style: AppTextStyles.bodyMedium)),
+            Center(child: Text(context.tr('Aucun salarié actif.', 'No active employees.'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface))),
             const SizedBox(height: 16),
              ElevatedButton.icon(
                   onPressed: () {
                     showDialog(context: context, builder: (_) => _AddSalarieDialog(entrepriseId: entrepriseId));
                   },
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Ajouter un salarié'),
+                  label: Text(context.tr('Ajouter un salarié', 'Add an employee')),
                   style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
             ),
           ]
@@ -405,13 +411,13 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Liste des Salariés', style: AppTextStyles.titleMedium),
+                Text(context.tr('Liste des Salariés', 'Employee List'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
                 ElevatedButton.icon(
                   onPressed: () {
                      showDialog(context: context, builder: (_) => _AddSalarieDialog(entrepriseId: entrepriseId));
                   },
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Ajouter un salarié'),
+                  label: Text(context.tr('Ajouter un salarié', 'Add an employee')),
                   style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
                 ),
               ],
@@ -445,43 +451,43 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('${salarie.nom} ${salarie.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700)),
-                          Text('Né(e): ${salarie.nomNaissance} | CIN: ${salarie.cin}', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+                          Text('${salarie.nom} ${salarie.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface)),
+                          Text(context.tr('Né(e): ${salarie.nomNaissance} | CIN: ${salarie.cin}', 'Born: ${salarie.nomNaissance} | ID: ${salarie.cin}'), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
                     ),
                     OutlinedButton.icon(
                       onPressed: () => _exportSalariePointage(salarie),
                       icon: const Icon(Icons.access_time, size: 16),
-                      label: const Text('Pointage'),
+                      label: Text(context.tr('Pointage', 'Attendance')),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
                       onPressed: () => _exportSalariePdf(salarie),
                       icon: const Icon(Icons.download, size: 16),
-                      label: const Text('Exporter'),
+                      label: Text(context.tr('Exporter', 'Export')),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: () => _showEmployeeDetailsModal(context, salarie),
-                      child: const Text('Plus d\'infos'),
+                      child: Text(context.tr('Plus d\'infos', 'More info')),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.archive_outlined, color: Colors.orange),
-                      tooltip: 'Archiver l\'employé',
+                      tooltip: context.tr('Archiver l\'employé', 'Archive employee'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).archiverSalarie(salarie.id, salarie.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Employé archivé avec succès.'), backgroundColor: Colors.orange));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Employé archivé avec succès.', 'Employee archived successfully.')), backgroundColor: Colors.orange));
                       },
                     ),
                     const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                      tooltip: 'Supprimer l\'employé',
+                      tooltip: context.tr('Supprimer l\'employé', 'Delete employee'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(salarie.id, salarie.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Employé supprimé définitivement.'), backgroundColor: AppColors.error));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Employé supprimé définitivement.', 'Employee deleted permanently.')), backgroundColor: AppColors.error));
                       },
                     ),
                   ],
@@ -500,7 +506,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
       return Container(
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
-        child: Center(child: Text('Aucune archive d\'employé.', style: AppTextStyles.bodyMedium)),
+        child: Center(child: Text(context.tr('Aucune archive d\'employé.', 'No archived employees.'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface))),
       );
     }
     return Container(
@@ -515,9 +521,9 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Employés Archivés (${archives.length})', style: AppTextStyles.titleMedium),
+                    Text(context.tr('Employés Archivés (${archives.length})', 'Archived Employees (${archives.length})'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
                     const SizedBox(height: 4),
-                    Text('Liste des employés inactifs (ayant quitté l\'entreprise).', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+                    Text(context.tr('Liste des employés inactifs (ayant quitté l\'entreprise).', 'List of inactive employees (who left the company).'), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                   ],
                 ),
               ],
@@ -550,43 +556,43 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('${s.nom} ${s.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700, decoration: TextDecoration.lineThrough)),
-                          Text('Né(e): ${s.nomNaissance} | CIN: ${s.cin}', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+                          Text('${s.nom} ${s.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700, decoration: TextDecoration.lineThrough, color: cs.onSurface)),
+                          Text(context.tr('Né(e): ${s.nomNaissance} | CIN: ${s.cin}', 'Born: ${s.nomNaissance} | ID: ${s.cin}'), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
                     ),
                     OutlinedButton.icon(
                       onPressed: () => _exportSalariePointage(s),
                       icon: const Icon(Icons.access_time, size: 16),
-                      label: const Text('Pointage'),
+                      label: Text(context.tr('Pointage', 'Attendance')),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
                       onPressed: () => _exportSalariePdf(s),
                       icon: const Icon(Icons.download, size: 16),
-                      label: const Text('Exporter'),
+                      label: Text(context.tr('Exporter', 'Export')),
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: () => _showEmployeeDetailsModal(context, s),
-                      child: const Text('Plus d\'infos'),
+                      child: Text(context.tr('Plus d\'infos', 'More info')),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.unarchive_outlined, color: AppColors.success),
-                      tooltip: 'Désarchiver l\'employé',
+                      tooltip: context.tr('Désarchiver l\'employé', 'Unarchive employee'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).desarchiverSalarie(s.id, s.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Employé désarchivé avec succès.'), backgroundColor: AppColors.success));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Employé désarchivé avec succès.', 'Employee unarchived successfully.')), backgroundColor: AppColors.success));
                       },
                     ),
                     const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                      tooltip: 'Supprimer l\'archive',
+                      tooltip: context.tr('Supprimer l\'archive', 'Delete archive'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(s.id, s.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Archive supprimée définitivement.'), backgroundColor: AppColors.error));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Archive supprimée définitivement.', 'Archive deleted permanently.')), backgroundColor: AppColors.error));
                       },
                     ),
                   ],
@@ -609,20 +615,20 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Notes & Rappels (${notes.length})', style: AppTextStyles.titleMedium),
+              Text(context.tr('Notes & Rappels (${notes.length})', 'Notes & Reminders (${notes.length})'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
               ElevatedButton.icon(
                 onPressed: () {
                   showDialog(context: context, builder: (_) => _AddNoteDialog(entrepriseId: entrepriseId));
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Ajouter'),
+                label: Text(context.tr('Ajouter', 'Add')),
                 style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
               ),
             ],
           ),
           const SizedBox(height: 24),
           if (notes.isEmpty)
-            const Center(child: Text('Aucune note ou rappel pour cette entreprise.'))
+            Center(child: Text(context.tr('Aucune note ou rappel pour cette entreprise.', 'No notes or reminders for this company.'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)))
           else
             ListView.separated(
               shrinkWrap: true,
@@ -646,29 +652,29 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         Icon(note.estRappel ? Icons.notifications_active : Icons.sticky_note_2_outlined,
                             color: note.estRappel ? AppColors.warning : cs.primary, size: 20),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(note.titre, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700))),
+                        Expanded(child: Text(note.titre, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface))),
                         Text('${note.dateCreation.day}/${note.dateCreation.month}/${note.dateCreation.year}',
                             style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
-                          tooltip: 'Supprimer',
+                          tooltip: context.tr('Supprimer', 'Delete'),
                           onPressed: () async {
                             try {
                               await Provider.of<EntrepriseProvider>(context, listen: false).supprimerNote(note.id, entrepriseId);
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note supprimée.'), backgroundColor: AppColors.success));
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note supprimée.', 'Note deleted.')), backgroundColor: AppColors.success));
                               }
                             } catch (e) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Erreur: ', 'Error: ') + e.toString()), backgroundColor: AppColors.error));
                               }
                             }
                           },
                         ),
                       ]),
                       const SizedBox(height: 8),
-                      Text(note.contenu, style: AppTextStyles.bodyMedium),
+                      Text(note.contenu, style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
                     ],
                   ),
                 );
@@ -697,7 +703,7 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
 
   Future<void> _ajouter() async {
     if (_titreController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Le titre est obligatoire.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Le titre est obligatoire.', 'Title is required.'))));
       return;
     }
 
@@ -716,12 +722,12 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
       await Provider.of<EntrepriseProvider>(context, listen: false).ajouterNote(note);
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note ajoutée avec succès !'), backgroundColor: AppColors.success));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note ajoutée avec succès !', 'Note added successfully!')), backgroundColor: AppColors.success));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Erreur: ', 'Error: ') + e.toString()), backgroundColor: AppColors.error));
       }
     }
   }
@@ -746,22 +752,36 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Ajouter une Note', style: AppTextStyles.headlineSmall),
+            Text(context.tr('Ajouter une Note', 'Add Note'), style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface)),
             const SizedBox(height: 24),
             TextField(
               controller: _titreController,
-              decoration: const InputDecoration(labelText: 'Titre', border: OutlineInputBorder(), isDense: true),
+              decoration: InputDecoration(
+                labelText: context.tr('Titre', 'Title'),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                isDense: true,
+              ),
+              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _contenuController,
               maxLines: 4,
-              decoration: const InputDecoration(labelText: 'Contenu', border: OutlineInputBorder(), isDense: true),
+              decoration: InputDecoration(
+                labelText: context.tr('Contenu', 'Content'),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                isDense: true,
+              ),
+              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Rappel'),
-              subtitle: const Text('Marquer comme rappel important'),
+              title: Text(context.tr('Rappel', 'Reminder'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
+              subtitle: Text(context.tr('Marquer comme rappel important', 'Mark as important reminder'), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
               value: _isRappel,
               onChanged: (v) => setState(() => _isRappel = v),
               activeThumbColor: cs.primary,
@@ -771,14 +791,14 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: _isLoading ? null : () => Navigator.pop(context), child: const Text('Annuler', style: TextStyle(color: AppColors.error))),
+                TextButton(onPressed: _isLoading ? null : () => Navigator.pop(context), child: Text(context.tr('Annuler', 'Cancel'), style: const TextStyle(color: AppColors.error))),
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _ajouter,
                   style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
                   child: _isLoading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Ajouter'),
+                      : Text(context.tr('Ajouter', 'Add')),
                 ),
               ],
             ),
@@ -867,14 +887,14 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
           _logoUrl = updatedEntreprise.logoUrl;
           _isUploadingLogo = false;
         });
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Logo mis à jour avec succès !'),
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.trStatic('Logo mis à jour avec succès !', 'Logo updated successfully!')),
           backgroundColor: AppColors.success,
         ));
       } else {
         setState(() => _isUploadingLogo = false);
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Erreur lors de la mise à jour du logo.'),
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.trStatic('Erreur lors de la mise à jour du logo.', 'Error updating logo.')),
           backgroundColor: AppColors.error,
         ));
       }
@@ -882,7 +902,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
       if (mounted) {
         setState(() => _isUploadingLogo = false);
         messenger.showSnackBar(SnackBar(
-          content: Text('Erreur lors de la sélection du fichier : $e'),
+          content: Text(context.trStatic('Erreur lors de la sélection du fichier : ', 'Error selecting file: ') + e.toString()),
           backgroundColor: AppColors.error,
         ));
       }
@@ -892,7 +912,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
   void _sauvegarder() {
     if (_nomController.text.isEmpty || _emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nom et Email sont obligatoires.')),
+        SnackBar(content: Text(context.trStatic('Nom et Email sont obligatoires.', 'Name and Email are required.'))),
       );
       return;
     }
@@ -919,7 +939,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(entrepriseAjournee);
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Informations modifiées avec succès !'), backgroundColor: AppColors.success),
+      SnackBar(content: Text(context.trStatic('Informations modifiées avec succès !', 'Information modified successfully!')), backgroundColor: AppColors.success),
     );
   }
 
@@ -955,7 +975,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
         padding: const EdgeInsets.all(32),
         child: Column(
           children: [
-            Text('Modifier l\'Entreprise', style: AppTextStyles.headlineSmall),
+            Text(context.tr('Modifier l\'Entreprise', 'Edit Company'), style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface)),
             const SizedBox(height: 16),
             Center(
               child: Stack(
@@ -1009,63 +1029,63 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('1. Informations générales et accès', style: AppTextStyles.titleMedium),
+                    Text(context.tr('1. Informations générales et accès', '1. General information & access'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
                     const SizedBox(height: 16),
-                    _buildField('Nom complet de l\'entreprise', _nomController),
+                    _buildField(context.tr('Nom complet de l\'entreprise', 'Company full name'), _nomController),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildField('Adresse Email de connexion', _emailController, keyboardType: TextInputType.emailAddress)),
+                        Expanded(child: _buildField(context.tr('Adresse Email de connexion', 'Login Email address'), _emailController, keyboardType: TextInputType.emailAddress)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildField('Mot de passe', _mdpController, isPassword: true)),
+                        Expanded(child: _buildField(context.tr('Mot de passe', 'Password'), _mdpController, isPassword: true)),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildField('Nom du dirigeant/gérant', _gerantController)),
+                        Expanded(child: _buildField(context.tr('Nom du dirigeant/gérant', 'Manager/director name'), _gerantController)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildField('Nombre d\'effectif', _effectifController, keyboardType: TextInputType.number)),
+                        Expanded(child: _buildField(context.tr('Nombre d\'effectif', 'Employee count'), _effectifController, keyboardType: TextInputType.number)),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildField('Téléphone de l\'entreprise', _telephoneController, keyboardType: TextInputType.phone)),
+                        Expanded(child: _buildField(context.tr('Téléphone de l\'entreprise', 'Company phone number'), _telephoneController, keyboardType: TextInputType.phone)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildField('Adresse physique', _adresseController)),
+                        Expanded(child: _buildField(context.tr('Adresse physique', 'Physical address'), _adresseController)),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildField('Description générale', _descController),
+                    _buildField(context.tr('Description générale', 'General description'), _descController),
                     const SizedBox(height: 24),
-                    Text('2. Informations juridiques', style: AppTextStyles.titleMedium),
+                    Text(context.tr('2. Informations juridiques', '2. Legal information'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildField('N° SIREN', _sirenController)),
+                        Expanded(child: _buildField(context.tr('N° SIREN', 'SIREN Number'), _sirenController)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildField('N° SIRET', _siretController)),
+                        Expanded(child: _buildField(context.tr('N° SIRET', 'SIRET Number'), _siretController)),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildField('Forme juridique', _formeController)),
+                        Expanded(child: _buildField(context.tr('Forme juridique', 'Legal form'), _formeController)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildField('Capital social', _capitalController)),
+                        Expanded(child: _buildField(context.tr('Capital social', 'Share capital'), _capitalController)),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildField('N° de TVA', _tvaController)),
+                        Expanded(child: _buildField(context.tr('N° de TVA', 'VAT Number'), _tvaController)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildField('N° RCS', _rcsController)),
+                        Expanded(child: _buildField(context.tr('N° RCS', 'RCS Number'), _rcsController)),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildField('Code APE / NAF', _codeApeController),
+                    _buildField(context.tr('Code APE / NAF', 'APE / NAF Code'), _codeApeController),
                   ],
                 ),
               ),
@@ -1076,7 +1096,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Annuler', style: TextStyle(color: AppColors.error)),
+                  child: Text(context.tr('Annuler', 'Cancel'), style: TextStyle(color: AppColors.error)),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
@@ -1087,7 +1107,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
-                  child: const Text('Enregistrer'),
+                  child: Text(context.tr('Enregistrer', 'Save')),
                 ),
               ],
             ),
@@ -1098,23 +1118,24 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
   }
 
   Widget _buildField(String label, TextEditingController controller, {bool isPassword = false, TextInputType? keyboardType}) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelMedium),
+        Text(label, style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
-          style: AppTextStyles.bodyMedium,
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
           decoration: InputDecoration(
             isDense: true,
-            hintText: 'Saisir $label',
+            hintText: context.tr('Saisir ', 'Enter ') + label,
             hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
           ),
         ),
       ],
@@ -1288,12 +1309,12 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Salarié ajouté avec succès !'), backgroundColor: AppColors.success));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Salarié ajouté avec succès !', 'Employee added successfully!')), backgroundColor: AppColors.success));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${context.tr('Erreur: ', 'Error: ')}$e'), backgroundColor: AppColors.error));
       }
     }
   }
@@ -1308,8 +1329,8 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
     }
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Non défini';
+  String _formatDate(BuildContext context, DateTime? date) {
+    if (date == null) return context.tr('Non défini', 'Not defined');
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
@@ -1327,7 +1348,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Ajouter un Salarié', style: AppTextStyles.headlineSmall),
+              Text(context.tr('Ajouter un Salarié', 'Add Employee'), style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface)),
               const SizedBox(height: 24),
               Center(
                 child: Stack(
@@ -1362,23 +1383,66 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
 
               // Nom / Prénom
               Row(children: [
-                Expanded(child: TextField(controller: _nomController, decoration: const InputDecoration(labelText: 'Nom *', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _nomController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Nom *', 'Last Name *'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: TextField(controller: _prenomController, decoration: const InputDecoration(labelText: 'Prénom *', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _prenomController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Prénom *', 'First Name *'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
               ]),
               const SizedBox(height: 16),
 
               // Nom naissance / Genre
               Row(children: [
-                Expanded(child: TextField(controller: _nomNaissanceController, decoration: const InputDecoration(labelText: 'Nom de Naissance', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _nomNaissanceController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Nom de Naissance', 'Birth Name'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _genre,
-                    decoration: const InputDecoration(labelText: 'Genre', border: OutlineInputBorder(), isDense: true),
-                    items: const [
-                      DropdownMenuItem(value: 'M', child: Text('Masculin')),
-                      DropdownMenuItem(value: 'F', child: Text('Féminin')),
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Genre', 'Gender'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'M', child: Text(context.tr('Masculin', 'Male'), style: TextStyle(color: cs.onSurface))),
+                      DropdownMenuItem(value: 'F', child: Text(context.tr('Féminin', 'Female'), style: TextStyle(color: cs.onSurface))),
                     ],
                     onChanged: (v) => setState(() => _genre = v!),
                   ),
@@ -1388,33 +1452,117 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
 
               // CIN / NSS
               Row(children: [
-                Expanded(child: TextField(controller: _cinController, decoration: const InputDecoration(labelText: 'CIN', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _cinController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('CIN', 'ID Card Number'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: TextField(controller: _nssController, decoration: const InputDecoration(labelText: 'N° Sécurité Sociale', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _nssController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('N° Sécurité Sociale', 'Social Security Number'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
               ]),
               const SizedBox(height: 16),
 
               // Date naissance / Lieu naissance
               Row(children: [
-                Expanded(child: _datePicker('Date de naissance', _dateNaissance, () => _pickDate('naissance'))),
+                Expanded(child: _datePicker(context.tr('Date de naissance', 'Date of Birth'), _dateNaissance, () => _pickDate('naissance'))),
                 const SizedBox(width: 16),
-                Expanded(child: TextField(controller: _lieuNaissanceController, decoration: const InputDecoration(labelText: 'Lieu de naissance', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _lieuNaissanceController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Lieu de naissance', 'Place of Birth'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
               ]),
               const SizedBox(height: 16),
 
               // Nationalité / Adresse
               Row(children: [
-                Expanded(child: TextField(controller: _nationaliteController, decoration: const InputDecoration(labelText: 'Nationalité', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _nationaliteController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Nationalité', 'Nationality'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: TextField(controller: _adressePostaleController, decoration: const InputDecoration(labelText: 'Adresse Postale', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _adressePostaleController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Adresse Postale', 'Postal Address'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
               ]),
               const SizedBox(height: 16),
 
               // Tel / Email
               Row(children: [
-                Expanded(child: TextField(controller: _telController, decoration: const InputDecoration(labelText: 'Téléphone', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _telController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Téléphone', 'Phone Number'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _emailController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Email', 'Email'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
               ]),
               const SizedBox(height: 16),
 
@@ -1423,28 +1571,47 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _typeContrat,
-                    decoration: const InputDecoration(labelText: 'Type Contrat', border: OutlineInputBorder(), isDense: true),
-                    items: const [
-                      DropdownMenuItem(value: 'CDI', child: Text('CDI')),
-                      DropdownMenuItem(value: 'CDD', child: Text('CDD')),
-                      DropdownMenuItem(value: 'Apprentissage', child: Text('Apprentissage')),
-                      DropdownMenuItem(value: 'Stage', child: Text('Stage')),
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Type Contrat', 'Contract Type'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'CDI', child: Text(context.tr('CDI', 'CDI'), style: TextStyle(color: cs.onSurface))),
+                      DropdownMenuItem(value: 'CDD', child: Text(context.tr('CDD', 'CDD'), style: TextStyle(color: cs.onSurface))),
+                      DropdownMenuItem(value: 'Apprentissage', child: Text(context.tr('Apprentissage', 'Apprenticeship'), style: TextStyle(color: cs.onSurface))),
+                      DropdownMenuItem(value: 'Stage', child: Text(context.tr('Stage', 'Internship'), style: TextStyle(color: cs.onSurface))),
                     ],
                     onChanged: (v) => setState(() => _typeContrat = v!),
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(child: TextField(controller: _emploiPosteController, decoration: const InputDecoration(labelText: 'Poste Occupé', border: OutlineInputBorder(), isDense: true))),
+                Expanded(
+                  child: TextField(
+                    controller: _emploiPosteController,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Poste Occupé', 'Job Title'),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ),
               ]),
               const SizedBox(height: 16),
 
               // Date embauche / Date fin contrat
               Row(children: [
-                Expanded(child: _datePicker('Date d\'embauche', _dateEmbauche, () => _pickDate('embauche'))),
+                Expanded(child: _datePicker(context.tr('Date d\'embauche', 'Hire Date'), _dateEmbauche, () => _pickDate('embauche'))),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _datePicker(
-                    'Date fin de contrat${_needsDateFin ? " *" : ""}',
+                    context.tr('Date fin de contrat', 'Contract End Date') + (_needsDateFin ? " *" : ""),
                     _dateFinContrat,
                     () => _pickDate('fin'),
                   ),
@@ -1453,7 +1620,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
               if (_needsDateFin && _dateFinContrat == null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text('⚠ Obligatoire pour un contrat $_typeContrat', style: TextStyle(color: AppColors.error, fontSize: 11)),
+                  child: Text(context.tr('⚠ Obligatoire pour un contrat ', '⚠ Required for contract ') + _typeContrat, style: TextStyle(color: AppColors.error, fontSize: 11)),
                 ),
               const SizedBox(height: 16),
 
@@ -1461,28 +1628,31 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
               TextField(
                 controller: descriptionController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Description / Note sur le salarié',
-                  border: OutlineInputBorder(),
+                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                decoration: InputDecoration(
+                  labelText: context.tr('Description / Note sur le salarié', 'Description / Employee Note'),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                   isDense: true,
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              Text('Pièces jointes', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700)),
+              Text(context.tr('Pièces jointes', 'Attachments'), style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface)),
               const SizedBox(height: 8),
-              Text('Formats acceptés : PDF, JPG, PNG, DOCX', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+              Text(context.tr('Formats acceptés : PDF, JPG, PNG, DOCX', 'Accepted formats: PDF, JPG, PNG, DOCX'), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
               const SizedBox(height: 12),
 
               Wrap(
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  _fileChip('Pièce d\'identité', 'piece_identite'),
-                  _fileChip('Carte Vitale', 'carte_vitale'),
-                  _fileChip('Justificatif domicile', 'justificatif_domicile'),
-                  _fileChip('Contrat signé', 'contrat_signe'),
+                  _fileChip(context.tr('Pièce d\'identité', 'ID Document'), 'piece_identite'),
+                  _fileChip(context.tr('Carte Vitale', 'Health Card'), 'carte_vitale'),
+                  _fileChip(context.tr('Justificatif domicile', 'Proof of Address'), 'justificatif_domicile'),
+                  _fileChip(context.tr('Contrat signé', 'Signed Contract'), 'contrat_signe'),
                 ],
               ),
 
@@ -1490,14 +1660,14 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(onPressed: _isLoading ? null : () => Navigator.pop(context), child: const Text('Annuler', style: TextStyle(color: AppColors.error))),
+                  TextButton(onPressed: _isLoading ? null : () => Navigator.pop(context), child: Text(context.tr('Annuler', 'Cancel'), style: const TextStyle(color: AppColors.error))),
                   const SizedBox(width: 16),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _ajouter,
                     style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
                     child: _isLoading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Ajouter le Salarié'),
+                        : Text(context.tr('Ajouter le Salarié', 'Add Employee')),
                   ),
                 ],
               ),
@@ -1515,12 +1685,14 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
           isDense: true,
           suffixIcon: const Icon(Icons.calendar_today, size: 16),
         ),
         child: Text(
-          _formatDate(value),
+          _formatDate(context, value),
           style: AppTextStyles.bodyMedium.copyWith(color: value != null ? cs.onSurface : cs.outline),
         ),
       ),
@@ -1538,7 +1710,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
         decoration: BoxDecoration(
           color: hasFile ? AppColors.success.withValues(alpha: 0.08) : cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outlineVariant),
+          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outline.withValues(alpha: 0.35)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1705,13 +1877,13 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
 
   Future<void> _enregistrer() async {
     if (_nomController.text.isEmpty || _prenomController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nom et Prénom sont obligatoires.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.trStatic('Nom et Prénom sont obligatoires.', 'Last Name and First Name are required.'))));
       return;
     }
 
     if (_needsDateFin && _dateFinContrat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('La date de fin de contrat est obligatoire pour un contrat $_typeContrat.'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(context.trStatic('La date de fin de contrat est obligatoire pour un contrat ', 'Contract End Date is required for contract ') + _typeContrat), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -1768,12 +1940,12 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Données du salarié modifiées avec succès !'), backgroundColor: AppColors.success));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.trStatic('Données du salarié modifiées avec succès !', 'Employee data modified successfully!')), backgroundColor: AppColors.success));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.trStatic('Erreur: ', 'Error: ') + e.toString()), backgroundColor: AppColors.error));
       }
     }
   }
@@ -1802,11 +1974,11 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 2)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
           ),
-          style: AppTextStyles.bodyMedium,
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
         ),
       ],
     );
@@ -1815,7 +1987,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
   Widget _fileChip(String label, String key, bool initiallyHasFile) {
     final hasNewFile = fichiers[key] != null;
     final hasFile = hasNewFile || initiallyHasFile;
-    final fileName = hasNewFile ? fichiersNoms[key]! : 'Fichier existant';
+    final fileName = hasNewFile ? fichiersNoms[key]! : context.trStatic('Fichier existant', 'Existing file');
     return InkWell(
       onTap: () => _pickFile(key),
       borderRadius: BorderRadius.circular(8),
@@ -1824,7 +1996,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
         decoration: BoxDecoration(
           color: hasFile ? AppColors.success.withValues(alpha: 0.08) : cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outlineVariant),
+          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outline.withValues(alpha: 0.35)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1836,7 +2008,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
             ),
             const SizedBox(width: 6),
             Text(
-              hasFile ? (hasNewFile ? fileName : '$label (Existant - Modifier)') : label,
+              hasFile ? (hasNewFile ? fileName : context.trStatic('$label (Existant - Modifier)', '$label (Existing - Edit)')) : label,
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.w600,
                 color: hasFile ? AppColors.success : cs.onSurfaceVariant,
@@ -1865,7 +2037,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Modifier le Salarié', style: AppTextStyles.headlineSmall),
+                  Text(context.tr('Modifier le Salarié', 'Edit Employee'), style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface)),
                   IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                 ],
               ),
@@ -1902,7 +2074,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text('État Civil', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
+              Text(context.tr('État Civil', 'Civil Status'), style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1910,18 +2082,21 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Genre', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
+                        Text(context.tr('Genre', 'Gender'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
                           initialValue: _genre,
+                          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
                           decoration: InputDecoration(
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 'M', child: Text('Masculin')),
-                            DropdownMenuItem(value: 'F', child: Text('Féminin')),
+                          items: [
+                            DropdownMenuItem(value: 'M', child: Text(context.tr('Masculin', 'Male'), style: TextStyle(color: cs.onSurface))),
+                            DropdownMenuItem(value: 'F', child: Text(context.tr('Féminin', 'Female'), style: TextStyle(color: cs.onSurface))),
                           ],
                           onChanged: (v) {
                             if (v != null) setState(() => _genre = v);
@@ -1931,23 +2106,23 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Nom', _nomController, required: true)),
+                  Expanded(child: _buildField(context.tr('Nom', 'Last Name'), _nomController, required: true)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('Prénom', _prenomController, required: true)),
+                  Expanded(child: _buildField(context.tr('Prénom', 'First Name'), _prenomController, required: true)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Nom de naissance', _nomNaissanceController)),
+                  Expanded(child: _buildField(context.tr('Nom de naissance', 'Birth Name'), _nomNaissanceController)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('CIN', _cinController)),
+                  Expanded(child: _buildField(context.tr('CIN', 'ID Card Number'), _cinController)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('N° Sécurité Sociale', _nssController)),
+                  Expanded(child: _buildField(context.tr('N° Sécurité Sociale', 'Social Security Number'), _nssController)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1957,17 +2132,17 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Date de naissance', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
+                        Text(context.tr('Date de naissance', 'Date of Birth'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         InkWell(
                           onTap: () => _pickDate('naissance'),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(border: Border.all(color: cs.outline), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(border: Border.all(color: cs.outline.withValues(alpha: 0.35)), borderRadius: BorderRadius.circular(8)),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(_dateNaissance != null ? "${_dateNaissance!.day}/${_dateNaissance!.month}/${_dateNaissance!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
+                                Text(_dateNaissance != null ? "${_dateNaissance!.day}/${_dateNaissance!.month}/${_dateNaissance!.year}" : context.tr('Choisir date', 'Choose date'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
                                 Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                               ],
                             ),
@@ -1977,31 +2152,31 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Lieu de naissance', _lieuNaissanceController)),
+                  Expanded(child: _buildField(context.tr('Lieu de naissance', 'Place of Birth'), _lieuNaissanceController)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('Nationalité', _nationaliteController)),
+                  Expanded(child: _buildField(context.tr('Nationalité', 'Nationality'), _nationaliteController)),
                   const SizedBox(width: 16),
                   const Expanded(child: SizedBox()),
                 ],
               ),
               const SizedBox(height: 24),
-              Text('Coordonnées', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
+              Text(context.tr('Coordonnées', 'Contact Info'), style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-              _buildField('Adresse postale', _adressePostaleController),
+              _buildField(context.tr('Adresse postale', 'Postal Address'), _adressePostaleController),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildField('Téléphone', _telController)),
+                  Expanded(child: _buildField(context.tr('Téléphone', 'Phone Number'), _telController)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField('Email', _emailController)),
+                  Expanded(child: _buildField(context.tr('Email', 'Email'), _emailController)),
                 ],
               ),
               const SizedBox(height: 24),
-              Text('Contrat & Poste', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
+              Text(context.tr('Contrat & Poste', 'Contract & Job'), style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -2009,17 +2184,17 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Date d\'embauche', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
+                        Text(context.tr('Date d\'embauche', 'Hire Date'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         InkWell(
                           onTap: () => _pickDate('embauche'),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(border: Border.all(color: cs.outline), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(border: Border.all(color: cs.outline.withValues(alpha: 0.35)), borderRadius: BorderRadius.circular(8)),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(_dateEmbauche != null ? "${_dateEmbauche!.day}/${_dateEmbauche!.month}/${_dateEmbauche!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
+                                Text(_dateEmbauche != null ? "${_dateEmbauche!.day}/${_dateEmbauche!.month}/${_dateEmbauche!.year}" : context.tr('Choisir date', 'Choose date'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
                                 Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                               ],
                             ),
@@ -2033,20 +2208,23 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Type de contrat', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
+                        Text(context.tr('Type de contrat', 'Contract Type'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
                           initialValue: _typeContrat,
+                          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
                           decoration: InputDecoration(
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 'CDI', child: Text('CDI')),
-                            DropdownMenuItem(value: 'CDD', child: Text('CDD')),
-                            DropdownMenuItem(value: 'Apprentissage', child: Text('Apprentissage')),
-                            DropdownMenuItem(value: 'Stage', child: Text('Stage')),
+                          items: [
+                            DropdownMenuItem(value: 'CDI', child: Text(context.tr('CDI', 'CDI'), style: TextStyle(color: cs.onSurface))),
+                            DropdownMenuItem(value: 'CDD', child: Text(context.tr('CDD', 'CDD'), style: TextStyle(color: cs.onSurface))),
+                            DropdownMenuItem(value: 'Apprentissage', child: Text(context.tr('Apprentissage', 'Apprenticeship'), style: TextStyle(color: cs.onSurface))),
+                            DropdownMenuItem(value: 'Stage', child: Text(context.tr('Stage', 'Internship'), style: TextStyle(color: cs.onSurface))),
                           ],
                           onChanged: (v) {
                             if (v != null) setState(() => _typeContrat = v);
@@ -2065,17 +2243,17 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Date de fin de contrat', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
+                          Text(context.tr('Date de fin de contrat', 'Contract End Date'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 6),
                           InkWell(
                             onTap: () => _pickDate('fin'),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              decoration: BoxDecoration(border: Border.all(color: cs.outline), borderRadius: BorderRadius.circular(8)),
+                              decoration: BoxDecoration(border: Border.all(color: cs.outline.withValues(alpha: 0.35)), borderRadius: BorderRadius.circular(8)),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(_dateFinContrat != null ? "${_dateFinContrat!.day}/${_dateFinContrat!.month}/${_dateFinContrat!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
+                                  Text(_dateFinContrat != null ? "${_dateFinContrat!.day}/${_dateFinContrat!.month}/${_dateFinContrat!.year}" : context.tr('Choisir date', 'Choose date'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
                                   Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                                 ],
                               ),
@@ -2090,20 +2268,20 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                 ),
               ],
               const SizedBox(height: 16),
-              _buildField('Emploi / Poste', _emploiPosteController),
+              _buildField(context.tr('Emploi / Poste', 'Job / Position'), _emploiPosteController),
               const SizedBox(height: 24),
-              _buildField('Description / Note sur le salarié', descriptionController),
+              _buildField(context.tr('Description / Note sur le salarié', 'Description / Employee Note'), descriptionController),
               const SizedBox(height: 24),
-              Text('Pièces Jointes (Modifier/Ajouter)', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
+              Text(context.tr('Pièces Jointes (Modifier/Ajouter)', 'Attachments (Edit/Add)'), style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  _fileChip('Pièce d\'identité', 'piece_identite', widget.salarie.aPieceIdentite),
-                  _fileChip('Carte Vitale', 'carte_vitale', widget.salarie.aCarteVitale),
-                  _fileChip('Justificatif domicile', 'justificatif_domicile', widget.salarie.aJustificatifDomicile),
-                  _fileChip('Contrat signé', 'contrat_signe', widget.salarie.aContratSigne),
+                  _fileChip(context.tr('Pièce d\'identité', 'ID Document'), 'piece_identite', widget.salarie.aPieceIdentite),
+                  _fileChip(context.tr('Carte Vitale', 'Health Card'), 'carte_vitale', widget.salarie.aCarteVitale),
+                  _fileChip(context.tr('Justificatif domicile', 'Proof of Address'), 'justificatif_domicile', widget.salarie.aJustificatifDomicile),
+                  _fileChip(context.tr('Contrat signé', 'Signed Contract'), 'contrat_signe', widget.salarie.aContratSigne),
                 ],
               ),
               const SizedBox(height: 32),
@@ -2112,7 +2290,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                 children: [
                   TextButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
-                    child: const Text('Annuler'),
+                    child: Text(context.tr('Annuler', 'Cancel')),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
@@ -2125,7 +2303,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                     ),
                     child: _isLoading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                        : const Text('Enregistrer'),
+                        : Text(context.tr('Enregistrer', 'Save')),
                   ),
                 ],
               ),
@@ -2157,9 +2335,13 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
   int _selectedYear = DateTime.now().year;
   bool _isLoading = false;
 
-  final List<String> _months = [
+  final List<String> _monthsFr = [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+  final List<String> _monthsEn = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
   final List<int> _years = List.generate(5, (index) => DateTime.now().year - index);
@@ -2237,7 +2419,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
       buffer.writeln('$title$separator');
       buffer.writeln('$employeeLbl$separator${escapeCsv("${widget.salarie.prenom} ${widget.salarie.nom}", separator)}');
       buffer.writeln('$companyLbl$separator${escapeCsv(widget.entrepriseNom, separator)}');
-      buffer.writeln('$periodLbl$separator${_months[_selectedMonth - 1]} $_selectedYear');
+      buffer.writeln('$periodLbl$separator${context.trStatic(_monthsFr[_selectedMonth - 1], _monthsEn[_selectedMonth - 1])} $_selectedYear');
       buffer.writeln('$presentLbl$separator$presents');
       buffer.writeln('$absentLbl$separator$absents');
       buffer.writeln('$unrepLbl$separator$nonRenseignes');
@@ -2313,27 +2495,30 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Exporter le Pointage',
-              style: AppTextStyles.headlineSmall,
+              context.tr('Exporter le Pointage', 'Export Attendance'),
+              style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface),
             ),
             const SizedBox(height: 8),
             Text(
-              'Salarié : ${widget.salarie.prenom} ${widget.salarie.nom}',
+              context.tr('Salarié : ', 'Employee: ') + '${widget.salarie.prenom} ${widget.salarie.nom}',
               style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: 24),
 
             DropdownButtonFormField<int>(
               initialValue: _selectedMonth,
-              decoration: const InputDecoration(
-                labelText: 'Mois',
-                border: OutlineInputBorder(),
+              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+              decoration: InputDecoration(
+                labelText: context.tr('Mois', 'Month'),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                 isDense: true,
               ),
               items: List.generate(12, (index) {
                 return DropdownMenuItem(
                   value: index + 1,
-                  child: Text(_months[index]),
+                  child: Text(context.tr(_monthsFr[index], _monthsEn[index]), style: TextStyle(color: cs.onSurface)),
                 );
               }),
               onChanged: _isLoading ? null : (v) => setState(() => _selectedMonth = v!),
@@ -2342,15 +2527,18 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
 
             DropdownButtonFormField<int>(
               initialValue: _selectedYear,
-              decoration: const InputDecoration(
-                labelText: 'Année',
-                border: OutlineInputBorder(),
+              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+              decoration: InputDecoration(
+                labelText: context.tr('Année', 'Year'),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                 isDense: true,
               ),
               items: _years.map((y) {
                 return DropdownMenuItem(
                   value: y,
-                  child: Text(y.toString()),
+                  child: Text(y.toString(), style: TextStyle(color: cs.onSurface)),
                 );
               }).toList(),
               onChanged: _isLoading ? null : (v) => setState(() => _selectedYear = v!),
@@ -2370,7 +2558,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Annuler', style: TextStyle(color: AppColors.error)),
+                    child: Text(context.tr('Annuler', 'Cancel'), style: const TextStyle(color: AppColors.error)),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
@@ -2379,7 +2567,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
                       backgroundColor: cs.primary,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Exporter'),
+                    child: Text(context.tr('Exporter', 'Export')),
                   ),
                 ],
               ),
@@ -2450,14 +2638,14 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Impossible d\'ouvrir le fichier $label.')),
+            SnackBar(content: Text(context.trStatic('Impossible d\'ouvrir le fichier ', 'Unable to open file ') + label)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'ouverture du fichier : $e')),
+          SnackBar(content: Text(context.trStatic('Erreur lors de l\'ouverture du fichier : ', 'Error opening file: ') + e.toString())),
         );
       }
     }
@@ -2483,8 +2671,8 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
-            value.isEmpty ? 'Non défini' : value,
-            style: AppTextStyles.bodyMedium,
+            (value.isEmpty || value == 'Non défini') ? context.tr('Non défini', 'Not defined') : value,
+            style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
           ),
         ),
       ],
@@ -2595,7 +2783,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Informations du Salarié', style: AppTextStyles.headlineSmall),
+                  Text(context.tr('Informations du Salarié', 'Employee Details'), style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface)),
                   Row(
                     children: [
                       ElevatedButton.icon(
@@ -2607,7 +2795,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
                           );
                         },
                         icon: const Icon(Icons.edit, size: 16),
-                        label: const Text('Modifier'),
+                        label: Text(context.tr('Modifier', 'Edit')),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: cs.primary,
                           foregroundColor: Colors.white,
@@ -2638,81 +2826,81 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildSectionTitle('État Civil & Identité'),
+              _buildSectionTitle(context.tr('État Civil & Identité', 'Civil Status & Identity')),
               Row(
                 children: [
-                  Expanded(child: _readField('Genre', salarie.genre == 'M' ? 'Masculin' : (salarie.genre == 'F' ? 'Féminin' : salarie.genre))),
+                  Expanded(child: _readField(context.tr('Genre', 'Gender'), salarie.genre == 'M' ? context.tr('Masculin', 'Male') : (salarie.genre == 'F' ? context.tr('Féminin', 'Female') : salarie.genre))),
                   const SizedBox(width: 16),
-                  Expanded(child: _readField('Nom', salarie.nom)),
+                  Expanded(child: _readField(context.tr('Nom', 'Last Name'), salarie.nom)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _readField('Prénom', salarie.prenom)),
+                  Expanded(child: _readField(context.tr('Prénom', 'First Name'), salarie.prenom)),
                   const SizedBox(width: 16),
-                  Expanded(child: _readField('Nom de naissance', salarie.nomNaissance)),
+                  Expanded(child: _readField(context.tr('Nom de naissance', 'Birth Name'), salarie.nomNaissance)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _readField('CIN', salarie.cin)),
+                  Expanded(child: _readField(context.tr('CIN', 'ID Card Number'), salarie.cin)),
                   const SizedBox(width: 16),
-                  Expanded(child: _readField('N° Sécurité Sociale', salarie.numeroSecuriteSociale)),
+                  Expanded(child: _readField(context.tr('N° Sécurité Sociale', 'Social Security Number'), salarie.numeroSecuriteSociale)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _readField('Date de naissance', salarie.dateNaissance != null ? "${salarie.dateNaissance!.day}/${salarie.dateNaissance!.month}/${salarie.dateNaissance!.year}" : "Non défini")),
+                  Expanded(child: _readField(context.tr('Date de naissance', 'Date of Birth'), salarie.dateNaissance != null ? "${salarie.dateNaissance!.day}/${salarie.dateNaissance!.month}/${salarie.dateNaissance!.year}" : "Non défini")),
                   const SizedBox(width: 16),
-                  Expanded(child: _readField('Lieu de naissance', salarie.lieuNaissance)),
+                  Expanded(child: _readField(context.tr('Lieu de naissance', 'Place of Birth'), salarie.lieuNaissance)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _readField('Nationalité', salarie.nationalite)),
+                  Expanded(child: _readField(context.tr('Nationalité', 'Nationality'), salarie.nationalite)),
                   const SizedBox(width: 16),
                   const Expanded(child: SizedBox()),
                 ],
               ),
               const SizedBox(height: 24),
-              _buildSectionTitle('Coordonnées'),
-              _readField('Adresse postale', salarie.adressePostale),
+              _buildSectionTitle(context.tr('Coordonnées', 'Contact Info')),
+              _readField(context.tr('Adresse postale', 'Postal Address'), salarie.adressePostale),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _readField('Téléphone', salarie.telephone)),
+                  Expanded(child: _readField(context.tr('Téléphone', 'Phone Number'), salarie.telephone)),
                   const SizedBox(width: 16),
-                  Expanded(child: _readField('Email', salarie.email)),
+                  Expanded(child: _readField(context.tr('Email', 'Email'), salarie.email)),
                 ],
               ),
               const SizedBox(height: 24),
-              _buildSectionTitle('Informations Professionnelles'),
+              _buildSectionTitle(context.tr('Informations Professionnelles', 'Professional Details')),
               Row(
                 children: [
-                  Expanded(child: _readField('Date d\'embauche', salarie.dateEmbauche != null ? "${salarie.dateEmbauche!.day}/${salarie.dateEmbauche!.month}/${salarie.dateEmbauche!.year}" : "Non défini")),
+                  Expanded(child: _readField(context.tr('Date d\'embauche', 'Hire Date'), salarie.dateEmbauche != null ? "${salarie.dateEmbauche!.day}/${salarie.dateEmbauche!.month}/${salarie.dateEmbauche!.year}" : "Non défini")),
                   const SizedBox(width: 16),
-                  Expanded(child: _readField('Type de contrat', salarie.typeContrat)),
+                  Expanded(child: _readField(context.tr('Type de contrat', 'Contract Type'), salarie.typeContrat)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _readField('Date de fin', salarie.dateFinContrat != null ? "${salarie.dateFinContrat!.day}/${salarie.dateFinContrat!.month}/${salarie.dateFinContrat!.year}" : "—")),
+                  Expanded(child: _readField(context.tr('Date de fin', 'End Date'), salarie.dateFinContrat != null ? "${salarie.dateFinContrat!.day}/${salarie.dateFinContrat!.month}/${salarie.dateFinContrat!.year}" : "—")),
                   const SizedBox(width: 16),
-                  Expanded(child: _readField('Emploi/Poste', salarie.emploiPoste)),
+                  Expanded(child: _readField(context.tr('Emploi/Poste', 'Job Title'), salarie.emploiPoste)),
                 ],
               ),
               const SizedBox(height: 24),
-              _buildSectionTitle('Description / Note'),
-              _readField('Description / Note sur le salarié', salarie.description),
+              _buildSectionTitle(context.tr('Description / Note', 'Description / Note')),
+              _readField(context.tr('Description / Note sur le salarié', 'Description / Employee Note'), salarie.description),
               const SizedBox(height: 24),
-              _buildSectionTitle('Pièces jointes'),
+              _buildSectionTitle(context.tr('Pièces jointes', 'Attachments')),
               Text(
-                'Les pièces jointes en vert souligné sont téléchargeables. Cliquez pour les ouvrir.',
+                context.tr('Les pièces jointes en vert souligné sont téléchargeables. Cliquez pour les ouvrir.', 'Attachments underlined in green are downloadable. Click to open them.'),
                 style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 12),
@@ -2720,10 +2908,10 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  _docChip('piece_identite', 'Pièce d\'identité', salarie.aPieceIdentite),
-                  _docChip('carte_vitale', 'Carte Vitale', salarie.aCarteVitale),
-                  _docChip('justificatif_domicile', 'Justificatif domicile', salarie.aJustificatifDomicile),
-                  _docChip('contrat_signe', 'Contrat signé', salarie.aContratSigne),
+                  _docChip('piece_identite', context.tr('Pièce d\'identité', 'ID Document'), salarie.aPieceIdentite),
+                  _docChip('carte_vitale', context.tr('Carte Vitale', 'Health Card'), salarie.aCarteVitale),
+                  _docChip('justificatif_domicile', context.tr('Justificatif domicile', 'Proof of Address'), salarie.aJustificatifDomicile),
+                  _docChip('contrat_signe', context.tr('Contrat signé', 'Signed Contract'), salarie.aContratSigne),
                 ],
               ),
             ],

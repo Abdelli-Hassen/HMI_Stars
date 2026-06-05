@@ -8,6 +8,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
 import '../../../../core/providers/theme_provider.dart';
+import '../../../../core/utils/translation_extension.dart';
 import '../../../auth/domain/models/platform_user.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -73,8 +74,8 @@ class _SettingsPageState extends State<SettingsPage> {
       telephone: _phoneController.text,
       cin: _cinController.text,
     );
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Profil sauvegardé avec succès !'),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(context.tr('Profil sauvegardé avec succès !', 'Profile saved successfully!')),
       backgroundColor: AppColors.success,
     ));
   }
@@ -86,8 +87,8 @@ class _SettingsPageState extends State<SettingsPage> {
     context.read<AuthProvider>().mettreAJourProfil(
       preferences: prefs,
     );
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Espace de travail mis à jour avec succès !'),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(context.tr('Espace de travail mis à jour avec succès !', 'Workspace updated successfully!')),
       backgroundColor: AppColors.success,
     ));
   }
@@ -116,15 +117,15 @@ class _SettingsPageState extends State<SettingsPage> {
 
       messenger.showSnackBar(SnackBar(
         content: Text(success
-            ? 'Photo de profil mise à jour avec succès !'
-            : 'Erreur lors de la mise à jour de la photo.'),
+            ? context.tr('Photo de profil mise à jour avec succès !', 'Profile picture updated successfully!')
+            : context.tr('Erreur lors de la mise à jour de la photo.', 'Error updating picture.')),
         backgroundColor: success ? AppColors.success : AppColors.error,
       ));
     } catch (e) {
       if (mounted) {
         setState(() => _uploadingAvatar = false);
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Erreur lors de la sélection du fichier.'),
+        messenger.showSnackBar(SnackBar(
+          content: Text(context.tr('Erreur lors de la sélection du fichier.', 'Error selecting file.')),
           backgroundColor: AppColors.error,
         ));
       }
@@ -135,14 +136,14 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return MainShell(
       currentRoute: AppRoutes.settings,
-      title: 'Paramètres du Compte',
+      title: context.tr('Paramètres du Compte', 'Account Settings'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: StaggeredColumn(
           children: [
-            Text('Paramètres', style: AppTextStyles.headlineMedium.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+            Text(context.tr('Paramètres', 'Settings'), style: AppTextStyles.headlineMedium.copyWith(color: Theme.of(context).colorScheme.onSurface)),
             const SizedBox(height: 4),
-            Text('Gérez votre profil (Admin / Secrétaire), vos préférences et la sécurité de votre compte.',
+            Text(context.tr('Gérez votre profil (Admin / Secrétaire), vos préférences et la sécurité de votre compte.', 'Manage your profile (Admin / Secretary), preferences, and account security.'),
                 style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 28),
 
@@ -176,10 +177,10 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('PROFIL UTILISATEUR', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
+        Text(context.tr('PROFIL UTILISATEUR', 'USER PROFILE'), style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
         const SizedBox(height: 20),
         Row(children: [
           Stack(
@@ -214,20 +215,20 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(width: 16),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_nomController.text.isNotEmpty ? _nomController.text : 'Utilisateur Actuel', style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface)),
+            Text(_nomController.text.isNotEmpty ? _nomController.text : context.tr('Utilisateur Actuel', 'Current User'), style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _uploadingAvatar ? null : _modifierPhoto,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(border: Border.all(color: cs.outlineVariant), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(border: Border.all(color: cs.outline.withValues(alpha: 0.35)), borderRadius: BorderRadius.circular(8)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.camera_alt_outlined, size: 14, color: _uploadingAvatar ? cs.outline : cs.primary),
                     const SizedBox(width: 6),
                     Text(
-                      _uploadingAvatar ? 'ENVOI EN COURS...' : 'MODIFIER LA PHOTO',
+                      _uploadingAvatar ? context.tr('ENVOI EN COURS...', 'UPLOADING...') : context.tr('MODIFIER LA PHOTO', 'CHANGE PHOTO'),
                       style: AppTextStyles.labelSmall.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.w700, color: cs.onSurface),
                     ),
                   ],
@@ -237,13 +238,13 @@ class _SettingsPageState extends State<SettingsPage> {
           ]),
         ]),
         const SizedBox(height: 28),
-        _textField('Nom Complet', _nomController, Icons.person_outline),
+        _textField(context.tr('Nom Complet', 'Full Name'), _nomController, Icons.person_outline),
         const SizedBox(height: 16),
-        _disabledTextField('Adresse E-mail', _emailController, Icons.email_outlined),
+        _disabledTextField(context.tr('Adresse E-mail', 'Email Address'), _emailController, Icons.email_outlined),
         const SizedBox(height: 16),
-        _textField('Téléphone', _phoneController, Icons.phone_outlined),
+        _textField(context.tr('Téléphone', 'Phone'), _phoneController, Icons.phone_outlined),
         const SizedBox(height: 16),
-        _textField('N° Carte d\'Identité (CIN)', _cinController, Icons.badge_outlined),
+        _textField(context.tr('N° Carte d\'Identité (CIN)', 'Identity Card Number (CIN)'), _cinController, Icons.badge_outlined),
         const SizedBox(height: 20),
         _saveButton(_sauvegarderProfil),
       ]),
@@ -257,13 +258,14 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text("ESPACE DE TRAVAIL", style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
+        Text(context.tr("ESPACE DE TRAVAIL", "WORKSPACE"), style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
         const SizedBox(height: 20),
-        _lockedTextField("Organisation", 'HMI Stars Consulting', Icons.corporate_fare),
+        _lockedTextField(context.tr("Organisation", "Organization"), 'HMI Stars Consulting', Icons.corporate_fare),
         const SizedBox(height: 16),
-        _staticDropdownField('Langue par défaut', _selectedLangue, ['Français (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
+        _staticDropdownField(context.tr('Langue par défaut', 'Default Language'), _selectedLangue, ['Français (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
         const SizedBox(height: 20),
         _saveButton(_sauvegarderWorkspace),
       ]),
@@ -279,12 +281,12 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('APPARENCE', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
+          Text(context.tr('APPARENCE', 'APPEARANCE'), style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -308,12 +310,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Mode Sombre',
+                        context.tr('Mode Sombre', 'Dark Mode'),
                         style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        themeProvider.isDarkMode ? 'Activé' : 'Désactivé',
+                        themeProvider.isDarkMode ? context.tr('Activé', 'Enabled') : context.tr('Désactivé', 'Disabled'),
                         style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ],
@@ -323,7 +325,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Switch(
                 value: themeProvider.isDarkMode,
                 onChanged: (val) => themeProvider.toggleTheme(val),
-                activeColor: cs.primary,
+                activeThumbColor: cs.primary,
                 activeTrackColor: cs.primary.withValues(alpha: 0.3),
                 inactiveThumbColor: cs.outline,
                 inactiveTrackColor: cs.surfaceContainerHigh,
@@ -362,14 +364,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Icon(Icons.lock_reset, color: cs.primary),
                 ),
                 const SizedBox(width: 12),
-                Text('Modifier le mot de passe', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
+                Text(context.tr('Modifier le mot de passe', 'Change Password'), style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)),
               ],
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Ancien mot de passe', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant)),
+                Text(context.tr('Ancien mot de passe', 'Old Password'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: ancienCtrl,
@@ -378,7 +380,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     isDense: true,
                     filled: true,
                     fillColor: cs.surfaceContainerLow,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                     prefixIcon: Icon(Icons.password, size: 18, color: cs.outline),
                     suffixIcon: IconButton(
                       icon: Icon(obscureAncien ? Icons.visibility_off : Icons.visibility, size: 18, color: cs.outline),
@@ -389,7 +393,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   style: TextStyle(color: cs.onSurface),
                 ),
                 const SizedBox(height: 20),
-                Text('Nouveau mot de passe', style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant)),
+                Text(context.tr('Nouveau mot de passe', 'New Password'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: nouveauCtrl,
@@ -398,7 +402,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     isDense: true,
                     filled: true,
                     fillColor: cs.surfaceContainerLow,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                     prefixIcon: Icon(Icons.lock_outline, size: 18, color: cs.outline),
                     suffixIcon: IconButton(
                       icon: Icon(obscureNouveau ? Icons.visibility_off : Icons.visibility, size: 18, color: cs.outline),
@@ -409,21 +415,21 @@ class _SettingsPageState extends State<SettingsPage> {
                   style: TextStyle(color: cs.onSurface),
                 ),
                 const SizedBox(height: 12),
-                Text('Minimum 8 caractères, incluant des lettres et des chiffres.', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+                Text(context.tr('Minimum 8 caractères, incluant des lettres et des chiffres.', 'Minimum 8 characters, including letters and numbers.'), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: isLoading ? null : () => Navigator.pop(context), 
                 style: TextButton.styleFrom(foregroundColor: cs.onSurfaceVariant),
-                child: const Text('Annuler')
+                child: Text(context.tr('Annuler', 'Cancel'))
               ),
               ElevatedButton(
                 onPressed: isLoading ? null : () async {
                   final nouveau = nouveauCtrl.text.trim();
                   if (nouveau.length < 8) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Le mot de passe doit contenir au moins 8 caractères.'),
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(context.tr('Le mot de passe doit contenir au moins 8 caractères.', 'Password must be at least 8 characters long.')),
                       backgroundColor: AppColors.error,
                     ));
                     return;
@@ -434,8 +440,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     await auth.changePassword(nouveau);
                     if (context.mounted) {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Mot de passe mis à jour avec succès.'),
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(context.tr('Mot de passe mis à jour avec succès.', 'Password updated successfully.')),
                         backgroundColor: AppColors.success,
                       ));
                     }
@@ -443,7 +449,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     setStateDialog(() => isLoading = false);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Erreur: $e'),
+                        content: Text('${context.tr('Erreur: ', 'Error: ')}$e'),
                         backgroundColor: AppColors.error,
                       ));
                     }
@@ -457,7 +463,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 child: isLoading
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Mettre à jour'),
+                    : Text(context.tr('Mettre à jour', 'Update')),
               ),
             ],
           );
@@ -473,12 +479,12 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('SÉCURITÉ', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
+          Text(context.tr('SÉCURITÉ', 'SECURITY'), style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant)),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -495,7 +501,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Mot de passe',
+                    context.tr('Mot de passe', 'Password'),
                     style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -505,7 +511,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    border: Border.all(color: cs.outlineVariant),
+                    border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -513,7 +519,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       Icon(Icons.lock_reset, size: 16, color: cs.primary),
                       const SizedBox(width: 8),
-                      Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
+                      Text(context.tr('Modifier', 'Modify'), style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
                     ],
                   ),
                 ),
@@ -621,7 +627,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: ElevatedButton.icon(
           onPressed: onPressed,
           icon: const Icon(Icons.check, size: 18),
-          label: const Text('Sauvegarder les Modifications'),
+          label: Text(context.tr('Sauvegarder les Modifications', 'Save Changes')),
           style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
         ),
       ),
