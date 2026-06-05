@@ -14,6 +14,7 @@ import '../../../../features/entreprises/domain/models/document_entreprise.dart'
 import '../providers/messagerie_provider.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 import '../../../entreprises/domain/models/entreprise.dart';
+import '../../../../core/utils/translation_extension.dart';
 
 class MessageriePage extends StatefulWidget {
   const MessageriePage({super.key});
@@ -188,6 +189,7 @@ class _MessageriePageState extends State<MessageriePage> {
                 );
 
           return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildSidebar(messagerie, entreprises),
 
@@ -231,7 +233,10 @@ class _MessageriePageState extends State<MessageriePage> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Text('Messagerie', style: AppTextStyles.titleMedium),
+            child: Text(
+              context.tr('Messagerie', 'Messaging'),
+              style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -245,14 +250,14 @@ class _MessageriePageState extends State<MessageriePage> {
                 children: [
                   Expanded(
                     child: _buildFilterTab(
-                      label: 'Tous',
+                      label: context.tr('Tous', 'All'),
                       isSelected: _activeFilter == 'Tous',
                       onTap: () => setState(() => _activeFilter = 'Tous'),
                     ),
                   ),
                   Expanded(
                     child: _buildFilterTab(
-                      label: 'Favoris',
+                      label: context.tr('Favoris', 'Favorites'),
                       isSelected: _activeFilter == 'Favoris',
                       onTap: () => setState(() => _activeFilter = 'Favoris'),
                     ),
@@ -265,7 +270,9 @@ class _MessageriePageState extends State<MessageriePage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              _activeFilter == 'Favoris' ? 'ENTREPRISES FAVORITES' : 'ENTREPRISES CLIENTES',
+              _activeFilter == 'Favoris'
+                  ? context.tr('ENTREPRISES FAVORITES', 'FAVORITE COMPANIES')
+                  : context.tr('ENTREPRISES CLIENTES', 'CLIENT COMPANIES'),
               style: AppTextStyles.labelSmall.copyWith(
                 letterSpacing: 1.1,
                 color: cs.onSurfaceVariant,
@@ -280,7 +287,9 @@ class _MessageriePageState extends State<MessageriePage> {
                 : list.isEmpty
                     ? Center(
                         child: Text(
-                          _activeFilter == 'Favoris' ? 'Aucun favori' : 'Aucune entreprise',
+                          _activeFilter == 'Favoris'
+                              ? context.tr('Aucun favori', 'No favorites')
+                              : context.tr('Aucune entreprise', 'No companies'),
                           style: AppTextStyles.bodySmall.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -361,12 +370,12 @@ class _MessageriePageState extends State<MessageriePage> {
             Icon(Icons.chat_bubble_outline, size: 56, color: cs.outlineVariant),
             const SizedBox(height: 16),
             Text(
-              'Sélectionnez une entreprise',
+              context.tr('Sélectionnez une entreprise', 'Select a company'),
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
             ),
             const SizedBox(height: 6),
             Text(
-              'pour consulter et envoyer des messages',
+              context.tr('pour consulter et envoyer des messages', 'to view and send messages'),
               style: TextStyle(color: cs.outline, fontSize: 12),
             ),
           ],
@@ -419,7 +428,7 @@ class _MessageriePageState extends State<MessageriePage> {
                 children: [
                   Text(
                     liveEntreprise.nom,
-                    style: AppTextStyles.titleSmall,
+                    style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface),
                   ),
                   Text(
                     liveEntreprise.email,
@@ -432,7 +441,7 @@ class _MessageriePageState extends State<MessageriePage> {
               ),
               const Spacer(),
               Tooltip(
-                message: 'Voir les détails de l\'entreprise',
+                message: context.tr('Voir les détails de l\'entreprise', 'View company details'),
                 child: InkWell(
                   onTap: () {
                     Navigator.pushNamed(
@@ -462,7 +471,7 @@ class _MessageriePageState extends State<MessageriePage> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Détails',
+                          context.tr('Détails', 'Details'),
                           style: AppTextStyles.labelSmall.copyWith(
                             color: cs.primary,
                             fontWeight: FontWeight.w700,
@@ -484,7 +493,7 @@ class _MessageriePageState extends State<MessageriePage> {
             child: messages.isEmpty
                 ? Center(
                     child: Text(
-                      'Aucun message — commencez la conversation',
+                      context.tr('Aucun message — commencez la conversation', 'No messages — start the conversation'),
                       style: AppTextStyles.bodySmall.copyWith(
                         color: cs.outline,
                       ),
@@ -587,12 +596,12 @@ class _MessageriePageState extends State<MessageriePage> {
         children: [
           IconButton(
             icon: Icon(Icons.attach_file, color: cs.outline),
-            tooltip: 'Joindre un fichier',
+            tooltip: context.tr('Joindre un fichier', 'Attach a file'),
             onPressed: () => _selectionnerEtEnvoyerFichier(false),
           ),
           IconButton(
             icon: Icon(Icons.image_outlined, color: cs.outline),
-            tooltip: 'Joindre une image',
+            tooltip: context.tr('Joindre une image', 'Attach an image'),
             onPressed: () => _selectionnerEtEnvoyerFichier(true),
           ),
           const SizedBox(width: 8),
@@ -609,7 +618,7 @@ class _MessageriePageState extends State<MessageriePage> {
                 maxLines: 4,
                 minLines: 1,
                 decoration: InputDecoration(
-                  hintText: 'Écrire un message...',
+                  hintText: context.tr('Écrire un message...', 'Write a message...'),
                   hintStyle: AppTextStyles.bodyMedium.copyWith(
                     color: cs.outline,
                   ),
@@ -694,7 +703,10 @@ class _MessageriePageState extends State<MessageriePage> {
             Row(
               children: [
                 Expanded(
-                  child: Text(liveEntreprise.nom, style: AppTextStyles.titleSmall),
+                  child: Text(
+                    liveEntreprise.nom,
+                    style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface),
+                  ),
                 ),
                 IconButton(
                   icon: Icon(
@@ -702,8 +714,8 @@ class _MessageriePageState extends State<MessageriePage> {
                     color: messagerie.estFavori(liveEntreprise.id) ? Colors.amber : cs.outline,
                   ),
                   tooltip: messagerie.estFavori(liveEntreprise.id)
-                      ? 'Retirer des favoris'
-                      : 'Ajouter aux favoris',
+                      ? context.tr('Retirer des favoris', 'Remove from favorites')
+                      : context.tr('Ajouter aux favoris', 'Add to favorites'),
                   onPressed: () => messagerie.toggleFavori(liveEntreprise.id),
                 ),
               ],
@@ -733,7 +745,16 @@ class _MessageriePageState extends State<MessageriePage> {
               ),
               child: Center(
                 child: Text(
-                  liveEntreprise.statut,
+                  context.tr(
+                    liveEntreprise.statut,
+                    liveEntreprise.statut == 'EN COURS'
+                        ? 'IN PROGRESS'
+                        : liveEntreprise.statut == 'ATTENTE DOCS'
+                            ? 'AWAITING DOCS'
+                            : liveEntreprise.statut == 'COMPLET'
+                                ? 'COMPLETE'
+                                : liveEntreprise.statut,
+                  ),
                   style: AppTextStyles.labelSmall.copyWith(
                     color: _couleurStatut(liveEntreprise.statut),
                     fontWeight: FontWeight.w700,
@@ -744,7 +765,7 @@ class _MessageriePageState extends State<MessageriePage> {
             ),
             const SizedBox(height: 24),
             Text(
-              'FICHIERS RÉCENTS',
+              context.tr('FICHIERS RÉCENTS', 'RECENT FILES'),
               style: AppTextStyles.labelSmall.copyWith(
                 letterSpacing: 1.1,
                 color: cs.onSurfaceVariant,
@@ -764,7 +785,7 @@ class _MessageriePageState extends State<MessageriePage> {
     if (fichiers.isEmpty) {
       return [
         Text(
-          'Aucun fichier partagé',
+          context.tr('Aucun fichier partagé', 'No shared files'),
           style: AppTextStyles.bodySmall.copyWith(
             color: cs.onSurfaceVariant,
             fontStyle: FontStyle.italic,
@@ -815,29 +836,32 @@ class _MessageriePageState extends State<MessageriePage> {
     }).toList();
 
     list.add(
-      Align(
-        alignment: Alignment.centerLeft,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
+      Padding(
+        padding: const EdgeInsets.only(top: 12.0),
+        child: SizedBox(
+          width: double.infinity,
           child: TextButton.icon(
             onPressed: () => _ouvrirPopupFichiers(
               context,
               liveEntreprise.id,
               liveEntreprise.nom,
             ),
-            icon: const Icon(Icons.grid_view_rounded, size: 14),
+            icon: Icon(Icons.grid_view_rounded, size: 16, color: cs.primary),
             label: Text(
-              'Afficher tous les fichiers',
+              context.tr('Afficher tous les fichiers', 'Show all files'),
               style: AppTextStyles.labelMedium.copyWith(
                 color: cs.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
             style: TextButton.styleFrom(
-              minimumSize: Size.zero,
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: cs.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
               backgroundColor: cs.primary.withValues(alpha: 0.08),
             ),
@@ -898,10 +922,15 @@ class _MessageriePageState extends State<MessageriePage> {
 
   String _formatDate(DateTime d) {
     final now = DateTime.now();
-    if (_memJour(d, now)) return "Aujourd'hui";
-    if (_memJour(d, now.subtract(const Duration(days: 1)))) return 'Hier';
-    const mois = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-    return '${d.day} ${mois[d.month - 1]} ${d.year}';
+    if (_memJour(d, now)) return context.tr("Aujourd'hui", "Today");
+    if (_memJour(d, now.subtract(const Duration(days: 1)))) return context.tr('Hier', 'Yesterday');
+    
+    final isEn = context.tr('FR', 'EN') == 'EN';
+    final moisFr = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    final moisEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final m = isEn ? moisEn[d.month - 1] : moisFr[d.month - 1];
+    
+    return isEn ? '$m ${d.day}, ${d.year}' : '${d.day} $m ${d.year}';
   }
 
   String _formatHeure(DateTime d) =>
@@ -929,15 +958,15 @@ class _EntrepriseContactItem extends StatelessWidget {
     required this.onTap,
   });
 
-  String _formatageTemps(DateTime? d) {
+  String _formatageTemps(DateTime? d, BuildContext context) {
     if (d == null) return '';
     final now = DateTime.now();
     final diff = now.difference(d);
     if (diff.inDays == 0) {
       return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
     }
-    if (diff.inDays == 1) return 'Hier';
-    if (diff.inDays < 7) return 'Il y a ${diff.inDays}j';
+    if (diff.inDays == 1) return context.tr('Hier', 'Yesterday');
+    if (diff.inDays < 7) return context.tr('Il y a ${diff.inDays}j', '${diff.inDays}d ago');
     return '${d.day}/${d.month}';
   }
 
@@ -1001,7 +1030,7 @@ class _EntrepriseContactItem extends StatelessWidget {
                   ),
                   if (dernierMessage != null)
                     Text(
-                      '${estEnvoyeParUser ? "" : "Vous : "}$dernierMessage',
+                      '${estEnvoyeParUser ? "" : context.tr("Vous : ", "You: ")}$dernierMessage',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.bodySmall.copyWith(
@@ -1016,7 +1045,7 @@ class _EntrepriseContactItem extends StatelessWidget {
                     )
                   else
                     Text(
-                      'Aucun message',
+                      context.tr('Aucun message', 'No messages'),
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 12,
                         color: cs.outline,
@@ -1028,7 +1057,7 @@ class _EntrepriseContactItem extends StatelessWidget {
             ),
             if (dateEnvoi != null)
               Text(
-                _formatageTemps(dateEnvoi),
+                _formatageTemps(dateEnvoi, context),
                 style: AppTextStyles.bodySmall.copyWith(fontSize: 10),
               ),
           ],
@@ -1608,8 +1637,15 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
   }
 
   String _formatDateAjout(DateTime d) {
-    const mois = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-    return '${d.day} ${mois[d.month - 1]} ${d.year} à ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    final isEn = context.tr('FR', 'EN') == 'EN';
+    final moisFr = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    final moisEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final m = isEn ? moisEn[d.month - 1] : moisFr[d.month - 1];
+    
+    final String timeStr = '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    return isEn 
+        ? '$m ${d.day}, ${d.year} at $timeStr' 
+        : '${d.day} $m ${d.year} à $timeStr';
   }
 
   @override
@@ -1658,13 +1694,14 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Fichiers de ${widget.entrepriseNom}',
+                            context.tr('Fichiers de ${widget.entrepriseNom}', 'Files of ${widget.entrepriseNom}'),
                             style: AppTextStyles.titleMedium.copyWith(
                               fontWeight: FontWeight.w700,
+                              color: cs.onSurface,
                             ),
                           ),
                           Text(
-                            'Tous les documents partagés dans cette conversation',
+                            context.tr('Tous les documents partagés dans cette conversation', 'All documents shared in this conversation'),
                             style: AppTextStyles.bodySmall.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -1702,7 +1739,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'Aucun fichier partagé dans ce salon',
+                                  context.tr('Aucun fichier partagé dans ce salon', 'No files shared in this chat'),
                                   style: AppTextStyles.bodyMedium.copyWith(
                                     color: cs.onSurfaceVariant,
                                     fontStyle: FontStyle.italic,
@@ -1769,6 +1806,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                                         doc.nom,
                                         style: AppTextStyles.bodyMedium.copyWith(
                                           fontWeight: FontWeight.w500,
+                                          color: cs.onSurface,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -1785,7 +1823,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                                           Icons.open_in_new_rounded,
                                           size: 18,
                                         ),
-                                        tooltip: 'Ouvrir le document',
+                                        tooltip: context.tr('Ouvrir le document', 'Open document'),
                                         onPressed: () async {
                                           if (doc.url != null) {
                                             final uri = Uri.parse(doc.url!);
