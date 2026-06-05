@@ -405,6 +405,7 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildLabel(String text) {
+    final cs = Theme.of(context).colorScheme;
     return Text(
       text,
       style: AppTextStyles.labelMedium.copyWith(

@@ -155,7 +155,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                       decoration: InputDecoration(
                         hintText: 'Rechercher...',
                         hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
-                        prefixIcon: const Icon(Icons.search, size: 18, color: cs.outline),
+                        prefixIcon: Icon(Icons.search, size: 18, color: cs.outline),
                         filled: true,
                         fillColor: cs.surfaceContainerLow,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
@@ -459,7 +459,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.add, size: 20, color: cs.outline),
+                                Icon(Icons.add, size: 20, color: cs.outline),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: TextField(
@@ -767,7 +767,7 @@ class _NoteCardState extends State<_NoteCard> {
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: widget.onEdit,
-                        child: const Icon(Icons.edit_outlined, size: 16, color: cs.primary),
+                        child: Icon(Icons.edit_outlined, size: 16, color: cs.primary),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(

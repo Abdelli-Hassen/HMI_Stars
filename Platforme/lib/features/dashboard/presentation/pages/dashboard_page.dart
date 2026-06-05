@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
+import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/supabase_config.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -19,12 +21,17 @@ class _DashboardPageState extends State<DashboardPage>
   late Animation<double> _fadeAnim;
   late Animation<double> _kpiAnim;
 
+  // Real-time dynamic stats
+  int _realSalariesCount = 0;
+  List<Map<String, dynamic>> _activeCompaniesStats = [];
+  bool _loadingStats = true;
+
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1500),
     );
 
     _kpiAnim = CurvedAnimation(
@@ -38,10 +45,93 @@ class _DashboardPageState extends State<DashboardPage>
 
     _controller.forward();
 
-    // Charger les données initiales (entreprises, stats, etc.)
+    // Load initial data and real-time stats
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EntrepriseProvider>().fetchEntreprises();
+      final ep = context.read<EntrepriseProvider>();
+      ep.fetchEntreprises();
+      ep.fetchAllNotes();
+      _loadRealTimeStats();
     });
+  }
+
+  Future<void> _loadRealTimeStats() async {
+    if (!mounted) return;
+    setState(() => _loadingStats = true);
+
+    try {
+      final client = SupabaseConfig.adminClient;
+
+      // 1. Fetch real total salaries count directly from database
+      final salariesRes = await client.from('salaries').select('id');
+      final totalSalaries = (salariesRes as List).length;
+
+      // 2. Fetch all companies to compute activity
+      final empresasRes = await client
+          .from('entreprises')
+          .select('id, raison_sociale, statut');
+      final empresas = empresasRes as List;
+
+      // 3. Fetch all messages and files to count them in memory (optimizes N-query loop to 2 queries)
+      final messagesRes = await client.from('messages').select('entreprise_id');
+      final filesRes = await client.from('fichiers').select('entreprise_id');
+
+      final messagesList = messagesRes as List;
+      final filesList = filesRes as List;
+
+      final Map<String, int> messageCounts = {};
+      final Map<String, int> fileCounts = {};
+
+      for (var msg in messagesList) {
+        final id = msg['entreprise_id'] as String?;
+        if (id != null) {
+          messageCounts[id] = (messageCounts[id] ?? 0) + 1;
+        }
+      }
+
+      for (var file in filesList) {
+        final id = file['entreprise_id'] as String?;
+        if (id != null) {
+          fileCounts[id] = (fileCounts[id] ?? 0) + 1;
+        }
+      }
+
+      List<Map<String, dynamic>> stats = [];
+
+      for (var emp in empresas) {
+        final empId = emp['id'] as String;
+        final name = emp['raison_sociale'] as String? ?? '';
+        final statusText = emp['statut'] as String? ?? 'EN COURS';
+
+        final msgCount = messageCounts[empId] ?? 0;
+        final docCount = fileCounts[empId] ?? 0;
+        final totalActivity = msgCount + docCount;
+
+        stats.add({
+          'id': empId,
+          'name': name,
+          'status': statusText,
+          'msgCount': msgCount,
+          'docCount': docCount,
+          'activity': totalActivity,
+        });
+      }
+
+      // Sort companies by activity score descending
+      stats.sort((a, b) => (b['activity'] as int).compareTo(a['activity'] as int));
+
+      if (mounted) {
+        setState(() {
+          _realSalariesCount = totalSalaries;
+          _activeCompaniesStats = stats.take(5).toList();
+          _loadingStats = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading real-time dashboard stats: $e');
+      if (mounted) {
+        setState(() => _loadingStats = false);
+      }
+    }
   }
 
   @override
@@ -55,7 +145,7 @@ class _DashboardPageState extends State<DashboardPage>
     final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.dashboard,
-      title: 'HMI Stars - Tableau de Bord RH',
+      title: context.tr('HMI Stars - Tableau de Bord RH', 'HMI Stars - HR Dashboard'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: Column(
@@ -65,67 +155,94 @@ class _DashboardPageState extends State<DashboardPage>
             FadeTransition(
               opacity: _kpiAnim,
               child: SlideTransition(
-                position: Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero).animate(_kpiAnim),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                position: Tween<Offset>(begin: const Offset(0, -0.1), end: Offset.zero).animate(_kpiAnim),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Tableau de Bord RH', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
-                    const SizedBox(height: 4),
-                    Text('Bienvenue, voici un aperçu de votre gestion actuelle.',
-                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('Tableau de Bord RH', 'HR Dashboard'),
+                          style: AppTextStyles.headlineMedium.copyWith(
+                            color: cs.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.tr(
+                            'Indicateurs globaux de supervision et de communication de votre portefeuille client.',
+                            'Global supervision and communication indicators of your client portfolio.',
+                          ),
+                          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
-          // ─── KPI Cards (animated counter) ───
-          Consumer<EntrepriseProvider>(
-            builder: (context, entrepriseProvider, child) {
-              return AnimatedBuilder(
-                animation: _kpiAnim,
-                builder: (context, _) {
-                  final t = _kpiAnim.value;
-                  return Opacity(
-                    opacity: t,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - t)),
-                      child: Row(
-                        children: [
-                          _KpiCard(
-                            icon: Icons.business, iconColor: cs.primary,
-                            value: (entrepriseProvider.totalEntreprises * t).round().toString(), label: 'Total Entreprises',
-                            badge: "Portefeuille", badgeColor: AppColors.success,
-                          ),
-                          const SizedBox(width: 16),
-                          _KpiCard(
-                            icon: Icons.work_history, iconColor: AppColors.warning,
-                            value: (entrepriseProvider.dossiersEnCours * t).round().toString(), label: 'En Cours',
-                            badge: "Aujourd'hui", badgeColor: cs.primary,
-                          ),
-                          const SizedBox(width: 16),
-                          _KpiCard(
-                            icon: Icons.hourglass_empty, iconColor: cs.primary,
-                            value: (entrepriseProvider.dossiersEnAttente * t).round().toString(), label: 'En Attente',
-                            badge: 'Documents', badgeColor: cs.primary,
-                          ),
-                          const SizedBox(width: 16),
-                          _KpiCard(
-                            icon: Icons.check_circle_outline, iconColor: AppColors.success,
-                            value: (entrepriseProvider.entreprises.where((e) => e.statut == 'COMPLET').length * t).round().toString(), label: 'Dossiers Complets',
-                            badge: 'Historique', badgeColor: AppColors.success,
-                          ),
-                        ],
+            // ─── KPI Cards Row ───
+            Consumer<EntrepriseProvider>(
+              builder: (context, entrepriseProvider, child) {
+                return AnimatedBuilder(
+                  animation: _kpiAnim,
+                  builder: (context, _) {
+                    final t = _kpiAnim.value;
+                    final urgentAlertsCount = entrepriseProvider.allNotes.where((n) => n.estRappel).length;
+
+                    // Display database dynamic counts or mockup values as fallback
+                    final displayCompanies = (entrepriseProvider.totalEntreprises * t).round().toString();
+                    final displaySalaries = _loadingStats 
+                        ? (entrepriseProvider.entreprises.fold<int>(0, (sum, e) => sum + e.effectif) * t).round().toString()
+                        : (_realSalariesCount * t).round().toString();
+
+                    return Opacity(
+                      opacity: t,
+                      child: Transform.translate(
+                        offset: Offset(0, 15 * (1 - t)),
+                        child: Row(
+                          children: [
+                            _KpiCard(
+                              icon: Icons.business_outlined,
+                              iconColor: cs.primary,
+                              value: displayCompanies,
+                              label: context.tr('ENTREPRISES CLIENTES', 'CLIENT COMPANIES'),
+                              badge: context.tr('Portefeuille', 'Portfolio'),
+                              badgeColor: cs.primary,
+                            ),
+                            const SizedBox(width: 16),
+                            _KpiCard(
+                              icon: Icons.people_outline,
+                              iconColor: AppColors.success,
+                              value: displaySalaries,
+                              label: context.tr('SALARIÉS GÉRÉS', 'EMPLOYEES MANAGED'),
+                              badge: context.tr('Effectif total', 'Total headcount'),
+                              badgeColor: AppColors.success,
+                            ),
+                            const SizedBox(width: 16),
+                            _KpiCard(
+                              icon: Icons.notifications_none_outlined,
+                              iconColor: cs.primary,
+                              value: (urgentAlertsCount * t).round().toString(),
+                              label: context.tr('RAPPELS & ACTIONS URGENTES', 'REMINDERS & URGENT ACTIONS'),
+                              badge: context.tr('Alertes actives', 'Active alerts'),
+                              badgeColor: cs.primary,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-          const SizedBox(height: 24),
+                    );
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 28),
 
-            // ─── Actions & Calendar ───
+            // ─── Bottom Sections Columns ───
             FadeTransition(
               opacity: _fadeAnim,
               child: SlideTransition(
@@ -133,9 +250,16 @@ class _DashboardPageState extends State<DashboardPage>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 2, child: _buildActionsCard()),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildCalendarCard()),
+                    // Left: Top Active Companies
+                    Expanded(
+                      flex: 2,
+                      child: _buildActiveCompaniesCard(),
+                    ),
+                    const SizedBox(width: 20),
+                    // Right: Approaching Deadlines
+                    Expanded(
+                      child: _buildDeadlinesCard(),
+                    ),
                   ],
                 ),
               ),
@@ -146,217 +270,184 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  Widget _buildActionsCard() {
+  Widget _buildActiveCompaniesCard() {
     final cs = Theme.of(context).colorScheme;
+
+    if (_loadingStats) {
+      return Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Determine the highest activity score for progress bar scaling
+    final int highestActivity = _activeCompaniesStats.isNotEmpty 
+        ? _activeCompaniesStats.first['activity'] as int 
+        : 1;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Actions & Notifications', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
-              Text('Voir tout',
-                  style: AppTextStyles.labelMedium.copyWith(color: cs.primary)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _actionItem(
-            Icons.warning_amber_rounded, AppColors.error,
-            'Vérification de la Paie',
-            'Validation finale nécessaire pour le mois de Juin.',
-            badge: 'URGENT', badgeColor: AppColors.error,
-          ),
-          const SizedBox(height: 16),
-          _actionItem(
-            Icons.assignment_outlined, cs.primary,
-            "Validation d'Entretien",
-            'Candidat : Marc Lefebvre - Développeur Senior.',
-            badge: 'Valider', badgeColor: cs.primary,
-          ),
-          const SizedBox(height: 16),
-          _actionItem(
-            Icons.calendar_today, cs.onSurfaceVariant,
-            'Planning Annuel',
-            "Mise à jour du calendrier des congés d'été.",
-            badge: 'IL Y A 2H', badgeColor: cs.outline,
-            hasBadgeBg: false,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _actionItem(IconData icon, Color iconColor, String title, String subtitle,
-      {String? badge, Color? badgeColor, bool hasBadgeBg = true}) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTextStyles.labelLarge.copyWith(color: cs.onSurface)),
-              Text(subtitle, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
-            ],
-          ),
-        ),
-        if (badge != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: hasBadgeBg ? badgeColor : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(badge,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: hasBadgeBg ? Colors.white : badgeColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
-                )),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCalendarCard() {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Calendrier', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
-              Row(
-                children: [
-                  Icon(Icons.chevron_left, size: 18, color: cs.outline),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.add, color: Colors.white, size: 18),
-                  ),
-                ],
+              Icon(Icons.star_border, color: cs.primary, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                context.tr('Entreprises les Plus Actives', 'Top Active Companies'),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurface,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Center(
-            child: Text('Juin 2026',
-                style: AppTextStyles.labelLarge.copyWith(color: cs.primary)),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 32),
+            child: Text(
+              context.tr(
+                'Classées par volume d\'échanges de messages et de fichiers importés sur la plateforme.',
+                'Ranked by the volume of message exchanges and files uploaded on the platform.',
+              ),
+              style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
+          if (_activeCompaniesStats.isEmpty)
+            // Empty state view
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  context.tr('Aucune entreprise active pour le moment.', 'No active companies at the moment.'),
+                  style: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
+                ),
+              ),
+            )
+          else
+            ..._activeCompaniesStats.map((item) {
+              final String name = item['name'] as String;
+              final int msg = item['msgCount'] as int;
+              final int doc = item['docCount'] as int;
+              final String status = item['status'] as String;
+              final int activity = item['activity'] as int;
 
-          // Day Headers
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-                .map((d) => SizedBox(
-                      width: 30,
-                      child: Center(
-                          child: Text(d,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: cs.onSurfaceVariant,
-                              ))),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 8),
+              // Calculate progress normalized against highest activity company
+              final double progress = highestActivity > 0 
+                  ? (activity / highestActivity).clamp(0.2, 1.0) 
+                  : 0.5;
 
-          // Week rows
-          _buildWeekRow([27, 28, 29, 30, 1, 2, 3], grayed: [27, 28, 29, 30]),
-          _buildWeekRow([4, 5, 6, 7, 8, 9, 10], highlighted: [5]),
-          _buildWeekRow([11, 12, 13, 14, 15, 16, 17], accent: [12]),
+              Color progressColor = cs.primary;
+              if (status == 'COMPLET') {
+                progressColor = AppColors.success;
+              }
 
-          const SizedBox(height: 16),
-
-          // Events
-          _calEvent(cs.primary, 'Réunion d\'équipe - 14:00'),
-          const SizedBox(height: 8),
-          _calEvent(AppColors.error, 'Clôture des congés - 17:00'),
+              return _ActiveCompanyItem(
+                name: name,
+                stats: context.tr('$msg messages • $doc doc(s)', '$msg messages • $doc doc(s)'),
+                status: status,
+                progress: progress,
+                progressColor: progressColor,
+              );
+            }),
         ],
       ),
     );
   }
 
-  Widget _buildWeekRow(List<int> days,
-      {List<int> grayed = const [],
-      List<int> highlighted = const [],
-      List<int> accent = const []}) {
+  Widget _buildDeadlinesCard() {
     final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: days
-            .map((d) => Container(
-                  width: 30, height: 30,
-                  decoration: BoxDecoration(
-                    color: highlighted.contains(d)
-                        ? cs.primary
-                        : accent.contains(d)
-                            ? AppColors.error
-                            : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text('$d',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          fontSize: 12,
-                          color: highlighted.contains(d) || accent.contains(d)
-                              ? Colors.white
-                              : grayed.contains(d)
-                                  ? cs.outline
-                                  : cs.onSurface,
-                          fontWeight: highlighted.contains(d)
-                              ? FontWeight.w700
-                              : FontWeight.w400,
-                        )),
-                  ),
-                ))
-            .toList(),
+    final entrepriseProvider = context.watch<EntrepriseProvider>();
+    final notes = entrepriseProvider.allNotes.where((n) => n.estRappel).take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.access_time, color: cs.primary, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                context.tr('Échéances Proches', 'Approaching Deadlines'),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 32),
+            child: Text(
+              context.tr('Rappels critiques à traiter en priorité.', 'Critical reminders to process first.'),
+              style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (notes.isEmpty)
+            // Render exact mockup reminders from the reference design if database has no warnings
+            ..._buildMockDeadlinesList()
+          else
+            // Render actual note reminders dynamically
+            ...notes.map((note) => _DeadlineItem(
+                  title: note.titre,
+                  description: note.contenu,
+                )),
+        ],
       ),
     );
   }
 
-  Widget _calEvent(Color color, String text) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface))),
-      ],
-    );
+  List<Widget> _buildMockDeadlinesList() {
+    return [
+      _DeadlineItem(
+        title: context.tr('Rapport Pointage', 'Attendance Report'),
+        description: context.tr(
+          'Anomalie détectée : certains salariés présentent des heures supplémentaires déclarées non validées par le responsable d\'éq...',
+          'Anomaly detected: some employees present declared overtime hours not validated by the team manager...',
+        ),
+      ),
+      const Divider(),
+      _DeadlineItem(
+        title: context.tr('Visite Médicale', 'Medical Visit'),
+        description: context.tr(
+          'Relancer le centre de médecine du travail pour planifier la visite obligatoire de reprise suite à l\'arrêt maladie prolongé.',
+          'Follow up with the occupational health center to schedule the mandatory return visit following prolonged sick leave.',
+        ),
+      ),
+      const Divider(),
+      _DeadlineItem(
+        title: context.tr('Renouvellement Mutuelle', 'Mutual Insurance Renewal'),
+        description: context.tr(
+          'Vérifier la bonne affiliation du nouveau salarié à la mutuelle d\'entreprise ou récupérer son attestation de dispense.',
+          'Verify the correct affiliation of the new employee to the company mutual insurance or retrieve their waiver certificate.',
+        ),
+      ),
+    ];
   }
 }
 
-class _KpiCard extends StatefulWidget {
+class _KpiCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String value;
@@ -374,80 +465,199 @@ class _KpiCard extends StatefulWidget {
   });
 
   @override
-  State<_KpiCard> createState() => _KpiCardState();
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    value,
+                    style: AppTextStyles.displaySmall.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    badge,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: badgeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 28),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _KpiCardState extends State<_KpiCard> {
-  bool _hovered = false;
+class _ActiveCompanyItem extends StatelessWidget {
+  final String name;
+  final String stats;
+  final String status;
+  final double progress;
+  final Color progressColor;
+
+  const _ActiveCompanyItem({
+    required this.name,
+    required this.stats,
+    required this.status,
+    required this.progress,
+    required this.progressColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Expanded(
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCirc,
-          padding: const EdgeInsets.all(24),
-          transform: Matrix4.translationValues(0.0, _hovered ? -6.0 : 0.0, 0.0),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _hovered 
-                  ? widget.iconColor.withValues(alpha: 0.3)
-                  : cs.outlineVariant.withValues(alpha: 0.3),
-              width: 1,
-            ),
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(color: widget.iconColor.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 12)),
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4)),
-                  ]
-                : [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 6)),
-                  ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(
+                name,
+                style: AppTextStyles.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurface,
+                ),
+              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.iconColor.withValues(alpha: _hovered ? 0.25 : 0.15),
-                          widget.iconColor.withValues(alpha: _hovered ? 0.1 : 0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: widget.iconColor.withValues(alpha: 0.2)),
+                  Text(
+                    stats,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
                     ),
-                    child: Icon(widget.icon, color: widget.iconColor, size: 24),
                   ),
-                  Text(widget.badge,
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: progressColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: progressColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      status,
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: widget.badgeColor,
-                        fontWeight: FontWeight.w600,
-                      )),
+                        color: progressColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(widget.value, style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
-              const SizedBox(height: 2),
-              Text(widget.label, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: cs.outlineVariant.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              minHeight: 4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeadlineItem extends StatelessWidget {
+  final String title;
+  final String description;
+
+  const _DeadlineItem({
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.notifications_none_outlined,
+              color: cs.primary,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

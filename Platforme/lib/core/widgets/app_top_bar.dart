@@ -714,8 +714,8 @@ class _NotificationItemState extends State<_NotificationItem> {
                               color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              context.tr('NOUVEAU', 'NEW'),
+                            child: Text(
+                              'NOUVEAU',
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,

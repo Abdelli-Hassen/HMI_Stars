@@ -322,7 +322,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.chevron_left,
+                                    Icon(Icons.chevron_left,
                                         size: 18, color: cs.primary),
                                     Text(
                                       context.tr(

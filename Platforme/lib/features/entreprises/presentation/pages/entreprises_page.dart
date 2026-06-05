@@ -44,7 +44,6 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.entreprises,
       title: 'Liste des Entreprises',
@@ -77,19 +76,19 @@ class _EntreprisesPageState extends State<EntreprisesPage> {
                             decoration: InputDecoration(
                               hintText: 'Rechercher (nom, email)...',
                               hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
-                              prefixIcon: const Icon(Icons.search, size: 20, color: cs.outline),
+                              prefixIcon: Icon(Icons.search, size: 20, color: cs.outline),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: cs.outlineVariant),
+                                borderSide: BorderSide(color: cs.outlineVariant),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: cs.outlineVariant),
+                                borderSide: BorderSide(color: cs.outlineVariant),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: cs.primary),
+                                borderSide: BorderSide(color: cs.primary),
                               ),
                               filled: true,
                               fillColor: cs.surfaceContainerLowest,
@@ -266,6 +265,7 @@ class _AddEntrepriseDialog extends StatefulWidget {
 }
 
 class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   final _nomController = TextEditingController();
   final _gerantController = TextEditingController();
   final _descController = TextEditingController();
@@ -481,9 +481,9 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
             isDense: true,
             hintText: 'Saisir $label',
             hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.primary)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary)),
           ),
         ),
       ],
@@ -670,6 +670,7 @@ class _EntrepriseCard extends StatefulWidget {
 }
 
 class _EntrepriseCardState extends State<_EntrepriseCard> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   bool _hovered = false;
 
   Color get _statusColor {
@@ -797,7 +798,7 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Voir le dossier', style: AppTextStyles.labelMedium.copyWith(color: cs.primary, fontWeight: FontWeight.w600)),
-                    const Icon(Icons.arrow_forward, size: 18, color: cs.primary),
+                    Icon(Icons.arrow_forward, size: 18, color: cs.primary),
                   ],
                 ),
               ),
@@ -818,6 +819,7 @@ class _EntrepriseListTile extends StatefulWidget {
 }
 
 class _EntrepriseListTileState extends State<_EntrepriseListTile> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   bool _hovered = false;
 
   Color get _statusColor {
@@ -947,7 +949,7 @@ class _EntrepriseListTileState extends State<_EntrepriseListTile> {
                 ),
               ),
               const SizedBox(width: 24),
-              const Icon(Icons.chevron_right, size: 24, color: cs.outline),
+              Icon(Icons.chevron_right, size: 24, color: cs.outline),
             ],
           ),
         ),

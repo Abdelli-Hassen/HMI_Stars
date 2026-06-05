@@ -48,9 +48,6 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
   Future<void> _changeRole(UtilisateurPlateforme user, String newRole) async {
     if (user.role == newRole) return;
     
-    // Prevent admin from accidentally demoting themselves if they are the only admin
-    // This is just a basic safeguard
-    
     setState(() => _isLoading = true);
     await context.read<AuthProvider>().changeUserRole(user.id, newRole);
     await _loadUsers();
@@ -74,13 +71,14 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
       return;
     }
 
+    final cs = Theme.of(context).colorScheme;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: cs.surfaceContainerLowest,
-        title: Text('Supprimer l\'utilisateur', style: AppTextStyles.titleMedium),
-        content: Text('Voulez-vous vraiment supprimer définitivement le compte de ${user.nom} (${user.email}) ? Cette action est irréversible.', style: AppTextStyles.bodyMedium),
+        title: Text('Supprimer l\'utilisateur', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
+        content: Text('Voulez-vous vraiment supprimer définitivement le compte de ${user.nom} (${user.email}) ? Cette action est irréversible.', style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
           ElevatedButton(
@@ -126,7 +124,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Comptes Utilisateurs', style: AppTextStyles.headlineMedium),
+            Text('Comptes Utilisateurs', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
             const SizedBox(height: 4),
             Text('Gérez les rôles et les accès de tous les utilisateurs de la plateforme.',
                 style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
@@ -137,9 +135,10 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
               constraints: const BoxConstraints(maxWidth: 400),
               child: TextField(
                 onChanged: _filterUsers,
+                style: TextStyle(color: cs.onSurface),
                 decoration: InputDecoration(
                   hintText: 'Rechercher par nom ou email...',
-                  prefixIcon: const Icon(Icons.search, color: cs.onSurfaceVariant),
+                  prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
                   filled: true,
                   fillColor: cs.surfaceContainerLowest,
                   border: OutlineInputBorder(
@@ -156,8 +155,8 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _filteredUsers.isEmpty
-                      ? Center(child: Text('Aucun utilisateur trouvé.', style: AppTextStyles.bodyLarge))
-                      : _buildUsersTable(),
+                      ? Center(child: Text('Aucun utilisateur trouvé.', style: AppTextStyles.bodyLarge.copyWith(color: cs.onSurface)))
+                      : _buildUsersTable(cs),
             ),
           ],
         ),
@@ -165,7 +164,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     );
   }
 
-  Widget _buildUsersTable() {
+  Widget _buildUsersTable(ColorScheme cs) {
     return Container(
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
@@ -176,9 +175,8 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
         borderRadius: BorderRadius.circular(16),
         child: ListView.separated(
           itemCount: _filteredUsers.length,
-          separatorBuilder: (context, index) => const Divider(height: 1, color: cs.outlineVariant),
+          separatorBuilder: (context, index) => Divider(height: 1, color: cs.outlineVariant),
           itemBuilder: (context, index) {
-            final cs = Theme.of(context).colorScheme;
             final user = _filteredUsers[index];
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -186,7 +184,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                 children: [
                   CircleAvatar(
                     backgroundColor: cs.primaryContainer,
-                    child: Text(user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?', style: const TextStyle(color: cs.onPrimaryContainer)),
+                    child: Text(user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?', style: TextStyle(color: cs.onPrimaryContainer)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -194,7 +192,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.nom.isNotEmpty ? user.nom : 'Sans Nom', style: AppTextStyles.titleSmall),
+                        Text(user.nom.isNotEmpty ? user.nom : 'Sans Nom', style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface)),
                         Text(user.email, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                       ],
                     ),
@@ -202,7 +200,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                   Expanded(
                     child: Text(
                       'Créé le ${user.creeLe.day}/${user.creeLe.month}/${user.creeLe.year}',
-                      style: AppTextStyles.bodySmall,
+                      style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),
                   // Role Dropdown
@@ -216,7 +214,8 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                       child: DropdownButton<String>(
                         value: (user.role == 'admin' || user.role == 'secretaire') ? user.role : 'secretaire',
                         icon: const Icon(Icons.arrow_drop_down, size: 20),
-                        style: AppTextStyles.bodyMedium,
+                        dropdownColor: cs.surfaceContainerLowest,
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
                         items: const [
                           DropdownMenuItem(value: 'admin', child: Text('ADMIN')),
                           DropdownMenuItem(value: 'secretaire', child: Text('SECRÉTAIRE')),

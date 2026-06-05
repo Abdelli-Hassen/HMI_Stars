@@ -23,6 +23,7 @@ class MessageriePage extends StatefulWidget {
 }
 
 class _MessageriePageState extends State<MessageriePage> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
@@ -95,8 +96,8 @@ class _MessageriePageState extends State<MessageriePage> {
 
       if (result == null || result.files.isEmpty) {
         scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('Aucun fichier sélectionné ou sélection annulée.'),
+          SnackBar(
+            content: const Text('Aucun fichier sélectionné ou sélection annulée.'),
             backgroundColor: cs.outline,
           ),
         );
@@ -164,7 +165,6 @@ class _MessageriePageState extends State<MessageriePage> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.messagerie,
       title: 'HMI Stars - Messagerie',
@@ -352,19 +352,19 @@ class _MessageriePageState extends State<MessageriePage> {
   }
 
   Widget _buildPlaceholder() {
-    return const Expanded(
+    return Expanded(
       flex: 2,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.chat_bubble_outline, size: 56, color: cs.outlineVariant),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Sélectionnez une entreprise',
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Text(
               'pour consulter et envoyer des messages',
               style: TextStyle(color: cs.outline, fontSize: 12),
@@ -455,7 +455,7 @@ class _MessageriePageState extends State<MessageriePage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline_rounded,
                           size: 16,
                           color: cs.primary,
@@ -586,12 +586,12 @@ class _MessageriePageState extends State<MessageriePage> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.attach_file, color: cs.outline),
+            icon: Icon(Icons.attach_file, color: cs.outline),
             tooltip: 'Joindre un fichier',
             onPressed: () => _selectionnerEtEnvoyerFichier(false),
           ),
           IconButton(
-            icon: const Icon(Icons.image_outlined, color: cs.outline),
+            icon: Icon(Icons.image_outlined, color: cs.outline),
             tooltip: 'Joindre une image',
             onPressed: () => _selectionnerEtEnvoyerFichier(true),
           ),
@@ -795,7 +795,7 @@ class _MessageriePageState extends State<MessageriePage> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.insert_drive_file, size: 16, color: cs.primary),
+                Icon(Icons.insert_drive_file, size: 16, color: cs.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -953,7 +953,7 @@ class _EntrepriseContactItem extends StatelessWidget {
               ? cs.primaryContainer.withValues(alpha: 0.3)
               : Colors.transparent,
           border: selected
-              ? const Border(
+              ? Border(
                   left: BorderSide(color: cs.primary, width: 3),
                 )
               : null,
@@ -1079,7 +1079,7 @@ class _BubbleMessage extends StatelessWidget {
                   ? NetworkImage(entrepriseLogoUrl!)
                   : null,
               child: (entrepriseLogoUrl == null || entrepriseLogoUrl!.isEmpty)
-                  ? const Icon(
+                  ? Icon(
                       Icons.business,
                       size: 14,
                       color: cs.onSurfaceVariant,
@@ -1272,7 +1272,7 @@ class _BubbleMessage extends StatelessWidget {
             CircleAvatar(
               radius: 14,
               backgroundColor: cs.primaryContainer,
-              child: const Icon(
+              child: Icon(
                 Icons.support_agent,
                 size: 14,
                 color: cs.primary,
@@ -1482,6 +1482,7 @@ class _FichiersListeDialog extends StatefulWidget {
 }
 
 class _FichiersListeDialogState extends State<_FichiersListeDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   final _dataService = PlatformDataService();
   final _scrollController = ScrollController();
   final List<DocumentEntreprise> _files = [];
@@ -1645,7 +1646,7 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: cs.primary.withValues(alpha: 0.1),
-                      child: const Icon(
+                      child: Icon(
                         Icons.folder_shared_outlined,
                         color: cs.primary,
                         size: 20,

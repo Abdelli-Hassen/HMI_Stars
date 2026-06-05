@@ -182,6 +182,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
   }
 
   void _showSortMenu(BuildContext context) async {
+    final cs = Theme.of(context).colorScheme;
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
@@ -437,7 +438,6 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final provider = Provider.of<EntrepriseProvider>(context);
 
     if (provider.entreprises.isEmpty) {
@@ -523,6 +523,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
   }
 
   Widget _buildHeader(EntrepriseProvider provider) {
+    final cs = Theme.of(context).colorScheme;
     final activeId = _selectedEntrepriseId ?? 'all';
     final currentEntrepriseName = activeId == 'all'
         ? 'Toutes les entreprises'
@@ -602,6 +603,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
   }
 
   Widget _buildLibrarySidebar(List<_FolderData> folders) {
+    final cs = Theme.of(context).colorScheme;
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(-0.3, 0), end: Offset.zero).animate(
         CurvedAnimation(parent: _staggerController, curve: const Interval(0.15, 0.6, curve: Curves.easeOutCubic)),
@@ -638,6 +640,7 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
   }
 
   Widget _buildDocumentsTable(List<DocumentEntreprise> filteredDocs, int totalDocsCount) {
+    final cs = Theme.of(context).colorScheme;
     final displayedDocs = filteredDocs.take(_visibleCount).toList();
     final hasMore = _visibleCount < filteredDocs.length;
 
@@ -795,11 +798,14 @@ class _DocumentsEntreprisePageState extends State<DocumentsEntreprisePage>
     );
   }
 
-  TextStyle _colHeader() => AppTextStyles.labelSmall.copyWith(
-        letterSpacing: 1.2,
-        fontWeight: FontWeight.w700,
-        color: cs.onSurfaceVariant,
-      );
+  TextStyle _colHeader() {
+    final cs = Theme.of(context).colorScheme;
+    return AppTextStyles.labelSmall.copyWith(
+      letterSpacing: 1.2,
+      fontWeight: FontWeight.w700,
+      color: cs.onSurfaceVariant,
+    );
+  }
 }
 
 // ─── Data Classes ───

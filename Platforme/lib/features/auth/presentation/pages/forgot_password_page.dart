@@ -182,7 +182,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.email_outlined,
+                              prefixIcon: Icon(Icons.email_outlined,
                                   size: 20, color: cs.outline),
                               hintText: context.tr(
                                 'nom@entreprise.fr',
@@ -260,7 +260,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.chevron_left,
+                                    Icon(Icons.chevron_left,
                                         size: 18, color: cs.primary),
                                     Text(
                                       context.tr(

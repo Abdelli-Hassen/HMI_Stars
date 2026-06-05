@@ -53,6 +53,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _afficherDialogueConfirmation(AuthProvider auth) {
+    final cs = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -210,8 +211,8 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 8),
                         Text(
                           context.tr(
-                            'Veuillez saisir vos identifiants pour accéder à votre tableau de bord financier.',
-                            'Please enter your credentials to access your financial dashboard.',
+                            'Veuillez saisir vos identifiants pour accéder.',
+                            'Please enter your credentials for access.',
                           ),
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: cs.onSurfaceVariant,
@@ -222,8 +223,8 @@ class _LoginPageState extends State<LoginPage> {
                         // ─── Email ───
                         Text(
                           context.tr(
-                            'Adresse e-mail professionnelle',
-                            'Professional email address',
+                            'Adresse e-mail',
+                            'Email address',
                           ),
                           style: AppTextStyles.labelMedium.copyWith(
                             fontWeight: FontWeight.w600,
@@ -235,7 +236,7 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.email_outlined,
+                            prefixIcon: Icon(Icons.email_outlined,
                                 size: 20, color: cs.outline),
                             hintText: context.tr(
                               'nom@entreprise.fr',
@@ -281,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
                           obscureText: _obscurePassword,
                           onSubmitted: (_) => _signIn(),
                           decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.lock_outline,
+                            prefixIcon: Icon(Icons.lock_outline,
                                 size: 20, color: cs.outline),
                             hintText: '••••••••••••',
                             suffixIcon: IconButton(

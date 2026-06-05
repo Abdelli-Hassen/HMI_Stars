@@ -28,13 +28,13 @@ class DetailsCalculsPage extends StatelessWidget {
                   child: Container(
                     width: 36, height: 36,
                     decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.arrow_back, size: 18, color: cs.onSurfaceVariant),
+                    child: Icon(Icons.arrow_back, size: 18, color: cs.onSurfaceVariant),
                   ),
                 ),
               ),
               const SizedBox(width: 16),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Détails des Calculs de Congés', style: AppTextStyles.headlineMedium),
+                Text('Détails des Calculs de Congés', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
                 Text('Jean Dupont — Exercice 2026',
                     style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
               ]),
@@ -45,13 +45,13 @@ class DetailsCalculsPage extends StatelessWidget {
               // ─── Left: Calc sections ───
               Expanded(flex: 2, child: Column(children: [
                 // CP Section
-                _calcSection(
+                _calcSection(cs,
                   'CONGÉS PAYÉS (CP)',
                   [
-                    _calcRow('Droits acquis N', '25 jours', cs.primary),
-                    _calcRow('Report N-1', '3 jours', cs.primary),
-                    _calcRow('Congés pris', '-10 jours', AppColors.error),
-                    _calcRow('Solde restant', '18 jours', AppColors.success, bold: true),
+                    _calcRow(cs, 'Droits acquis N', '25 jours', cs.primary),
+                    _calcRow(cs, 'Report N-1', '3 jours', cs.primary),
+                    _calcRow(cs, 'Congés pris', '-10 jours', AppColors.error),
+                    _calcRow(cs, 'Solde restant', '18 jours', AppColors.success, bold: true),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -61,35 +61,35 @@ class DetailsCalculsPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('MOUVEMENTS DE CONGÉS', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+                    Text('MOUVEMENTS DE CONGÉS', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(8)),
                       child: Row(children: [
-                        SizedBox(width: 100, child: Text('DATE', style: _hdr())),
-                        Expanded(child: Text('TYPE', style: _hdr())),
-                        SizedBox(width: 80, child: Text('JOURS', textAlign: TextAlign.center, style: _hdr())),
-                        SizedBox(width: 80, child: Text('SOLDE', textAlign: TextAlign.center, style: _hdr())),
+                        SizedBox(width: 100, child: Text('DATE', style: _hdr(cs))),
+                        Expanded(child: Text('TYPE', style: _hdr(cs))),
+                        SizedBox(width: 80, child: Text('JOURS', textAlign: TextAlign.center, style: _hdr(cs))),
+                        SizedBox(width: 80, child: Text('SOLDE', textAlign: TextAlign.center, style: _hdr(cs))),
                       ]),
                     ),
-                    _movRow('01 Jan', 'Acquisition', '+2.08', '27.08'),
-                    _movRow('01 Fév', 'Acquisition', '+2.08', '29.16'),
-                    _movRow('15 Mar', 'Congé Maladie', '-2', '27.16'),
-                    _movRow('01 Avr', 'Acquisition', '+2.08', '29.24'),
-                    _movRow('22 Mai', 'RTT posé', '-1', '28.24'),
-                    _movRow('01 Juin', 'Congé Payé', '-10', '18.24'),
+                    _movRow(cs, '01 Jan', 'Acquisition', '+2.08', '27.08'),
+                    _movRow(cs, '01 Fév', 'Acquisition', '+2.08', '29.16'),
+                    _movRow(cs, '15 Mar', 'Congé Maladie', '-2', '27.16'),
+                    _movRow(cs, '01 Avr', 'Acquisition', '+2.08', '29.24'),
+                    _movRow(cs, '22 Mai', 'RTT posé', '-1', '28.24'),
+                    _movRow(cs, '01 Juin', 'Congé Payé', '-10', '18.24'),
                   ]),
                 ),
                 const SizedBox(height: 16),
 
                 // RTT Section
-                _calcSection(
+                _calcSection(cs,
                   'RÉDUCTION DU TEMPS DE TRAVAIL (RTT)',
                   [
-                    _calcRow('Droits annuels', '10 jours', cs.primary),
-                    _calcRow('RTT pris', '-4 jours', AppColors.error),
-                    _calcRow('Solde restant', '6 jours', AppColors.success, bold: true),
+                    _calcRow(cs, 'Droits annuels', '10 jours', cs.primary),
+                    _calcRow(cs, 'RTT pris', '-4 jours', AppColors.error),
+                    _calcRow(cs, 'Solde restant', '6 jours', AppColors.success, bold: true),
                   ],
                 ),
               ])),
@@ -105,17 +105,17 @@ class DetailsCalculsPage extends StatelessWidget {
                     border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('RÉSUMÉ GLOBAL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+                    Text('RÉSUMÉ GLOBAL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)),
                     const SizedBox(height: 20),
-                    _globalRow('CP Restants', '18 j', cs.primary),
+                    _globalRow(cs, 'CP Restants', '18 j', cs.primary),
                     const SizedBox(height: 12),
-                    _globalRow('RTT Restants', '6 j', cs.primaryContainer),
+                    _globalRow(cs, 'RTT Restants', '6 j', cs.primaryContainer),
                     const SizedBox(height: 12),
-                    _globalRow('Maladie utilisés', '2 j', AppColors.error),
+                    _globalRow(cs, 'Maladie utilisés', '2 j', AppColors.error),
                     const SizedBox(height: 12),
                     Divider(color: cs.outlineVariant.withValues(alpha: 0.15)),
                     const SizedBox(height: 8),
-                    _globalRow('Total disponible', '24 j', AppColors.success),
+                    _globalRow(cs, 'Total disponible', '24 j', AppColors.success),
                   ]),
                 ),
                 const SizedBox(height: 16),
@@ -123,12 +123,12 @@ class DetailsCalculsPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('MÉTHODE DE CALCUL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+                    Text('MÉTHODE DE CALCUL', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)),
                     const SizedBox(height: 16),
-                    _methodItem('Acquisition', '2.08 j/mois (25j/an)'),
-                    _methodItem('Période', '1 Juin N-1 → 31 Mai N'),
-                    _methodItem('Convention', 'SYNTEC – IDCC 1486'),
-                    _methodItem('Report max', '5 jours N-1'),
+                    _methodItem(cs, 'Acquisition', '2.08 j/mois (25j/an)'),
+                    _methodItem(cs, 'Période', '1 Juin N-1 → 31 Mai N'),
+                    _methodItem(cs, 'Convention', 'SYNTEC – IDCC 1486'),
+                    _methodItem(cs, 'Report max', '5 jours N-1'),
                     const SizedBox(height: 12),
                     Container(
                       width: double.infinity, padding: const EdgeInsets.all(12),
@@ -137,7 +137,7 @@ class DetailsCalculsPage extends StatelessWidget {
                         Icon(Icons.info_outline, size: 14, color: cs.primary),
                         const SizedBox(width: 6),
                         Expanded(child: Text('Calculs conformes aux articles L.3141 du Code du Travail',
-                            style: AppTextStyles.bodySmall.copyWith(fontSize: 10))),
+                            style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: cs.onSurfaceVariant))),
                       ]),
                     ),
                   ]),
@@ -150,21 +150,21 @@ class DetailsCalculsPage extends StatelessWidget {
     );
   }
 
-  TextStyle _hdr() => AppTextStyles.labelSmall.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.w700);
+  TextStyle _hdr(ColorScheme cs) => AppTextStyles.labelSmall.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.w700, color: cs.onSurface);
 
-  Widget _calcSection(String title, List<Widget> items) {
+  Widget _calcSection(ColorScheme cs, String title, List<Widget> items) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
+        Text(title, style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700, color: cs.onSurface)),
         const SizedBox(height: 16),
         ...items,
       ]),
     );
   }
 
-  Widget _calcRow(String label, String value, Color color, {bool bold = false}) {
+  Widget _calcRow(ColorScheme cs, String label, String value, Color color, {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -174,7 +174,7 @@ class DetailsCalculsPage extends StatelessWidget {
     );
   }
 
-  Widget _movRow(String date, String type, String days, String balance) {
+  Widget _movRow(ColorScheme cs, String date, String type, String days, String balance) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.1)))),
@@ -185,12 +185,12 @@ class DetailsCalculsPage extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: days.startsWith('+') ? AppColors.success : days.startsWith('-') ? AppColors.error : cs.onSurface,
         ))),
-        SizedBox(width: 80, child: Text(balance, textAlign: TextAlign.center, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600))),
+        SizedBox(width: 80, child: Text(balance, textAlign: TextAlign.center, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface))),
       ]),
     );
   }
 
-  Widget _globalRow(String label, String value, Color color) {
+  Widget _globalRow(ColorScheme cs, String label, String value, Color color) {
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text(label, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w500, color: cs.onSurface)),
       Container(
@@ -201,15 +201,15 @@ class DetailsCalculsPage extends StatelessWidget {
     ]);
   }
 
-  Widget _methodItem(String label, String value) {
+  Widget _methodItem(ColorScheme cs, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(children: [
         Container(width: 4, height: 4, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)),
         const SizedBox(width: 8),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
-          Text(value, style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
+          Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
+          Text(value, style: AppTextStyles.bodySmall.copyWith(fontSize: 11, color: cs.onSurfaceVariant)),
         ])),
       ]),
     );

@@ -29,6 +29,7 @@ class EntrepriseDetailsPage extends StatefulWidget {
 }
 
 class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   String _activeTab = 'Informations';
   String? _loadedEntrepriseId;
 
@@ -164,7 +165,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         ? NetworkImage(entreprise.logoUrl!)
                         : null,
                     child: (entreprise.logoUrl == null || entreprise.logoUrl!.isEmpty)
-                        ? const Icon(Icons.domain, size: 44, color: cs.onSurfaceVariant)
+                        ? Icon(Icons.domain, size: 44, color: cs.onSurfaceVariant)
                         : null,
                   ),
                   const SizedBox(width: 24),
@@ -213,7 +214,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.edit_outlined, size: 16, color: cs.primary),
+                          Icon(Icons.edit_outlined, size: 16, color: cs.primary),
                           const SizedBox(width: 6),
                           Text('Modifier', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
                         ],
@@ -295,7 +296,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                const Icon(Icons.info_outline, size: 18, color: cs.primary),
+                Icon(Icons.info_outline, size: 18, color: cs.primary),
                 const SizedBox(width: 8),
                 Text('INFORMATIONS GÉNÉRALES', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
               ]),
@@ -330,7 +331,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             decoration: BoxDecoration(color: cs.surfaceContainerLowest, borderRadius: BorderRadius.circular(16)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                const Icon(Icons.gavel_outlined, size: 18, color: cs.primary),
+                Icon(Icons.gavel_outlined, size: 18, color: cs.primary),
                 const SizedBox(width: 8),
                 Text('INFORMATIONS JURIDIQUES', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1.2, fontWeight: FontWeight.w700)),
               ]),
@@ -541,7 +542,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                           ? NetworkImage(s.avatarUrl!)
                           : null,
                       child: (s.avatarUrl == null || s.avatarUrl!.isEmpty)
-                          ? const Icon(Icons.person_off, color: cs.onSurfaceVariant)
+                          ? Icon(Icons.person_off, color: cs.onSurfaceVariant)
                           : null,
                     ),
                     const SizedBox(width: 16),
@@ -688,6 +689,7 @@ class _AddNoteDialog extends StatefulWidget {
 }
 
 class _AddNoteDialogState extends State<_AddNoteDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   final _titreController = TextEditingController();
   final _contenuController = TextEditingController();
   bool _isRappel = false;
@@ -797,6 +799,7 @@ class _EditEntrepriseDialog extends StatefulWidget {
 }
 
 class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   late TextEditingController _nomController;
   late TextEditingController _gerantController;
   late TextEditingController _descController;
@@ -965,7 +968,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                         ? NetworkImage(_logoUrl!)
                         : null,
                     child: (_logoUrl == null || _logoUrl!.isEmpty)
-                        ? const Icon(Icons.domain, size: 40, color: cs.onSurfaceVariant)
+                        ? Icon(Icons.domain, size: 40, color: cs.onSurfaceVariant)
                         : null,
                   ),
                   if (_isUploadingLogo)
@@ -1109,9 +1112,9 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
             isDense: true,
             hintText: 'Saisir $label',
             hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outlineVariant)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.primary)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outlineVariant)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary)),
           ),
         ),
       ],
@@ -1128,6 +1131,7 @@ class _AddSalarieDialog extends StatefulWidget {
 }
 
 class _AddSalarieDialogState extends State<_AddSalarieDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   final _nomController = TextEditingController();
   final _prenomController = TextEditingController();
   final _nomNaissanceController = TextEditingController();
@@ -1335,7 +1339,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                           ? MemoryImage(_avatarBytes!)
                           : null,
                       child: _avatarBytes == null
-                          ? const Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
+                          ? Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
                           : null,
                     ),
                     Positioned(
@@ -1568,6 +1572,7 @@ class _EditSalarieDialog extends StatefulWidget {
 }
 
 class _EditSalarieDialogState extends State<_EditSalarieDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   late final TextEditingController _nomController;
   late final TextEditingController _prenomController;
   late final TextEditingController _nomNaissanceController;
@@ -1798,8 +1803,8 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.outline)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: cs.primary, width: 2)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 2)),
           ),
           style: AppTextStyles.bodyMedium,
         ),
@@ -1877,7 +1882,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                               ? NetworkImage(widget.salarie.avatarUrl!) as ImageProvider
                               : null),
                       child: (_avatarBytes == null && (widget.salarie.avatarUrl == null || widget.salarie.avatarUrl!.isEmpty))
-                          ? const Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
+                          ? Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
                           : null,
                     ),
                     Positioned(
@@ -1963,7 +1968,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(_dateNaissance != null ? "${_dateNaissance!.day}/${_dateNaissance!.month}/${_dateNaissance!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
-                                const Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
+                                Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                               ],
                             ),
                           ),
@@ -2015,7 +2020,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(_dateEmbauche != null ? "${_dateEmbauche!.day}/${_dateEmbauche!.month}/${_dateEmbauche!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
-                                const Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
+                                Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                               ],
                             ),
                           ),
@@ -2071,7 +2076,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(_dateFinContrat != null ? "${_dateFinContrat!.day}/${_dateFinContrat!.month}/${_dateFinContrat!.year}" : 'Choisir date', style: AppTextStyles.bodyMedium),
-                                  const Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
+                                  Icon(Icons.calendar_today, size: 16, color: cs.onSurfaceVariant),
                                 ],
                               ),
                             ),
@@ -2147,6 +2152,7 @@ class _ExportPointageDialog extends StatefulWidget {
 }
 
 class _ExportPointageDialogState extends State<_ExportPointageDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
   bool _isLoading = false;
@@ -2394,6 +2400,7 @@ class _SalarieDetailsDialog extends StatefulWidget {
 }
 
 class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
+  ColorScheme get cs => Theme.of(context).colorScheme;
   bool _loadingFiles = true;
   Map<String, String> _fileUrls = {};
 
@@ -2626,7 +2633,7 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
                       ? NetworkImage(salarie.avatarUrl!)
                       : null,
                   child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
-                      ? const Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
+                      ? Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
                       : null,
                 ),
               ),

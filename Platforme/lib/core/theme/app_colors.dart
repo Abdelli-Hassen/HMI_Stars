@@ -85,3 +85,8 @@ class AppColors {
   static const Color info = Color(0xFF0288D1);
   static const Color infoLight = Color(0xFFE1F5FE);
 }
+
+extension ColorSchemeGradient on ColorScheme {
+  LinearGradient get primaryGradient => AppColors.primaryGradient;
+}
+
