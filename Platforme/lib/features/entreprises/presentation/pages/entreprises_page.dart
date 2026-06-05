@@ -309,9 +309,24 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
 
 
   Future<void> _creerEntreprise() async {
-    if (_nomController.text.isEmpty) {
+    if (_nomController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _mdpController.text.isEmpty ||
+        _gerantController.text.isEmpty ||
+        _effectifController.text.isEmpty ||
+        _telephoneController.text.isEmpty ||
+        _sirenController.text.isEmpty ||
+        _siretController.text.isEmpty ||
+        _formeController.text.isEmpty ||
+        _capitalController.text.isEmpty ||
+        _tvaController.text.isEmpty ||
+        _rcsController.text.isEmpty ||
+        _codeApeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('Le nom de l\'entreprise est obligatoire.', 'Company name is required.'))),
+        SnackBar(
+          content: Text(context.tr('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
@@ -424,11 +439,11 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
                 children: [
                   Expanded(child: _buildField(context.tr('Téléphone de l\'entreprise', 'Company phone number'), _telephoneController, keyboardType: TextInputType.phone)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildField(context.tr('Adresse physique', 'Physical address'), _adresseController)),
+                  Expanded(child: _buildField(context.tr('Adresse physique', 'Physical address'), _adresseController, required: false)),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildField(context.tr('Description générale', 'General description'), _descController),
+              _buildField(context.tr('Description générale', 'General description'), _descController, required: false),
               const SizedBox(height: 24),
               Text(context.tr('2. Informations juridiques', '2. Legal information'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
               const SizedBox(height: 16),
@@ -485,12 +500,24 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, {bool isPassword = false, TextInputType? keyboardType}) {
+  Widget _buildField(String label, TextEditingController controller, {bool isPassword = false, TextInputType? keyboardType, bool required = true}) {
     final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface)),
+        RichText(
+          text: TextSpan(
+            style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600),
+            children: [
+              if (required)
+                const TextSpan(
+                  text: '* ',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+              TextSpan(text: label),
+            ],
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,

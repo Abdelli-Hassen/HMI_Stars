@@ -75,7 +75,12 @@ class EntrepriseProvider extends ChangeNotifier {
 
   // ─── Init / Fetch ─────────────────────────────────────────────────────────
 
-  Future<void> fetchEntreprises() async {
+  Future<void> fetchEntreprises({bool force = false}) async {
+    if (!force && _entreprises.isNotEmpty) {
+      _status = LoadStatus.loaded;
+      notifyListeners();
+      return;
+    }
     _status = LoadStatus.loading;
     _error = null;
     notifyListeners();
@@ -101,7 +106,8 @@ class EntrepriseProvider extends ChangeNotifier {
           .where((s) => !s.estActif)
           .toList();
 
-  Future<void> fetchSalariesForEntreprise(String entrepriseId) async {
+  Future<void> fetchSalariesForEntreprise(String entrepriseId, {bool force = false}) async {
+    if (!force && _salariesCache.containsKey(entrepriseId)) return;
     try {
       final list = await _dataService.fetchSalariesForEntreprise(entrepriseId);
       _salariesCache[entrepriseId] = list;
@@ -125,7 +131,7 @@ class EntrepriseProvider extends ChangeNotifier {
       list[index] = updated;
       _salariesCache[salarie.entrepriseId] = [...list];
     } else {
-      await fetchSalariesForEntreprise(salarie.entrepriseId);
+      await fetchSalariesForEntreprise(salarie.entrepriseId, force: true);
     }
     notifyListeners();
     return updated;
@@ -147,12 +153,12 @@ class EntrepriseProvider extends ChangeNotifier {
 
   Future<void> archiverSalarie(String id, String entrepriseId) async {
     await _dataService.archiveSalarie(id);
-    await fetchSalariesForEntreprise(entrepriseId);
+    await fetchSalariesForEntreprise(entrepriseId, force: true);
   }
 
   Future<void> desarchiverSalarie(String id, String entrepriseId) async {
     await _dataService.unarchiveSalarie(id);
-    await fetchSalariesForEntreprise(entrepriseId);
+    await fetchSalariesForEntreprise(entrepriseId, force: true);
   }
 
   Future<void> supprimerArchive(String id, String entrepriseId) async {
@@ -166,7 +172,8 @@ class EntrepriseProvider extends ChangeNotifier {
   List<DocumentEntreprise> documentsPourEntreprise(String entrepriseId) =>
       _documentsCache[entrepriseId] ?? [];
 
-  Future<void> fetchDocumentsForEntreprise(String entrepriseId) async {
+  Future<void> fetchDocumentsForEntreprise(String entrepriseId, {bool force = false}) async {
+    if (!force && _documentsCache.containsKey(entrepriseId)) return;
     try {
       final list = entrepriseId == 'all'
           ? await _dataService.fetchAllDocuments()
@@ -187,11 +194,13 @@ class EntrepriseProvider extends ChangeNotifier {
   // ─── Notes ────────────────────────────────────────────────────────────────
 
   List<NoteEntreprise> notesPourEntreprise(String entrepriseId) =>
-      _notesCache[entrepriseId] ?? [];
+      (_notesCache[entrepriseId] ?? [])
+          .toList();
 
   List<NoteEntreprise> get allNotes => _allNotes;
 
-  Future<void> fetchNotesForEntreprise(String entrepriseId) async {
+  Future<void> fetchNotesForEntreprise(String entrepriseId, {bool force = false}) async {
+    if (!force && _notesCache.containsKey(entrepriseId)) return;
     try {
       final list = await _dataService.fetchNotesForEntreprise(entrepriseId);
       _notesCache[entrepriseId] = list;

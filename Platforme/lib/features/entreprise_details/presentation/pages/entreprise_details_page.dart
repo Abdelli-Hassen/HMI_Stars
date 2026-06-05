@@ -924,9 +924,23 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
   }
 
   void _sauvegarder() {
-    if (_nomController.text.isEmpty || _emailController.text.isEmpty) {
+    if (_nomController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _gerantController.text.isEmpty ||
+        _effectifController.text.isEmpty ||
+        _telephoneController.text.isEmpty ||
+        _sirenController.text.isEmpty ||
+        _siretController.text.isEmpty ||
+        _formeController.text.isEmpty ||
+        _capitalController.text.isEmpty ||
+        _tvaController.text.isEmpty ||
+        _rcsController.text.isEmpty ||
+        _codeApeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.trStatic('Nom et Email sont obligatoires.', 'Name and Email are required.'))),
+        SnackBar(
+          content: Text(context.trStatic('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
@@ -1067,11 +1081,11 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                       children: [
                         Expanded(child: _buildField(context.tr('Téléphone de l\'entreprise', 'Company phone number'), _telephoneController, keyboardType: TextInputType.phone)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildField(context.tr('Adresse physique', 'Physical address'), _adresseController)),
+                        Expanded(child: _buildField(context.tr('Adresse physique', 'Physical address'), _adresseController, required: false)),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildField(context.tr('Description générale', 'General description'), _descController),
+                    _buildField(context.tr('Description générale', 'General description'), _descController, required: false),
                     const SizedBox(height: 24),
                     Text(context.tr('2. Informations juridiques', '2. Legal information'), style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
                     const SizedBox(height: 16),
@@ -1131,12 +1145,24 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, {bool isPassword = false, TextInputType? keyboardType}) {
+  Widget _buildField(String label, TextEditingController controller, {bool isPassword = false, TextInputType? keyboardType, bool required = true}) {
     final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface)),
+        RichText(
+          text: TextSpan(
+            style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600),
+            children: [
+              if (required)
+                const TextSpan(
+                  text: '* ',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+              TextSpan(text: label),
+            ],
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -1190,7 +1216,6 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
   Uint8List? _avatarBytes;
   String _avatarName = '';
 
-  // Pièces jointes
   Map<String, Uint8List?> fichiers = {
     'piece_identite': null,
     'carte_vitale': null,
@@ -1258,14 +1283,33 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
   }
 
   Future<void> _ajouter() async {
-    if (_nomController.text.isEmpty || _prenomController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nom et Prénom sont obligatoires.')));
+    if (_nomController.text.isEmpty ||
+        _prenomController.text.isEmpty ||
+        _nomNaissanceController.text.isEmpty ||
+        _cinController.text.isEmpty ||
+        _nssController.text.isEmpty ||
+        _dateNaissance == null ||
+        _lieuNaissanceController.text.isEmpty ||
+        _nationaliteController.text.isEmpty ||
+        _telController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _dateEmbauche == null ||
+        _emploiPosteController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
+          backgroundColor: AppColors.error,
+        ),
+      );
       return;
     }
 
     if (_needsDateFin && _dateFinContrat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('La date de fin de contrat est obligatoire pour un contrat $_typeContrat.'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text(context.tr('La date de fin de contrat est obligatoire pour un contrat ', 'Contract End Date is required for contract ') + _typeContrat),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
@@ -1278,7 +1322,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
       nom: _nomController.text,
       prenom: _prenomController.text,
       genre: _genre,
-      nomNaissance: _nomNaissanceController.text.isEmpty ? _nomController.text : _nomNaissanceController.text,
+      nomNaissance: _nomNaissanceController.text,
       cin: _cinController.text,
       numeroSecuriteSociale: _nssController.text,
       dateNaissance: _dateNaissance,
@@ -1287,7 +1331,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
       adressePostale: _adressePostaleController.text,
       telephone: _telController.text,
       email: _emailController.text,
-      dateEmbauche: _dateEmbauche ?? DateTime.now(),
+      dateEmbauche: _dateEmbauche!,
       typeContrat: _typeContrat,
       dateFinContrat: _dateFinContrat,
       emploiPoste: _emploiPosteController.text,
@@ -1302,7 +1346,6 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
     try {
       final created = await Provider.of<EntrepriseProvider>(context, listen: false).ajouterSalarie(s);
 
-      // Upload les fichiers si présents
       final salarieId = created.id;
       final storage = SupabaseConfig.adminClient.storage.from('documents');
 
@@ -1315,7 +1358,6 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
         }
       }
 
-      // Upload avatar if present
       if (_avatarBytes != null && _avatarName.isNotEmpty) {
         await Provider.of<EntrepriseProvider>(context, listen: false)
             .uploadSalarieAvatar(salarieId, _avatarBytes!, _avatarName, widget.entrepriseId);
@@ -1346,6 +1388,44 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
   String _formatDate(BuildContext context, DateTime? date) {
     if (date == null) return context.tr('Non défini', 'Not defined');
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  Widget _buildLabel(String label, {bool required = true}) {
+    return RichText(
+      text: TextSpan(
+        style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600),
+        children: [
+          if (required)
+            const TextSpan(
+              text: '* ',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          TextSpan(text: label),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller, {bool required = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label, required: required),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: context.tr('Saisir ', 'Enter ') + label,
+            hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -1395,239 +1475,112 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
               ),
               const SizedBox(height: 24),
 
-              // Nom / Prénom
               Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _nomController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Nom *', 'Last Name *'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Nom', 'Last Name'), _nomController)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _prenomController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Prénom *', 'First Name *'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Prénom', 'First Name'), _prenomController)),
               ]),
               const SizedBox(height: 16),
 
-              // Nom naissance / Genre
               Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _nomNaissanceController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Nom de Naissance', 'Birth Name'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Nom de Naissance', 'Birth Name'), _nomNaissanceController)),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _genre,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Genre', 'Gender'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                    items: [
-                      DropdownMenuItem(value: 'M', child: Text(context.tr('Masculin', 'Male'), style: TextStyle(color: cs.onSurface))),
-                      DropdownMenuItem(value: 'F', child: Text(context.tr('Féminin', 'Female'), style: TextStyle(color: cs.onSurface))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel(context.tr('Genre', 'Gender')),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: _genre,
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 'M', child: Text(context.tr('Masculin', 'Male'), style: TextStyle(color: cs.onSurface))),
+                          DropdownMenuItem(value: 'F', child: Text(context.tr('Féminin', 'Female'), style: TextStyle(color: cs.onSurface))),
+                        ],
+                        onChanged: (v) => setState(() => _genre = v!),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => _genre = v!),
                   ),
                 )
               ]),
               const SizedBox(height: 16),
 
-              // CIN / NSS
               Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _cinController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('CIN', 'ID Card Number'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('CIN', 'ID Card Number'), _cinController)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _nssController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('N° Sécurité Sociale', 'Social Security Number'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('N° Sécurité Sociale', 'Social Security Number'), _nssController)),
               ]),
               const SizedBox(height: 16),
 
-              // Date naissance / Lieu naissance
               Row(children: [
                 Expanded(child: _datePicker(context.tr('Date de naissance', 'Date of Birth'), _dateNaissance, () => _pickDate('naissance'))),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _lieuNaissanceController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Lieu de naissance', 'Place of Birth'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Lieu de naissance', 'Place of Birth'), _lieuNaissanceController)),
               ]),
               const SizedBox(height: 16),
 
-              // Nationalité / Adresse
               Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _nationaliteController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Nationalité', 'Nationality'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Nationalité', 'Nationality'), _nationaliteController)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _adressePostaleController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Adresse Postale', 'Postal Address'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Adresse Postale', 'Postal Address'), _adressePostaleController, required: false)),
               ]),
               const SizedBox(height: 16),
 
-              // Tel / Email
               Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _telController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Téléphone', 'Phone Number'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Téléphone', 'Phone Number'), _telController)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _emailController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Email', 'Email'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Email', 'Email'), _emailController)),
               ]),
               const SizedBox(height: 16),
 
-              // Type contrat / Poste
               Row(children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _typeContrat,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Type Contrat', 'Contract Type'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                    items: [
-                      DropdownMenuItem(value: 'CDI', child: Text(context.tr('CDI', 'CDI'), style: TextStyle(color: cs.onSurface))),
-                      DropdownMenuItem(value: 'CDD', child: Text(context.tr('CDD', 'CDD'), style: TextStyle(color: cs.onSurface))),
-                      DropdownMenuItem(value: 'Apprentissage', child: Text(context.tr('Apprentissage', 'Apprenticeship'), style: TextStyle(color: cs.onSurface))),
-                      DropdownMenuItem(value: 'Stage', child: Text(context.tr('Stage', 'Internship'), style: TextStyle(color: cs.onSurface))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel(context.tr('Type Contrat', 'Contract Type')),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: _typeContrat,
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 'CDI', child: Text(context.tr('CDI', 'CDI'), style: TextStyle(color: cs.onSurface))),
+                          DropdownMenuItem(value: 'CDD', child: Text(context.tr('CDD', 'CDD'), style: TextStyle(color: cs.onSurface))),
+                          DropdownMenuItem(value: 'Apprentissage', child: Text(context.tr('Apprentissage', 'Apprenticeship'), style: TextStyle(color: cs.onSurface))),
+                          DropdownMenuItem(value: 'Stage', child: Text(context.tr('Stage', 'Internship'), style: TextStyle(color: cs.onSurface))),
+                        ],
+                        onChanged: (v) => setState(() => _typeContrat = v!),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => _typeContrat = v!),
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _emploiPosteController,
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                    decoration: InputDecoration(
-                      labelText: context.tr('Poste Occupé', 'Job Title'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                      isDense: true,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildField(context.tr('Poste Occupé', 'Job Title'), _emploiPosteController)),
               ]),
               const SizedBox(height: 16),
 
-              // Date embauche / Date fin contrat
               Row(children: [
                 Expanded(child: _datePicker(context.tr('Date d\'embauche', 'Hire Date'), _dateEmbauche, () => _pickDate('embauche'))),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _datePicker(
-                    context.tr('Date fin de contrat', 'Contract End Date') + (_needsDateFin ? " *" : ""),
+                    context.tr('Date fin de contrat', 'Contract End Date'),
                     _dateFinContrat,
                     () => _pickDate('fin'),
+                    required: _needsDateFin,
                   ),
                 ),
               ]),
@@ -1638,18 +1591,23 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
                 ),
               const SizedBox(height: 16),
 
-              // Description / Note
-              TextField(
-                controller: descriptionController,
-                maxLines: 3,
-                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                decoration: InputDecoration(
-                  labelText: context.tr('Description / Note sur le salarié', 'Description / Employee Note'),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-                  isDense: true,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel(context.tr('Description / Note sur le salarié', 'Description / Employee Note'), required: false),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 3,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      isDense: true,
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 24),
@@ -1692,24 +1650,30 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
     );
   }
 
-  Widget _datePicker(String label, DateTime? value, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
-          isDense: true,
-          suffixIcon: const Icon(Icons.calendar_today, size: 16),
+  Widget _datePicker(String label, DateTime? value, VoidCallback onTap, {bool required = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label, required: required),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(4),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+              isDense: true,
+              suffixIcon: const Icon(Icons.calendar_today, size: 16),
+            ),
+            child: Text(
+              _formatDate(context, value),
+              style: AppTextStyles.bodyMedium.copyWith(color: value != null ? cs.onSurface : cs.outline),
+            ),
+          ),
         ),
-        child: Text(
-          _formatDate(context, value),
-          style: AppTextStyles.bodyMedium.copyWith(color: value != null ? cs.onSurface : cs.outline),
-        ),
-      ),
+      ],
     );
   }
 
@@ -1782,7 +1746,6 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
   Uint8List? _avatarBytes;
   String _avatarName = '';
 
-  // Pièces jointes
   Map<String, Uint8List?> fichiers = {
     'piece_identite': null,
     'carte_vitale': null,
@@ -1897,8 +1860,24 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
   }
 
   Future<void> _enregistrer() async {
-    if (_nomController.text.isEmpty || _prenomController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.trStatic('Nom et Prénom sont obligatoires.', 'Last Name and First Name are required.'))));
+    if (_nomController.text.isEmpty ||
+        _prenomController.text.isEmpty ||
+        _nomNaissanceController.text.isEmpty ||
+        _cinController.text.isEmpty ||
+        _nssController.text.isEmpty ||
+        _dateNaissance == null ||
+        _lieuNaissanceController.text.isEmpty ||
+        _nationaliteController.text.isEmpty ||
+        _telController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _dateEmbauche == null ||
+        _emploiPosteController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.trStatic('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
+          backgroundColor: AppColors.error,
+        ),
+      );
       return;
     }
 
@@ -1917,7 +1896,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
       nom: _nomController.text,
       prenom: _prenomController.text,
       genre: _genre,
-      nomNaissance: _nomNaissanceController.text.isEmpty ? _nomController.text : _nomNaissanceController.text,
+      nomNaissance: _nomNaissanceController.text,
       cin: _cinController.text,
       numeroSecuriteSociale: _nssController.text,
       dateNaissance: _dateNaissance,
@@ -1941,7 +1920,6 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
     try {
       await Provider.of<EntrepriseProvider>(context, listen: false).modifierSalarie(s);
 
-      // Upload les nouveaux fichiers si présents
       final storage = SupabaseConfig.adminClient.storage.from('documents');
 
       for (final entry in fichiers.entries) {
@@ -1953,7 +1931,6 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
         }
       }
 
-      // Upload avatar if present
       if (_avatarBytes != null && _avatarName.isNotEmpty) {
         await Provider.of<EntrepriseProvider>(context, listen: false)
             .uploadSalarieAvatar(widget.salarie.id, _avatarBytes!, _avatarName, widget.salarie.entrepriseId);
@@ -1979,16 +1956,27 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
     return 'application/octet-stream';
   }
 
-  Widget _buildField(String label, TextEditingController controller, {bool required = false}) {
+  Widget _buildLabel(String label, {bool required = true}) {
+    return RichText(
+      text: TextSpan(
+        style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600),
+        children: [
+          if (required)
+            const TextSpan(
+              text: '* ',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          TextSpan(text: label),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller, {bool required = true}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(label, style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
-            if (required) Text(' *', style: const TextStyle(color: AppColors.error)),
-          ],
-        ),
+        _buildLabel(label, required: required),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -2002,42 +1990,6 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
           style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
         ),
       ],
-    );
-  }
-
-  Widget _fileChip(String label, String key, bool initiallyHasFile) {
-    final hasNewFile = fichiers[key] != null;
-    final hasFile = hasNewFile || initiallyHasFile;
-    final fileName = hasNewFile ? fichiersNoms[key]! : context.trStatic('Fichier existant', 'Existing file');
-    return InkWell(
-      onTap: () => _pickFile(key),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outline.withValues(alpha: 0.35)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              hasFile ? Icons.check_circle : Icons.upload_file,
-              size: 16,
-              color: hasFile ? AppColors.success : cs.onSurfaceVariant,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              hasFile ? (hasNewFile ? fileName : context.trStatic('$label (Existant - Modifier)', '$label (Existing - Edit)')) : label,
-              style: AppTextStyles.labelSmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: hasFile ? AppColors.success : cs.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -2330,6 +2282,42 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _fileChip(String label, String key, bool initiallyHasFile) {
+    final hasNewFile = fichiers[key] != null;
+    final hasFile = hasNewFile || initiallyHasFile;
+    final fileName = hasNewFile ? fichiersNoms[key]! : context.trStatic('Fichier existant', 'Existing file');
+    return InkWell(
+      onTap: () => _pickFile(key),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: hasFile ? AppColors.success.withValues(alpha: 0.08) : cs.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: hasFile ? AppColors.success.withValues(alpha: 0.4) : cs.outline.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              hasFile ? Icons.check_circle : Icons.upload_file,
+              size: 16,
+              color: hasFile ? AppColors.success : cs.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              hasFile ? (hasNewFile ? fileName : context.trStatic('$label (Existant - Modifier)', '$label (Existing - Edit)')) : label,
+              style: AppTextStyles.labelSmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: hasFile ? AppColors.success : cs.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );
