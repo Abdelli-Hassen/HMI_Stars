@@ -27,6 +27,35 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
   bool _dataLoaded = false;
   bool _showAllTodos = false;
 
+  DateTime? _deadlineDate;
+  TimeOfDay? _deadlineTime;
+
+  Future<void> _selectDeadlineDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _deadlineDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) {
+      setState(() {
+        _deadlineDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectDeadlineTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _deadlineTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _deadlineTime = picked;
+      });
+    }
+  }
+
   String _translateTab(BuildContext context, String tab) {
     if (tab == 'Toutes') return context.tr('Toutes', 'All');
     if (tab == 'Épinglées') return context.tr('Épinglées', 'Pinned');
@@ -75,6 +104,18 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
     }
 
 
+    DateTime? limitDate;
+    if (_selectedCategory == 'Rappel' && _deadlineDate != null) {
+      final time = _deadlineTime ?? const TimeOfDay(hour: 12, minute: 0);
+      limitDate = DateTime(
+        _deadlineDate!.year,
+        _deadlineDate!.month,
+        _deadlineDate!.day,
+        time.hour,
+        time.minute,
+      );
+    }
+
     final note = NoteEntreprise(
       id: '',
       entrepriseId: targetId,
@@ -82,6 +123,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
       contenu: _newNoteBodyCtrl.text.trim(),
       dateCreation: DateTime.now(),
       estRappel: _selectedCategory == 'Rappel',
+      dateRappel: limitDate,
       tag: _selectedCategory,
     );
 
@@ -93,6 +135,8 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
           _newNoteBodyCtrl.clear();
           _selectedCategory = 'Note';
           _inputExpanded = false;
+          _deadlineDate = null;
+          _deadlineTime = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note ajoutée !', 'Note added!')), backgroundColor: AppColors.success));
       }
@@ -185,153 +229,242 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.all(24),
+              padding: _inputExpanded ? const EdgeInsets.all(24) : EdgeInsets.zero,
               decoration: BoxDecoration(
-                color: cs.surfaceContainerLowest,
+                color: _inputExpanded ? cs.surfaceContainerLowest : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
-                boxShadow: [
-                  BoxShadow(color: cs.onSurface.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
-                ],
+                border: Border.all(
+                  color: _inputExpanded 
+                      ? cs.outlineVariant.withValues(alpha: 0.5) 
+                      : Colors.transparent,
+                  width: 1,
+                ),
+                boxShadow: _inputExpanded ? [
+                  BoxShadow(
+                    color: cs.onSurface.withValues(alpha: 0.03),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ] : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title input row
-                  Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: _currentCat.color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(_currentCat.icon, size: 20, color: _currentCat.color),
+                  // Title input row - Styled like the To-Do input
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _inputExpanded 
+                            ? _currentCat.color.withValues(alpha: 0.3) 
+                            : cs.outlineVariant.withValues(alpha: 0.5)
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: TextField(
-                          controller: _newNoteCtrl,
-                          onTap: () { if (!_inputExpanded) setState(() => _inputExpanded = true); },
-                          onSubmitted: (_) => _addNote(),
-                          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: cs.onSurface),
-                          decoration: InputDecoration(
-                            hintText: context.tr('Titre de la note...', 'Note title...'),
-                            hintStyle: AppTextStyles.bodyLarge.copyWith(color: cs.outline, fontWeight: FontWeight.w500, fontSize: 16),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _currentCat.color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          child: Icon(_currentCat.icon, size: 18, color: _currentCat.color),
                         ),
-                      ),
-                      // Collapse/Expand toggle
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _inputExpanded = !_inputExpanded),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(
-                              color: cs.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              _inputExpanded ? Icons.expand_less : Icons.expand_more,
-                              size: 18, color: cs.onSurfaceVariant,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _newNoteCtrl,
+                            onTap: () { if (!_inputExpanded) setState(() => _inputExpanded = true); },
+                            onSubmitted: (_) => _addNote(),
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
+                            decoration: InputDecoration(
+                              hintText: context.tr('Titre de la note...', 'Note title...'),
+                              hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline, fontWeight: FontWeight.w500),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 8),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        // Collapse/Expand toggle button
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _inputExpanded = !_inputExpanded),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: _inputExpanded ? _currentCat.color : cs.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: AnimatedRotation(
+                                turns: _inputExpanded ? 0.5 : 0.0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  Icons.expand_more,
+                                  size: 18, 
+                                  color: _inputExpanded ? Colors.white : cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   // Expanded details
-                  AnimatedCrossFade(
-                    firstChild: const SizedBox.shrink(),
-                    secondChild: Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Description field
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: cs.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: TextField(
-                              controller: _newNoteBodyCtrl,
-                              maxLines: 5,
-                              minLines: 3,
-                              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                              decoration: InputDecoration(
-                                hintText: context.tr('Description (optionnel)...', 'Description (optional)...'),
-                                hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
-                                border: InputBorder.none,
-                                isDense: false,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Category label
-                          Text(context.tr('CATÉGORIE', 'CATEGORY'), style: AppTextStyles.labelSmall.copyWith(
-                            letterSpacing: 1.2, fontWeight: FontWeight.w800, color: cs.onSurfaceVariant,
-                          )),
-                          const SizedBox(height: 10),
-
-                          // Category Chips
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _categories.map((cat) {
-                              final active = _selectedCategory == cat.label;
-                              return _CategoryChip(
-                                cat: cat,
-                                isActive: active,
-                                onTap: () => setState(() => _selectedCategory = cat.label),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Submit row
-                          Row(
-                            children: [
-                              const Spacer(),
-                              // Cancel
-                              MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: GestureDetector(
-                                  onTap: () => setState(() {
-                                    _inputExpanded = false;
-                                    _newNoteCtrl.clear();
-                                    _newNoteBodyCtrl.clear();
-                                    _selectedCategory = 'Note';
-                                  }),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    child: Text(context.tr('Annuler', 'Cancel'), style: AppTextStyles.labelMedium.copyWith(
-                                      fontWeight: FontWeight.w600, color: cs.onSurfaceVariant,
-                                    )),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOutCubic,
+                    child: !_inputExpanded 
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Description field
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: cs.surfaceContainerLow,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+                                  ),
+                                  child: TextField(
+                                    controller: _newNoteBodyCtrl,
+                                    maxLines: 5,
+                                    minLines: 3,
+                                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                                    decoration: InputDecoration(
+                                      hintText: context.tr('Description (optionnel)...', 'Description (optional)...'),
+                                      hintStyle: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
+                                      border: InputBorder.none,
+                                      isDense: false,
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Add button
-                              _AddButton(onTap: _addNote),
-                            ],
+                                const SizedBox(height: 16),
+
+                                // Category label
+                                Text(context.tr('CATÉGORIE', 'CATEGORY'), style: AppTextStyles.labelSmall.copyWith(
+                                  letterSpacing: 1.2, fontWeight: FontWeight.w800, color: cs.onSurfaceVariant,
+                                )),
+                                const SizedBox(height: 10),
+
+                                // Category Chips
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: _categories.map((cat) {
+                                    final active = _selectedCategory == cat.label;
+                                    return _CategoryChip(
+                                      cat: cat,
+                                      isActive: active,
+                                      onTap: () => setState(() => _selectedCategory = cat.label),
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Deadline Date / Time selection
+                                if (_selectedCategory == 'Rappel') ...[
+                                  Text(
+                                    context.tr('DATE LIMITE & HEURE', 'DEADLINE DATE & TIME'),
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      letterSpacing: 1.2,
+                                      fontWeight: FontWeight.w800,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      OutlinedButton.icon(
+                                        onPressed: () => _selectDeadlineDate(context),
+                                        icon: const Icon(Icons.calendar_today, size: 16),
+                                        label: Text(
+                                          _deadlineDate == null
+                                              ? context.tr('Sélectionner Date', 'Select Date')
+                                              : '${_deadlineDate!.day}/${_deadlineDate!.month}/${_deadlineDate!.year}',
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          foregroundColor: cs.onSurface,
+                                          side: BorderSide(color: cs.outlineVariant),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      OutlinedButton.icon(
+                                        onPressed: () => _selectDeadlineTime(context),
+                                        icon: const Icon(Icons.access_time, size: 16),
+                                        label: Text(
+                                          _deadlineTime == null
+                                              ? context.tr('Sélectionner Heure', 'Select Time')
+                                              : _deadlineTime!.format(context),
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          foregroundColor: cs.onSurface,
+                                          side: BorderSide(color: cs.outlineVariant),
+                                        ),
+                                      ),
+                                      if (_deadlineDate != null || _deadlineTime != null) ...[
+                                        const SizedBox(width: 12),
+                                        IconButton(
+                                          icon: const Icon(Icons.clear, color: AppColors.error),
+                                          onPressed: () {
+                                            setState(() {
+                                              _deadlineDate = null;
+                                              _deadlineTime = null;
+                                            });
+                                          },
+                                          tooltip: context.tr('Effacer', 'Clear'),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+
+                                // Submit row
+                                Row(
+                                  children: [
+                                    const Spacer(),
+                                    // Cancel
+                                    MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: GestureDetector(
+                                        onTap: () => setState(() {
+                                          _inputExpanded = false;
+                                          _newNoteCtrl.clear();
+                                          _newNoteBodyCtrl.clear();
+                                          _selectedCategory = 'Note';
+                                        }),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          child: Text(context.tr('Annuler', 'Cancel'), style: AppTextStyles.labelMedium.copyWith(
+                                            fontWeight: FontWeight.w600, color: cs.onSurfaceVariant,
+                                          )),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Add button
+                                    _AddButton(onTap: _addNote),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
-                    crossFadeState: _inputExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                    duration: const Duration(milliseconds: 300),
-                    sizeCurve: Curves.easeOutCubic,
                   ),
                 ],
               ),
@@ -542,12 +675,43 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
     final titleCtrl = TextEditingController(text: note.titre);
     final contentCtrl = TextEditingController(text: note.contenu);
     String selectedTag = note.tag;
+    DateTime? deadlineDate = note.dateRappel;
+    TimeOfDay? deadlineTime = note.dateRappel != null
+        ? TimeOfDay(hour: note.dateRappel!.hour, minute: note.dateRappel!.minute)
+        : null;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           final cs = Theme.of(context).colorScheme;
+
+          Future<void> selectDate() async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: deadlineDate ?? DateTime.now(),
+              firstDate: DateTime.now().subtract(const Duration(days: 365)),
+              lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+            );
+            if (picked != null) {
+              setDialogState(() {
+                deadlineDate = picked;
+              });
+            }
+          }
+
+          Future<void> selectTime() async {
+            final TimeOfDay? picked = await showTimePicker(
+              context: context,
+              initialTime: deadlineTime ?? TimeOfDay.now(),
+            );
+            if (picked != null) {
+              setDialogState(() {
+                deadlineTime = picked;
+              });
+            }
+          }
+
           return AlertDialog(
             backgroundColor: cs.surfaceContainerLowest,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -621,6 +785,66 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                         );
                       }).toList(),
                     ),
+                    if (selectedTag == 'Rappel') ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        context.tr('DATE LIMITE & HEURE', 'DEADLINE DATE & TIME'),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: selectDate,
+                            icon: const Icon(Icons.calendar_today, size: 16),
+                            label: Text(
+                              deadlineDate == null
+                                  ? context.tr('Sélectionner Date', 'Select Date')
+                                  : '${deadlineDate!.day}/${deadlineDate!.month}/${deadlineDate!.year}',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              foregroundColor: cs.onSurface,
+                              side: BorderSide(color: cs.outlineVariant),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          OutlinedButton.icon(
+                            onPressed: selectTime,
+                            icon: const Icon(Icons.access_time, size: 16),
+                            label: Text(
+                              deadlineTime == null
+                                  ? context.tr('Sélectionner Heure', 'Select Time')
+                                  : deadlineTime!.format(context),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              foregroundColor: cs.onSurface,
+                              side: BorderSide(color: cs.outlineVariant),
+                            ),
+                          ),
+                          if (deadlineDate != null || deadlineTime != null) ...[
+                            const SizedBox(width: 12),
+                            IconButton(
+                              icon: const Icon(Icons.clear, color: AppColors.error),
+                              onPressed: () {
+                                setDialogState(() {
+                                  deadlineDate = null;
+                                  deadlineTime = null;
+                                });
+                              },
+                              tooltip: context.tr('Effacer', 'Clear'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -633,11 +857,23 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
               ElevatedButton(
                 onPressed: () async {
                   final provider = Provider.of<EntrepriseProvider>(context, listen: false);
+                  DateTime? limitDate;
+                  if (selectedTag == 'Rappel' && deadlineDate != null) {
+                    final time = deadlineTime ?? const TimeOfDay(hour: 12, minute: 0);
+                    limitDate = DateTime(
+                      deadlineDate!.year,
+                      deadlineDate!.month,
+                      deadlineDate!.day,
+                      time.hour,
+                      time.minute,
+                    );
+                  }
                   final updatedNote = note.copyWith(
                     titre: titleCtrl.text.trim(),
                     contenu: contentCtrl.text.trim(),
                     tag: selectedTag,
                     estRappel: selectedTag == 'Rappel',
+                    dateRappel: limitDate,
                   );
                   try {
                     await provider.updateNote(updatedNote);
@@ -698,14 +934,15 @@ class _NoteCard extends StatefulWidget {
 class _NoteCardState extends State<_NoteCard> {
   bool _hovered = false;
 
-  Color _getColorForTag(String tag) {
+  Color _getColorForTag(BuildContext context, String tag) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (tag) {
-      case 'Rappel': return const Color(0xFFE65100);
-      case 'Contrats': return const Color(0xFF00695C);
-      case 'RH': return const Color(0xFF2E7D32);
-      case 'Congés': return const Color(0xFF0277BD);
-      case 'Recrutement': return const Color(0xFFC62828);
-      default: return const Color(0xFF1A237E);
+      case 'Rappel': return isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+      case 'Contrats': return isDark ? const Color(0xFF4DB6AC) : const Color(0xFF00695C);
+      case 'RH': return isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+      case 'Congés': return isDark ? const Color(0xFF64B5F6) : const Color(0xFF0277BD);
+      case 'Recrutement': return isDark ? const Color(0xFFE57373) : const Color(0xFFC62828);
+      default: return isDark ? const Color(0xFF9FA8DA) : const Color(0xFF1A237E);
     }
   }
 
@@ -713,7 +950,7 @@ class _NoteCardState extends State<_NoteCard> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final d = widget.data;
-    final color = _getColorForTag(d.tag);
+    final color = _getColorForTag(context, d.tag);
     final dateStr = '${d.dateCreation.day}/${d.dateCreation.month}/${d.dateCreation.year}';
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -791,7 +1028,7 @@ class _NoteCardState extends State<_NoteCard> {
               ],
             ),
             const SizedBox(height: 12),
-            Text(d.titre, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700),
+            Text(d.titre, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface),
                 maxLines: 2, overflow: TextOverflow.ellipsis),
             if (d.contenu.isNotEmpty) ...[
               const SizedBox(height: 6),

@@ -715,6 +715,35 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
   bool _isRappel = false;
   bool _isLoading = false;
 
+  DateTime? _deadlineDate;
+  TimeOfDay? _deadlineTime;
+
+  Future<void> _selectDeadlineDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _deadlineDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) {
+      setState(() {
+        _deadlineDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectDeadlineTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _deadlineTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _deadlineTime = picked;
+      });
+    }
+  }
+
   Future<void> _ajouter() async {
     if (_titreController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Le titre est obligatoire.', 'Title is required.'))));
@@ -723,6 +752,18 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
 
     setState(() => _isLoading = true);
 
+    DateTime? limitDate;
+    if (_isRappel && _deadlineDate != null) {
+      final time = _deadlineTime ?? const TimeOfDay(hour: 12, minute: 0);
+      limitDate = DateTime(
+        _deadlineDate!.year,
+        _deadlineDate!.month,
+        _deadlineDate!.day,
+        time.hour,
+        time.minute,
+      );
+    }
+
     final note = NoteEntreprise(
       id: '',
       entrepriseId: widget.entrepriseId,
@@ -730,6 +771,7 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
       contenu: _contenuController.text,
       dateCreation: DateTime.now(),
       estRappel: _isRappel,
+      dateRappel: limitDate,
     );
 
     try {
@@ -801,6 +843,66 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
               activeThumbColor: cs.primary,
               contentPadding: EdgeInsets.zero,
             ),
+            if (_isRappel) ...[
+              const SizedBox(height: 16),
+              Text(
+                context.tr('DATE LIMITE & HEURE', 'DEADLINE DATE & TIME'),
+                style: AppTextStyles.labelSmall.copyWith(
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _selectDeadlineDate(context),
+                    icon: const Icon(Icons.calendar_today, size: 16),
+                    label: Text(
+                      _deadlineDate == null
+                          ? context.tr('Sélectionner Date', 'Select Date')
+                          : '${_deadlineDate!.day}/${_deadlineDate!.month}/${_deadlineDate!.year}',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      foregroundColor: cs.onSurface,
+                      side: BorderSide(color: cs.outlineVariant),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => _selectDeadlineTime(context),
+                    icon: const Icon(Icons.access_time, size: 16),
+                    label: Text(
+                      _deadlineTime == null
+                          ? context.tr('Sélectionner Heure', 'Select Time')
+                          : _deadlineTime!.format(context),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      foregroundColor: cs.onSurface,
+                      side: BorderSide(color: cs.outlineVariant),
+                    ),
+                  ),
+                  if (_deadlineDate != null || _deadlineTime != null) ...[
+                    const SizedBox(width: 12),
+                    IconButton(
+                      icon: const Icon(Icons.clear, color: AppColors.error),
+                      onPressed: () {
+                        setState(() {
+                          _deadlineDate = null;
+                          _deadlineTime = null;
+                        });
+                      },
+                      tooltip: context.tr('Effacer', 'Clear'),
+                    ),
+                  ],
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
