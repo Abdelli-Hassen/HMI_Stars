@@ -492,4 +492,24 @@ Instead of default full-width SnackBars or browser alert banners, all status not
 * **Auto-Dismiss & Close**: Automatically fades out and dismisses itself after 4 seconds, and includes an explicit close action button (`Icons.close`).
 * **Localization Synchronization**: Fixed language preservation by synchronizing the local `_tempLanguage` with the loaded user preferences upon profile generation and login, ensuring the language does not flick back to French on logout, and that error/success status messages are returned in the selected language.
 
+### 5. Non-Developer Friendly Error Message Mapping
+To provide an intuitive client experience, all technical authentication exceptions (such as GoTrue's raw 422 `email_exists` or OTP expiration exceptions) are routed through a translation parser:
+* **Friendly Translation**: Helper `_formatFriendlyError` inspects the error codes and translates developer codes (e.g. `AuthApiException`) into clear, localized descriptions in French or English.
+* **Validation Guards**: Prevents raw database or API error messages from surfacing directly to non-technical users.
+
+### 6. Dual-OTP Email Modification Flow
+Under Supabase's secure email change configuration, changing the account email requires verifying both the old and new email addresses:
+* **Automatic Sequence**:
+  1. The user enters a new email address and requests a change.
+  2. `verifyEmailChangeOTP` first attempts to verify the token against the new email.
+  3. If this fails (e.g., due to a 403 requiring the old email validation first), it automatically tries verifying the token against the old email.
+  4. Upon success on the old email, the provider returns `need_new_email_verification`, transitioning the UI to ask for the second token sent to the new email address.
+  5. The second token is verified against the new email, fully completing the account modification.
+
+### 7. Form Layout Alignment & Dashboard Safe Loading
+* **Sizing Compatibility**: To ensure consistency across form rows, the email text input and its corresponding "Modifier" button are locked to a height of `42px` via vertical padding and explicit bounds.
+* **Mock Data Suppression**: During data synchronization, the main dashboard's client companies and active employee counts display a loading state (`...`) instead of displaying cached mock data (such as the default `366` count).
+
+---
+
 

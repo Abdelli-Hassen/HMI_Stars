@@ -49,17 +49,147 @@ class _LoginPageState extends State<LoginPage> {
     if (success) {
       Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
     } else if (auth.emailNonConfirme) {
-      ToastUtils.show(
-        context,
-        context.tr(
-          "Votre adresse e-mail n'a pas encore été confirmée. Veuillez vérifier votre boîte de réception et cliquer sur le lien de confirmation.",
-          "Your email address has not been confirmed yet. Please check your inbox and click the confirmation link.",
-        ),
-        isError: true,
-      );
+      _afficherDialogueConfirmation(auth);
     }
   }
+  void _afficherDialogueConfirmation(AuthProvider auth) {
+    final cs = Theme.of(context).colorScheme;
+    final otpController = TextEditingController();
+    bool dialogLoading = false;
+    String? dialogError;
 
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          icon: Icon(Icons.mark_email_unread_outlined, size: 48, color: cs.primary),
+          title: Text(
+            context.tr('Confirmez votre compte', 'Confirm Your Account'),
+            style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.tr(
+                  'Veuillez entrer le code de confirmation (OTP) à 6 chiffres envoyé à votre adresse e-mail.',
+                  'Please enter the 6-digit confirmation code (OTP) sent to your email address.',
+                ),
+                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: InputDecoration(
+                  counterText: "",
+                  hintText: '123456',
+                  prefixIcon: Icon(Icons.lock_outline, color: cs.outline),
+                  errorText: dialogError,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: dialogLoading
+                    ? null
+                    : () async {
+                        setState(() {
+                          dialogLoading = true;
+                          dialogError = null;
+                        });
+                        final sent = await auth.renvoyerConfirmation();
+                        setState(() {
+                          dialogLoading = false;
+                        });
+                        if (sent) {
+                          ToastUtils.show(
+                            context,
+                            context.tr(
+                              'Code de confirmation renvoyé !',
+                              'Confirmation code resent!',
+                            ),
+                          );
+                        } else {
+                          setState(() {
+                            dialogError = auth.errorMessage ?? context.tr('Erreur de renvoi.', 'Failed to resend.');
+                          });
+                        }
+                      },
+                child: Text(
+                  context.tr('Renvoyer le code', 'Resend Code'),
+                  style: TextStyle(color: cs.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+              if (dialogLoading)
+                const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: dialogLoading
+                  ? null
+                  : () {
+                      auth.clearError();
+                      Navigator.pop(ctx);
+                    },
+              child: Text(
+                context.tr('Annuler', 'Cancel'),
+                style: AppTextStyles.labelMedium.copyWith(color: cs.outline),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: dialogLoading
+                  ? null
+                  : () async {
+                      final code = otpController.text.trim();
+                      if (code.isEmpty) {
+                        setState(() => dialogError = context.tr('Veuillez entrer le code.', 'Please enter the code.'));
+                        return;
+                      }
+
+                      setState(() {
+                        dialogLoading = true;
+                        dialogError = null;
+                      });
+
+                      final success = await auth.verifySignupOTP(auth.emailEnAttente ?? '', code);
+
+                      if (!ctx.mounted) return;
+
+                      setState(() {
+                        dialogLoading = false;
+                      });
+
+                      if (success) {
+                        Navigator.pop(ctx);
+                        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+                      } else {
+                        setState(() {
+                          dialogError = auth.errorMessage ?? context.tr('Code invalide ou expiré.', 'Invalid or expired code.');
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: cs.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(context.tr('Confirmer', 'Confirm')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

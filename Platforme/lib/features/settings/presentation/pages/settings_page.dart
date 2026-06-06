@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -53,7 +54,8 @@ class _SettingsPageState extends State<SettingsPage> {
       _cinController.text = auth.userCin;
       
       final prefs = auth.utilisateur!.preferences;
-      _selectedLangue = prefs['langue'] ?? 'Français (FR)';
+      final rawLang = prefs['langue'] ?? 'Français (FR)';
+      _selectedLangue = rawLang == 'Francais (FR)' ? 'Français (FR)' : rawLang;
     }
   }
 
@@ -232,25 +234,48 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 28),
         _textField(context.tr('Nom Complet', 'Full Name'), _nomController, Icons.person_outline),
         const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _disabledTextField(context.tr('Adresse E-mail', 'Email Address'), _emailController, Icons.email_outlined),
-            ),
-            const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: _changerAdresseEmailDialog,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                side: BorderSide(color: cs.outline.withValues(alpha: 0.35)),
-              ),
-              icon: Icon(Icons.edit_outlined, size: 16, color: cs.primary),
-              label: Text(
-                context.tr('Modifier', 'Change'),
-                style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.bold, fontSize: 13),
-              ),
+            Text(context.tr('Adresse E-mail', 'Email Address'), style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _emailController,
+                    readOnly: true,
+                    enabled: false,
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+                    decoration: InputDecoration(
+                        isDense: true,
+                        prefixIcon: Icon(Icons.email_outlined, size: 18, color: cs.outline),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        filled: true,
+                        fillColor: cs.surfaceContainerLow,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  height: 42,
+                  child: OutlinedButton.icon(
+                    onPressed: _changerAdresseEmailDialog,
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      backgroundColor: cs.primary.withValues(alpha: 0.05),
+                      side: BorderSide(color: cs.primary.withValues(alpha: 0.35)),
+                    ),
+                    icon: Icon(Icons.edit_outlined, size: 16, color: cs.primary),
+                    label: Text(
+                      context.tr('Modifier', 'Change'),
+                      style: TextStyle(color: cs.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -279,7 +304,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _lockedTextField(context.tr("Organisation", "Organization"), 'HMI Stars Consulting', Icons.corporate_fare),
         const SizedBox(height: 16),
-        _staticDropdownField(context.tr('Langue par defaut', 'Default Language'), _selectedLangue, ['Francais (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
+        _staticDropdownField(context.tr('Langue par defaut', 'Default Language'), _selectedLangue, ['Français (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -315,10 +340,45 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  String _formatFriendlyError(dynamic error) {
+    if (error is AuthException) {
+      final msg = error.message.toLowerCase();
+      final code = error.code?.toLowerCase() ?? '';
+      
+      if (code == 'email_exists' || msg.contains('already been registered') || msg.contains('email_exists')) {
+        return context.tr(
+          'Cette adresse e-mail est déjà associée à un autre compte.',
+          'This email address is already registered to another account.'
+        );
+      }
+      if (code == 'email_address_invalid' || msg.contains('invalid email') || msg.contains('email_address_invalid')) {
+        return context.tr(
+          'Veuillez entrer une adresse e-mail valide.',
+          'Please enter a valid email address.'
+        );
+      }
+      if (code == 'invalid_otp' || msg.contains('invalid code') || msg.contains('incorrect code') || msg.contains('invalid_otp')) {
+        return context.tr(
+          'Le code de confirmation saisi est incorrect.',
+          'The confirmation code entered is incorrect.'
+        );
+      }
+      if (code == 'otp_expired' || msg.contains('expired') || msg.contains('otp_expired')) {
+        return context.tr(
+          'Le code de confirmation a expiré. Veuillez en demander un nouveau.',
+          'The confirmation code has expired. Please request a new one.'
+        );
+      }
+      return error.message;
+    }
+    return error.toString();
+  }
+
   void _changerAdresseEmailDialog() {
     final emailCtrl = TextEditingController(text: _emailController.text);
     final otpCtrl = TextEditingController();
     bool showOtpStep = false;
+    bool isSecondStep = false;
     bool isLoading = false;
 
     showDialog(
@@ -378,7 +438,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ] else ...[
                   Text(
-                    '${context.tr('Saisissez le code à 6 chiffres envoyé à', 'Enter the 6-digit code sent to')} ${emailCtrl.text.trim()}', 
+                    isSecondStep
+                        ? '${context.tr('Saisissez le code à 6 chiffres envoyé à votre NOUVEL e-mail', 'Enter the 6-digit code sent to your NEW email')} : ${emailCtrl.text.trim()}'
+                        : '${context.tr('Saisissez le code à 6 chiffres envoyé à votre ANCIEN e-mail', 'Enter the 6-digit code sent to your OLD email')} : ${_emailController.text.trim()}',
                     style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)
                   ),
                   const SizedBox(height: 16),
@@ -417,10 +479,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (!showOtpStep) {
                     final targetEmail = emailCtrl.text.trim();
                     if (targetEmail.isEmpty || !targetEmail.contains('@')) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(context.tr('Veuillez entrer un e-mail valide.', 'Please enter a valid email.')),
-                        backgroundColor: AppColors.error,
-                      ));
+                      ToastUtils.show(
+                        context,
+                        context.tr('Veuillez entrer un e-mail valide.', 'Please enter a valid email.'),
+                        isError: true,
+                      );
                       return;
                     }
                     setStateDialog(() => isLoading = true);
@@ -434,10 +497,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     } catch (e) {
                       setStateDialog(() => isLoading = false);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('${context.tr('Erreur: ', 'Error: ')}$e'),
-                          backgroundColor: AppColors.error,
-                        ));
+                        ToastUtils.show(
+                          context,
+                          _formatFriendlyError(e),
+                          isError: true,
+                        );
                       }
                     }
                   } else {
@@ -453,13 +517,29 @@ class _SettingsPageState extends State<SettingsPage> {
                     setStateDialog(() => isLoading = true);
                     try {
                       final auth = Provider.of<AuthProvider>(context, listen: false);
-                      final success = await auth.verifyEmailChangeOTP(emailCtrl.text.trim(), token);
-                      if (success) {
+                      final result = await auth.verifyEmailChangeOTP(
+                        emailCtrl.text.trim(),
+                        token,
+                        isSecondStep: isSecondStep,
+                      );
+                      if (result == 'success') {
                         if (context.mounted) {
                           Navigator.pop(context);
                           ToastUtils.show(
                             context,
                             context.tr('Adresse e-mail modifiée avec succès !', 'Email address updated successfully!'),
+                          );
+                        }
+                      } else if (result == 'need_new_email_verification') {
+                        setStateDialog(() {
+                          isLoading = false;
+                          isSecondStep = true;
+                          otpCtrl.clear();
+                        });
+                        if (context.mounted) {
+                          ToastUtils.show(
+                            context,
+                            context.tr('Code de l\'ancien e-mail vérifié. Veuillez saisir le code du nouvel e-mail.', 'Old email code verified. Please enter the code from the new email.'),
                           );
                         }
                       } else {
@@ -477,7 +557,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       if (context.mounted) {
                         ToastUtils.show(
                           context,
-                          '${context.tr('Erreur: ', 'Error: ')}$e',
+                          _formatFriendlyError(e),
                           isError: true,
                         );
                       }
@@ -697,7 +777,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
+                    color: cs.primary.withValues(alpha: 0.05),
+                    border: Border.all(color: cs.primary.withValues(alpha: 0.35)),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -705,7 +786,13 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       Icon(Icons.lock_reset, size: 16, color: cs.primary),
                       const SizedBox(width: 8),
-                      Text(context.tr('Modifier', 'Modify'), style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
+                      Text(
+                        context.tr('Modifier', 'Modify'), 
+                        style: AppTextStyles.labelMedium.copyWith(
+                          fontWeight: FontWeight.w600, 
+                          color: cs.primary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -736,26 +823,6 @@ class _SettingsPageState extends State<SettingsPage> {
     ]);
   }
 
-  Widget _disabledTextField(String label, TextEditingController controller, IconData icon) {
-    final cs = Theme.of(context).colorScheme;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
-      const SizedBox(height: 6),
-      TextFormField(
-        controller: controller,
-        readOnly: true,
-        enabled: false,
-        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
-        decoration: InputDecoration(
-            isDense: true,
-            prefixIcon: Icon(icon, size: 18, color: cs.outline),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            filled: true,
-            fillColor: cs.surfaceContainerLow,
-        ),
-      ),
-    ]);
-  }
 
   Widget _lockedTextField(String label, String value, IconData icon) {
     final cs = Theme.of(context).colorScheme;

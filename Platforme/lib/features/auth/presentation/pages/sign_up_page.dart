@@ -24,8 +24,10 @@ class _SignUpPageState extends State<SignUpPage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _cinController = TextEditingController();
+  final _otpController = TextEditingController();
   bool _acceptTerms = false;
   bool _loading = false;
+  bool _showOtpStep = false;
   String? _errorMessage;
 
   @override
@@ -36,6 +38,7 @@ class _SignUpPageState extends State<SignUpPage> {
     _nameController.dispose();
     _phoneController.dispose();
     _cinController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
@@ -73,18 +76,51 @@ class _SignUpPageState extends State<SignUpPage> {
       if (auth.isAuthenticated) {
         Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
       } else {
+        setState(() {
+          _showOtpStep = true;
+        });
         ToastUtils.show(
           context,
           context.tr(
-            "Inscription réussie. Veuillez vérifier votre e-mail.",
-            "Registration successful. Please check your email.",
+            "Inscription réussie. Veuillez saisir le code OTP envoyé par e-mail.",
+            "Registration successful. Please enter the OTP code sent by email.",
           ),
         );
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     } else {
       setState(() {
         _errorMessage = auth.errorMessage ?? context.tr("Erreur lors de l'inscription.", "Error during registration.");
+      });
+    }
+  }
+
+  Future<void> _verifySignupOtp() async {
+    final token = _otpController.text.trim();
+    if (token.length < 6) {
+      setState(() => _errorMessage = context.tr("Veuillez entrer un code de 6 chiffres.", "Please enter a 6-digit code."));
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+
+    final auth = context.read<AuthProvider>();
+    final success = await auth.verifySignupOTP(_emailController.text.trim(), token);
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (success) {
+      ToastUtils.show(
+        context,
+        context.tr("Compte vérifié avec succès !", "Account verified successfully!"),
+      );
+      Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+    } else {
+      setState(() {
+        _errorMessage = auth.errorMessage ?? context.tr("Code incorrect ou expiré.", "Incorrect or expired code.");
       });
     }
   }
@@ -137,206 +173,304 @@ class _SignUpPageState extends State<SignUpPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.tr('Créer un compte', 'Create an account'),
-                              style: AppTextStyles.headlineLarge.copyWith(fontSize: 30, color: cs.onSurface)),
-                          const SizedBox(height: 6),
-                          Text(
-                            context.tr('Démarrez votre transformation digitale aujourd\'hui.', 'Start your digital transformation today.'),
-                            style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
-                          ),
-                          const SizedBox(height: 32),
-
-                          if (_errorMessage != null)
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 24),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.error_outline, color: AppColors.error, size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: Text(_errorMessage!, style: TextStyle(color: AppColors.error))),
-                                ],
-                              ),
+                          if (!_showOtpStep) ...[
+                            Text(context.tr('Créer un compte', 'Create an account'),
+                                style: AppTextStyles.headlineLarge.copyWith(fontSize: 30, color: cs.onSurface)),
+                            const SizedBox(height: 6),
+                            Text(
+                              context.tr('Démarrez votre transformation digitale aujourd\'hui.', 'Start your digital transformation today.'),
+                              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
                             ),
+                            const SizedBox(height: 32),
 
-                          // Name
-                          _buildLabel(context.tr('Nom Complet', 'Full Name')),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _nameController,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.person_outline, size: 20, color: cs.outline),
-                              hintText: 'Jean Dupont',
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-
-                          // Phone
-                          _buildLabel(context.tr('Numéro de Téléphone', 'Phone Number')),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.phone_outlined, size: 20, color: cs.outline),
-                              hintText: '+33 6 12 34 56 78',
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-
-                          // CIN (Carte d'Identité Nationale)
-                          _buildLabel(context.tr('N° Carte d\'Identité Nationale', 'National ID Number')),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _cinController,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.badge_outlined, size: 20, color: cs.outline),
-                              hintText: 'AB123456',
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-
-                          // Email
-                          _buildLabel(context.tr('Adresse Email', 'Email Address')),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.email_outlined, size: 20, color: cs.outline),
-                              hintText: 'jean.dupont@entreprise.fr',
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-
-                          // Password Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            if (_errorMessage != null)
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 24),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
                                   children: [
-                                    _buildLabel(context.tr('Mot de passe', 'Password')),
-                                    const SizedBox(height: 8),
-                                    TextField(
-                                      controller: _passwordController,
-                                      obscureText: true,
-                                      decoration: InputDecoration(
-                                        prefixIcon: Icon(Icons.lock_outline, size: 20, color: cs.outline),
-                                        hintText: '••••••••',
-                                      ),
-                                    ),
+                                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: Text(_errorMessage!, style: TextStyle(color: AppColors.error))),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(context.tr('Confirmation', 'Confirm Password')),
-                                    const SizedBox(height: 8),
-                                    TextField(
-                                      controller: _confirmPasswordController,
-                                      obscureText: true,
-                                      decoration: InputDecoration(
-                                        prefixIcon: Icon(Icons.lock_reset, size: 20, color: cs.outline),
-                                        hintText: '••••••••',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 18),
 
-                          // Terms
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: Checkbox(
-                                  value: _acceptTerms,
-                                  onChanged: (v) => setState(() => _acceptTerms = v ?? false),
-                                ),
+                            // Name
+                            _buildLabel(context.tr('Nom Complet', 'Full Name')),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                prefixIcon: Icon(Icons.person_outline, size: 20, color: cs.outline),
+                                hintText: 'Jean Dupont',
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: cs.onSurfaceVariant,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                            ),
+                            const SizedBox(height: 18),
+
+                            // Phone
+                            _buildLabel(context.tr('Numéro de Téléphone', 'Phone Number')),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _phoneController,
+                              keyboardType: TextInputType.phone,
+                              decoration: InputDecoration(
+                                prefixIcon: Icon(Icons.phone_outlined, size: 20, color: cs.outline),
+                                hintText: '+33 6 12 34 56 78',
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+
+                            // CIN (Carte d'Identité Nationale)
+                            _buildLabel(context.tr('N° Carte d\'Identité Nationale', 'National ID Number')),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _cinController,
+                              decoration: InputDecoration(
+                                prefixIcon: Icon(Icons.badge_outlined, size: 20, color: cs.outline),
+                                hintText: 'AB123456',
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+
+                            // Email
+                            _buildLabel(context.tr('Adresse Email', 'Email Address')),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                prefixIcon: Icon(Icons.email_outlined, size: 20, color: cs.outline),
+                                hintText: 'jean.dupont@entreprise.fr',
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+
+                            // Password Row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      TextSpan(text: context.tr("J'accepte les ", "I accept the ")),
-                                      TextSpan(
-                                        text: context.tr("Conditions Générales d'Utilisation", "Terms and Conditions"),
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: cs.primary,
-                                          fontWeight: FontWeight.w700,
+                                      _buildLabel(context.tr('Mot de passe', 'Password')),
+                                      const SizedBox(height: 8),
+                                      TextField(
+                                        controller: _passwordController,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          prefixIcon: Icon(Icons.lock_outline, size: 20, color: cs.outline),
+                                          hintText: '••••••••',
                                         ),
                                       ),
-                                      TextSpan(text: context.tr(' et la politique de confidentialité.', ' and the privacy policy.')),
                                     ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Submit
-                          SizedBox(
-                            width: double.infinity,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              decoration: BoxDecoration(
-                                gradient: _acceptTerms ? cs.primaryGradient : null,
-                                color: _acceptTerms ? null : cs.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: _acceptTerms
-                                    ? [
-                                        BoxShadow(
-                                          color: cs.primary.withValues(alpha: 0.2),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildLabel(context.tr('Confirmation', 'Confirm Password')),
+                                      const SizedBox(height: 8),
+                                      TextField(
+                                        controller: _confirmPasswordController,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          prefixIcon: Icon(Icons.lock_reset, size: 20, color: cs.outline),
+                                          hintText: '••••••••',
                                         ),
-                                      ]
-                                    : [],
-                              ),
-                              child: ElevatedButton(
-                                onPressed: _acceptTerms && !_loading ? _signUp : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  padding: const EdgeInsets.symmetric(vertical: 18),
-                                ),
-                                child: _loading 
-                                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                    : Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(context.tr("S'inscrire", 'Sign Up'),
-                                              style: GoogleFonts.manrope(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              )),
-                                          const SizedBox(width: 8),
-                                          const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
-                                        ],
                                       ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+
+                            // Terms
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: Checkbox(
+                                    value: _acceptTerms,
+                                    onChanged: (v) => setState(() => _acceptTerms = v ?? false),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      children: [
+                                        TextSpan(text: context.tr("J'accepte les ", "I accept the ")),
+                                        TextSpan(
+                                          text: context.tr("Conditions Générales d'Utilisation", "Terms and Conditions"),
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        TextSpan(text: context.tr(' et la politique de confidentialité.', ' and the privacy policy.')),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Submit
+                            SizedBox(
+                              width: double.infinity,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                decoration: BoxDecoration(
+                                  gradient: _acceptTerms ? cs.primaryGradient : null,
+                                  color: _acceptTerms ? null : cs.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: _acceptTerms
+                                      ? [
+                                          BoxShadow(
+                                            color: cs.primary.withValues(alpha: 0.2),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _acceptTerms && !_loading ? _signUp : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    padding: const EdgeInsets.symmetric(vertical: 18),
+                                  ),
+                                  child: _loading 
+                                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                      : Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(context.tr("S'inscrire", 'Sign Up'),
+                                                style: GoogleFonts.manrope(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Colors.white,
+                                                )),
+                                            const SizedBox(width: 8),
+                                            const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
+                                          ],
+                                        ),
+                                ),
                               ),
                             ),
-                          ),
+                          ] else ...[
+                            Text(context.tr('Vérification du compte', 'Account Verification'),
+                                style: AppTextStyles.headlineLarge.copyWith(fontSize: 30, color: cs.onSurface)),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${context.tr('Saisissez le code à 6 chiffres envoyé à', 'Enter the 6-digit code sent to')} ${_emailController.text.trim()}',
+                              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+                            ),
+                            const SizedBox(height: 32),
+
+                            if (_errorMessage != null)
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 24),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: Text(_errorMessage!, style: TextStyle(color: AppColors.error))),
+                                  ],
+                                ),
+                              ),
+
+                            _buildLabel(context.tr('Code de confirmation', 'Confirmation Code')),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _otpController,
+                              keyboardType: TextInputType.number,
+                              maxLength: 6,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24, 
+                                fontWeight: FontWeight.bold, 
+                                letterSpacing: 8, 
+                                color: cs.primary
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '000000',
+                                counterText: '',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: cs.primaryGradient,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: cs.primary.withValues(alpha: 0.2),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _loading ? null : _verifySignupOtp,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    padding: const EdgeInsets.symmetric(vertical: 18),
+                                  ),
+                                  child: _loading 
+                                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                      : Text(
+                                          context.tr("Vérifier & Se connecter", "Verify & Connect"),
+                                          style: GoogleFonts.manrope(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: TextButton(
+                                onPressed: _loading ? null : () {
+                                  setState(() {
+                                    _showOtpStep = false;
+                                    _errorMessage = null;
+                                  });
+                                },
+                                child: Text(
+                                  context.tr("Retour", "Back"),
+                                  style: TextStyle(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 24),
 
                           // Already have account

@@ -416,33 +416,62 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> verifyEmailChangeOTP(String newEmail, String token) async {
+  Future<String> verifyEmailChangeOTP(String newEmail, String token, {bool isSecondStep = false}) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
     try {
-      await _authService.verifyEmailChangeOTP(newEmail, token);
-      
-      if (_utilisateur != null) {
-        _utilisateur = await _dataService.mettreAJourUtilisateur(
-          _utilisateur!.copyWith(email: newEmail),
-        );
+      if (isSecondStep) {
+        await _authService.verifyEmailChangeOTP(newEmail, token);
+        if (_utilisateur != null) {
+          _utilisateur = await _dataService.mettreAJourUtilisateur(
+            _utilisateur!.copyWith(email: newEmail),
+          );
+        }
+        _status = AuthStatus.authenticated;
+        _synchLangue();
+        notifyListeners();
+        return 'success';
       }
-      
-      _status = AuthStatus.authenticated;
-      _synchLangue();
-      notifyListeners();
-      return true;
+
+      // Try verifying the new email directly (e.g. if secure email change is disabled)
+      try {
+        await _authService.verifyEmailChangeOTP(newEmail, token);
+        if (_utilisateur != null) {
+          _utilisateur = await _dataService.mettreAJourUtilisateur(
+            _utilisateur!.copyWith(email: newEmail),
+          );
+        }
+        _status = AuthStatus.authenticated;
+        _synchLangue();
+        notifyListeners();
+        return 'success';
+      } on AuthException catch (_) {
+        // If forbidden or error, check if we need to verify the old email first
+        final oldEmail = userEmail;
+        if (oldEmail.isNotEmpty && oldEmail != newEmail) {
+          try {
+            await _authService.verifyEmailChangeOTP(oldEmail, token);
+            // Old email verified successfully! Now we need the code for the new email.
+            _status = AuthStatus.unauthenticated;
+            notifyListeners();
+            return 'need_new_email_verification';
+          } catch (_) {
+            rethrow;
+          }
+        }
+        rethrow;
+      }
     } on AuthException catch (e) {
       _status = AuthStatus.error;
       _errorMessage = e.message;
       notifyListeners();
-      return false;
+      return 'error';
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = _loc('Code invalide ou expiré.', 'Invalid or expired code.');
+      _errorMessage = _loc('Code incorrect ou expiré.', 'Incorrect or expired code.');
       notifyListeners();
-      return false;
+      return 'error';
     }
   }
 

@@ -188,10 +188,8 @@ class _DashboardPageState extends State<DashboardPage>
                     final urgentAlertsCount = entrepriseProvider.allNotes.where((n) => n.estRappel).length;
 
                     // Display database dynamic counts or mockup values as fallback
-                    final displayCompanies = (entrepriseProvider.totalEntreprises * t).round().toString();
-                    final displaySalaries = _loadingStats 
-                        ? (entrepriseProvider.entreprises.fold<int>(0, (sum, e) => sum + e.effectif) * t).round().toString()
-                        : (_realSalariesCount * t).round().toString();
+                    final displayCompanies = _loadingStats ? '...' : (entrepriseProvider.totalEntreprises * t).round().toString();
+                    final displaySalaries = _loadingStats ? '...' : (_realSalariesCount * t).round().toString();
 
                     return Opacity(
                       opacity: t,

@@ -27,8 +27,10 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
   }
 
   Future<void> _loadUsers() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     final users = await context.read<AuthProvider>().fetchAllUsers();
+    if (!mounted) return;
     setState(() {
       _allUsers = users;
       _filteredUsers = users;
@@ -51,6 +53,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     
     setState(() => _isLoading = true);
     await context.read<AuthProvider>().changeUserRole(user.id, newRole);
+    if (!mounted) return;
     await _loadUsers();
     
     if (mounted) {
@@ -110,9 +113,11 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     );
 
     if (confirm == true) {
+      if (!mounted) return;
       setState(() => _isLoading = true);
       try {
         await authProvider.deleteUser(user.id);
+        if (!mounted) return;
         await _loadUsers();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
