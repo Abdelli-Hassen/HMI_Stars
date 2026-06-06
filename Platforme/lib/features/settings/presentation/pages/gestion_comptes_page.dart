@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
+import '../../../../core/utils/translation_extension.dart';
 
 class GestionComptesPage extends StatefulWidget {
   const GestionComptesPage({super.key});
@@ -54,7 +55,10 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Le rôle de ${user.nom} a été mis à jour.'),
+        content: Text(context.tr(
+          'Le rôle de ${user.nom} a été mis à jour.',
+          'The role of ${user.nom} has been updated.',
+        )),
         backgroundColor: AppColors.success,
       ));
     }
@@ -64,8 +68,11 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     final authProvider = context.read<AuthProvider>();
     final currentUserId = authProvider.utilisateur?.id;
     if (user.id == currentUserId) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Vous ne pouvez pas supprimer votre propre compte ici.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(context.tr(
+          'Vous ne pouvez pas supprimer votre propre compte ici.',
+          'You cannot delete your own account here.',
+        )),
         backgroundColor: AppColors.error,
       ));
       return;
@@ -77,14 +84,26 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: cs.surfaceContainerLowest,
-        title: Text('Supprimer l\'utilisateur', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
-        content: Text('Voulez-vous vraiment supprimer définitivement le compte de ${user.nom} (${user.email}) ? Cette action est irréversible.', style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
+        title: Text(
+          context.tr('Supprimer l\'utilisateur', 'Delete User'),
+          style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface),
+        ),
+        content: Text(
+          context.tr(
+            'Voulez-vous vraiment supprimer définitivement le compte de ${user.nom} (${user.email}) ? Cette action est irréversible.',
+            'Are you sure you want to permanently delete the account of ${user.nom} (${user.email})? This action is irreversible.',
+          ),
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.tr('Annuler', 'Cancel')),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
-            child: const Text('Supprimer'),
+            child: Text(context.tr('Supprimer', 'Delete')),
           ),
         ],
       ),
@@ -96,16 +115,16 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
         await authProvider.deleteUser(user.id);
         await _loadUsers();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Utilisateur supprimé avec succès.'),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(context.tr('Utilisateur supprimé avec succès.', 'User deleted successfully.')),
             backgroundColor: AppColors.success,
           ));
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Erreur lors de la suppression.'),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(context.tr('Erreur lors de la suppression.', 'Error during deletion.')),
             backgroundColor: AppColors.error,
           ));
         }
@@ -118,16 +137,21 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     final cs = Theme.of(context).colorScheme;
     return MainShell(
       currentRoute: AppRoutes.gestionComptes,
-      title: 'Gestion des Comptes',
+      title: context.tr('Gestion des Comptes', 'Account Management'),
       body: Padding(
         padding: const EdgeInsets.all(28.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Comptes Utilisateurs', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
+            Text(context.tr('Comptes Utilisateurs', 'User Accounts'), style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
             const SizedBox(height: 4),
-            Text('Gérez les rôles et les accès de tous les utilisateurs de la plateforme.',
-                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              context.tr(
+                'Gérez les rôles et les accès de tous les utilisateurs de la plateforme.',
+                'Manage roles and access for all platform users.',
+              ),
+              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+            ),
             const SizedBox(height: 28),
             
             // Search Bar
@@ -137,7 +161,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                 onChanged: _filterUsers,
                 style: TextStyle(color: cs.onSurface),
                 decoration: InputDecoration(
-                  hintText: 'Rechercher par nom ou email...',
+                  hintText: context.tr('Rechercher par nom ou email...', 'Search by name or email...'),
                   prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
                   filled: true,
                   fillColor: cs.surfaceContainerLowest,
@@ -155,7 +179,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _filteredUsers.isEmpty
-                      ? Center(child: Text('Aucun utilisateur trouvé.', style: AppTextStyles.bodyLarge.copyWith(color: cs.onSurface)))
+                      ? Center(child: Text(context.tr('Aucun utilisateur trouvé.', 'No user found.'), style: AppTextStyles.bodyLarge.copyWith(color: cs.onSurface)))
                       : _buildUsersTable(cs),
             ),
           ],
@@ -192,14 +216,17 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.nom.isNotEmpty ? user.nom : 'Sans Nom', style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface)),
+                        Text(user.nom.isNotEmpty ? user.nom : context.tr('Sans Nom', 'No Name'), style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface)),
                         Text(user.email, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                       ],
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      'Créé le ${user.creeLe.day}/${user.creeLe.month}/${user.creeLe.year}',
+                      context.tr(
+                        'Créé le ${user.creeLe.day}/${user.creeLe.month}/${user.creeLe.year}',
+                        'Created on ${user.creeLe.day}/${user.creeLe.month}/${user.creeLe.year}',
+                      ),
                       style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),
@@ -216,9 +243,9 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                         icon: const Icon(Icons.arrow_drop_down, size: 20),
                         dropdownColor: cs.surfaceContainerLowest,
                         style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                        items: const [
-                          DropdownMenuItem(value: 'admin', child: Text('ADMIN')),
-                          DropdownMenuItem(value: 'secretaire', child: Text('SECRÉTAIRE')),
+                        items: [
+                          DropdownMenuItem(value: 'admin', child: Text(context.tr('ADMIN', 'ADMIN'))),
+                          DropdownMenuItem(value: 'secretaire', child: Text(context.tr('SECRÉTAIRE', 'SECRETARY'))),
                         ],
                         onChanged: (newRole) {
                           if (newRole != null) _changeRole(user, newRole);
@@ -230,7 +257,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                   // Delete Action
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                    tooltip: 'Supprimer le compte',
+                    tooltip: context.tr('Supprimer le compte', 'Delete account'),
                     onPressed: () => _confirmDelete(user),
                   ),
                 ],

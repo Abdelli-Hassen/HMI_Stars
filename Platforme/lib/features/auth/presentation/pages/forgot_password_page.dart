@@ -7,6 +7,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 import '../widgets/auth_hero_panel.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -57,13 +58,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       setState(() {
         _codeSent = true;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr(
-            "Un code OTP a été envoyé à votre adresse e-mail.",
-            "An OTP code has been sent to your email address.",
-          )),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+      ToastUtils.show(
+        context,
+        context.tr(
+          "Un code OTP a été envoyé à votre adresse e-mail.",
+          "An OTP code has been sent to your email address.",
         ),
       );
     }

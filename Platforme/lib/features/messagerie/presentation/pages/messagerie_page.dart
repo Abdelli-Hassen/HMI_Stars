@@ -15,6 +15,7 @@ import '../providers/messagerie_provider.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 import '../../../entreprises/domain/models/entreprise.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 
 class MessageriePage extends StatefulWidget {
   const MessageriePage({super.key});
@@ -87,7 +88,6 @@ class _MessageriePageState extends State<MessageriePage> {
   }
 
   Future<void> _selectionnerEtEnvoyerFichier(bool seulementImages) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final provider = context.read<MessagerieProvider>();
 
     try {
@@ -98,12 +98,13 @@ class _MessageriePageState extends State<MessageriePage> {
       );
 
       if (result == null || result.files.isEmpty) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: const Text('Aucun fichier sélectionné ou sélection annulée.'),
-            backgroundColor: cs.outline,
-          ),
-        );
+        if (mounted) {
+          ToastUtils.show(
+            context,
+            'Aucun fichier sélectionné ou sélection annulée.',
+            isError: false,
+          );
+        }
         return;
       }
 
@@ -124,21 +125,23 @@ class _MessageriePageState extends State<MessageriePage> {
       }
       if (bytes == null) {
         debugPrint('[MessageriePage] Aucun octet de fichier récupéré');
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('Impossible de lire le contenu du fichier sélectionné.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        if (mounted) {
+          ToastUtils.show(
+            context,
+            'Impossible de lire le contenu du fichier sélectionné.',
+            isError: true,
+          );
+        }
         return;
       }
 
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('Téléversement de ${file.name}...'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ToastUtils.show(
+          context,
+          'Téléversement de ${file.name}...',
+          isError: false,
+        );
+      }
 
       await provider.envoyerMessageAvecFichier(
         nomFichier: file.name,
@@ -148,21 +151,21 @@ class _MessageriePageState extends State<MessageriePage> {
 
       if (mounted) {
         _scrollToBottom();
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Fichier ${file.name} envoyé avec succès !'),
-            backgroundColor: Colors.green,
-          ),
+        ToastUtils.show(
+          context,
+          'Fichier ${file.name} envoyé avec succès !',
+          isError: false,
         );
       }
     } catch (e) {
       debugPrint('[MessageriePage] Erreur sélection fichier : $e');
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors du téléversement : $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        ToastUtils.show(
+          context,
+          'Erreur lors du téléversement : $e',
+          isError: true,
+        );
+      }
     }
   }
 
@@ -1596,11 +1599,10 @@ class _FichiersListeDialogState extends State<_FichiersListeDialog> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors du chargement des fichiers : $e'),
-            backgroundColor: AppColors.error,
-          ),
+        ToastUtils.show(
+          context,
+          'Erreur lors du chargement des fichiers : $e',
+          isError: true,
         );
       }
     }

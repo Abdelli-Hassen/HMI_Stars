@@ -388,3 +388,108 @@ All tables have RLS enabled. Clients are restricted to row selections containing
   * If the card's ID matches the argument, it executes a high-fidelity pulsing gold glow animation (`AppColors.primary`) on its borders and box shadows using a `TweenSequence` driven by an `AnimationController` and `TickerProviderStateMixin`.
   * Utilizes `AnimatedBuilder` for performance-efficient repaints and nullable animation states for lifecycle safety.
 
+---
+
+## 9. Security & Notification Architecture (OTP, Settings Reauthentication & Bilingual Emails)
+
+This session introduced a hardened authentication, recovery, and account editing pipeline across the Web Platform (`Platforme`) and Mobile Client (`hmistarsmobile`), integrated with premium bilingual notifications.
+
+### 1. 6-Digit OTP Verification Flow (No Magic Links)
+To avoid dependency on external deep-link routing and browser redirects, the magic link flow was replaced with standard 6-digit OTP codes.
+* **Confirm Signup (SignUp / Login)**: 
+  * If a user registers or attempts to log in with an unconfirmed email, the system catches the Supabase unconfirmed email exception (`Email not confirmed` / code `400`).
+  * A premium OTP verification dialog is presented directly in-app, invoking `verifyOTP(email: email, token: otp, type: OtpType.signup)`.
+* **Password Recovery (Forgot Password)**:
+  * Users enter their email to request a reset code. 
+  * The interface updates in-place to display a 6-digit OTP code field and a new password input field.
+  * When submitted, it calls `verifyOTP(email: email, token: otp, type: OtpType.recovery)`, immediately authenticating the user session, followed by `updateUser(UserAttributes(password: newPassword))` to persist the new password.
+* **Email Address Change**:
+  * Changing an email from settings triggers confirmation OTPs to both the old and new email addresses (security feature to prevent account takeover).
+  * The user is prompted to input the OTP code received on the new email address, which is validated using `verifyOTP(email: newEmail, token: otp, type: OtpType.emailChange)`.
+
+### 2. Settings Page Security & Reauthentication
+Before permitting high-risk account updates from the settings page, the application verifies the user's current credentials:
+* **Password Change**:
+  * Users must enter their old/current password first before typing a new password.
+  * Since GoTrue does not expose a direct "validate password" endpoint, reauthentication is handled in the app by executing a silent, temporary sign-in:
+    ```dart
+    // Web & Mobile Reauthentication Pattern
+    final currentEmail = supabase.auth.currentUser?.email;
+    if (currentEmail != null) {
+      await supabase.auth.signInWithPassword(
+        email: currentEmail,
+        password: oldPassword,
+      );
+    }
+    // If sign-in succeeds, update the password:
+    await supabase.auth.updateUser(UserAttributes(password: newPassword));
+    ```
+* **Email Change**:
+  * Initiated using `supabase.auth.updateUser(UserAttributes(email: newEmail))`.
+  * After triggering this update, the interface opens a secure OTP input popup to allow verification of the transition directly in-app.
+
+### 3. Bilingual Supabase HTML Email Templates (Accents: `#b4975a`)
+All email communications sent by Supabase are customized with premium unified HTML templates containing French on top and English below. The header displays the hosted brand logo in a clean card container:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+    .wrapper { width: 100%; background-color: #f8fafc; padding: 40px 0; }
+    .container { max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03); overflow: hidden; }
+    .header { padding: 40px 30px 24px 30px; text-align: center; border-bottom: 1px solid #f1f5f9; }
+    .header img { max-height: 60px; margin-bottom: 14px; border-radius: 6px; }
+    .header h1 { color: #b4975a; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+    .content { padding: 30px 40px 40px 40px; }
+    .otp-box { background-color: #fcfbf7; border: 1px dashed #b4975a; border-radius: 12px; padding: 24px; text-align: center; margin: 30px 0; }
+    .otp-code { font-size: 36px; font-weight: 800; color: #b4975a; letter-spacing: 6px; }
+  </style>
+</head>
+<body>
+  ...
+</body>
+</html>
+```
+
+The specific configurations deployed:
+
+#### A. Confirm Sign Up (Bilingual OTP)
+* **Subject**: `Confirmez votre inscription | Confirm Sign Up`
+* **OTP Variable**: `{{ .Token }}`
+
+#### B. Reset Password (Bilingual OTP)
+* **Subject**: `Réinitialisation de votre mot de passe | Reset Password`
+* **OTP Variable**: `{{ .Token }}`
+
+#### C. Change Email Address (Bilingual OTP)
+* **Subject**: `Confirmez le changement d'email | Confirm Email Change`
+* **OTP Variable**: `{{ .Token }}`
+
+#### D. Password Changed Notification (Informational)
+* **Subject**: `Votre mot de passe a été modifié | Password Changed`
+* **Content**: French/English notice indicating the user's password was updated successfully.
+
+#### E. Email Address Changed Notification (Informational)
+* **Subject**: `Votre adresse email a été modifiée | Email Address Changed`
+* **Content**: French/English notice indicating the user's email was updated successfully.
+
+#### F. Phone Number Changed Notification (Bilingual Email instead of SMS)
+* **Subject**: `Numéro de téléphone modifié | Phone Number Changed`
+* **Content**: French/English notification showing transition details:
+  * Old phone number: `{{ .Phone }}`
+  * New phone number: `{{ .NewPhone }}`
+  * Note: Following requirements, phone number change notifications are routed directly as email alerts instead of SMS text messages.
+
+### 4. Gold-Themed Bottom-Right Toast Notification System
+Instead of default full-width SnackBars or browser alert banners, all status notifications are routed through the custom floating toast system (`ToastUtils.show`):
+* **Positioning**: Automatically positioned in the bottom-right corner of the viewport (`bottom: 24, right: 24`) for optimal visibility on desktop/web screens.
+* **Premium Gold Style**: Designed as a card container featuring a solid gold border (`#b4975a`) and a soft gold shadow for success alerts, or a red border (`AppColors.error`) for errors.
+* **Micro-Animations**: Slide-in and fade-in animations driven by a smooth bounce curve (`Curves.easeOutBack`).
+* **Auto-Dismiss & Close**: Automatically fades out and dismisses itself after 4 seconds, and includes an explicit close action button (`Icons.close`).
+* **Localization Synchronization**: Fixed language preservation by synchronizing the local `_tempLanguage` with the loaded user preferences upon profile generation and login, ensuring the language does not flick back to French on logout, and that error/success status messages are returned in the selected language.
+
+

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 import '../widgets/auth_hero_panel.dart';
 
 class ResetPasswordPage extends StatefulWidget {
@@ -68,26 +69,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
       if (!mounted) return;
 
-      showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(context.tr('Succès', 'Success')),
-          content: Text(context.tr(
-              'Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter.',
-              'Your password has been successfully modified. You can now log in.')),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pushReplacementNamed(context, AppRoutes.login);
-              },
-              child: const Text('OK'),
-            ),
-          ],
+      ToastUtils.show(
+        context,
+        context.tr(
+          'Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter.',
+          'Your password has been successfully modified. You can now log in.',
         ),
       );
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.login);
+        }
+      });
     } on AuthException catch (e) {
       String msg = e.message;
       if (msg.toLowerCase().contains('session missing') ||

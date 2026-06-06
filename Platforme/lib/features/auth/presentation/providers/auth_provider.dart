@@ -28,6 +28,19 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _loc(String fr, String en) {
+    return _tempLanguage == 'English (EN)' ? en : fr;
+  }
+
+  void _synchLangue() {
+    if (_utilisateur != null) {
+      final lang = _utilisateur!.preferences['langue'];
+      if (lang != null && lang.toString().isNotEmpty) {
+        _tempLanguage = lang.toString();
+      }
+    }
+  }
+
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
   User? get user => _user;
@@ -120,6 +133,7 @@ class AuthProvider extends ChangeNotifier {
     if (_utilisateur != null) {
       debugPrint('[AuthProvider] Profile OK: ${_utilisateur!.nom} (${_utilisateur!.libelleRole})');
       _status = AuthStatus.authenticated;
+      _synchLangue();
     } else {
       debugPrint('[AuthProvider] No profile found -> access denied');
       _user = null;
@@ -138,6 +152,7 @@ class AuthProvider extends ChangeNotifier {
       _utilisateur = await _dataService.recupererUtilisateur(_user!.id);
       if (_utilisateur != null) {
         _status = AuthStatus.authenticated;
+        _synchLangue();
       } else {
         debugPrint('[AuthProvider] Profile not found -> signing out');
         _status = AuthStatus.unauthenticated;
@@ -178,7 +193,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (_user == null) {
         _status = AuthStatus.unauthenticated;
-        _errorMessage = 'Identifiants invalides.';
+        _errorMessage = _loc('Identifiants invalides.', 'Invalid credentials.');
         notifyListeners();
         return false;
       }
@@ -187,7 +202,10 @@ class AuthProvider extends ChangeNotifier {
       _utilisateur = await _dataService.recupererUtilisateur(_user!.id);
       if (_utilisateur == null) {
         _status = AuthStatus.error;
-        _errorMessage = 'Ce compte n\'est pas autorisé à accéder à la plateforme.';
+        _errorMessage = _loc(
+          'Ce compte n\'est pas autorisé à accéder à la plateforme.',
+          'This account is not authorized to access the platform.',
+        );
         _user = null;
         await _authService.signOut();
         notifyListeners();
@@ -195,6 +213,7 @@ class AuthProvider extends ChangeNotifier {
       }
 
       _status = AuthStatus.authenticated;
+      _synchLangue();
       notifyListeners();
       return true;
     } on AuthException catch (e) {
@@ -203,7 +222,10 @@ class AuthProvider extends ChangeNotifier {
           (e is AuthApiException && e.code == 'email_not_confirmed')) {
         _emailNonConfirme = true;
         _emailEnAttente = email;
-        _errorMessage = 'Votre adresse e-mail n\'a pas encore été confirmée.';
+        _errorMessage = _loc(
+          'Votre adresse e-mail n\'a pas encore été confirmée.',
+          'Your email address has not been confirmed yet.',
+        );
       } else {
         _errorMessage = e.message;
       }
@@ -211,7 +233,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = 'Erreur de connexion. Vérifiez votre réseau.';
+      _errorMessage = _loc('Erreur de connexion. Vérifiez votre réseau.', 'Connection error. Check your network.');
       notifyListeners();
       return false;
     }
@@ -242,7 +264,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (_user == null) {
         _status = AuthStatus.error;
-        _errorMessage = 'Erreur lors de la création du compte.';
+        _errorMessage = _loc('Erreur lors de la création du compte.', 'Error during account creation.');
         notifyListeners();
         return false;
       }
@@ -250,7 +272,10 @@ class AuthProvider extends ChangeNotifier {
       if (response.session == null) {
         // L'utilisateur est créé mais doit vérifier son email
         _status = AuthStatus.unauthenticated;
-        _errorMessage = 'Inscription réussie. Veuillez vérifier votre boîte mail pour confirmer votre compte.';
+        _errorMessage = _loc(
+          'Inscription réussie. Veuillez vérifier votre boîte mail pour confirmer votre compte.',
+          'Registration successful. Please check your email to confirm your account.',
+        );
         notifyListeners();
         return true;
       }
@@ -267,9 +292,13 @@ class AuthProvider extends ChangeNotifier {
 
       if (_utilisateur != null) {
         _status = AuthStatus.authenticated;
+        _synchLangue();
       } else {
         _status = AuthStatus.error;
-        _errorMessage = 'Le profil n\'a pas pu être créé. Contactez l\'administrateur.';
+        _errorMessage = _loc(
+          'Le profil n\'a pas pu être créé. Contactez l\'administrateur.',
+          'Profile could not be created. Contact the administrator.',
+        );
         _user = null;
         await _authService.signOut();
       }
@@ -283,7 +312,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = 'Erreur lors de la création du compte.';
+      _errorMessage = _loc('Erreur lors de la création du compte.', 'Error during account creation.');
       notifyListeners();
       return false;
     }
@@ -315,7 +344,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = 'Code invalide ou expiré.';
+      _errorMessage = _loc('Code invalide ou expiré.', 'Invalid or expired code.');
       notifyListeners();
       return false;
     }
@@ -340,9 +369,13 @@ class AuthProvider extends ChangeNotifier {
         _emailNonConfirme = false;
         _emailEnAttente = null;
         _errorMessage = null;
+        _synchLangue();
       } else {
         _status = AuthStatus.error;
-        _errorMessage = 'Le profil n\'a pas pu être créé. Contactez l\'administrateur.';
+        _errorMessage = _loc(
+          'Le profil n\'a pas pu être créé. Contactez l\'administrateur.',
+          'Profile could not be created. Contact the administrator.',
+        );
         _user = null;
         await _authService.signOut();
       }
@@ -356,7 +389,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = 'Code invalide ou expiré.';
+      _errorMessage = _loc('Code invalide ou expiré.', 'Invalid or expired code.');
       notifyListeners();
       return false;
     }
@@ -377,7 +410,7 @@ class AuthProvider extends ChangeNotifier {
       rethrow;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = 'Erreur lors de la modification de l\'e-mail.';
+      _errorMessage = _loc('Erreur lors de la modification de l\'e-mail.', 'Error during email modification.');
       notifyListeners();
       rethrow;
     }
@@ -397,6 +430,7 @@ class AuthProvider extends ChangeNotifier {
       }
       
       _status = AuthStatus.authenticated;
+      _synchLangue();
       notifyListeners();
       return true;
     } on AuthException catch (e) {
@@ -406,7 +440,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = 'Code invalide ou expiré.';
+      _errorMessage = _loc('Code invalide ou expiré.', 'Invalid or expired code.');
       notifyListeners();
       return false;
     }
@@ -462,7 +496,10 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      _errorMessage = 'Impossible de renvoyer l\'e-mail. Réessayez plus tard.';
+      _errorMessage = _loc(
+        'Impossible de renvoyer l\'e-mail. Réessayez plus tard.',
+        'Unable to resend email. Try again later.',
+      );
       notifyListeners();
       return false;
     }
@@ -540,6 +577,7 @@ class AuthProvider extends ChangeNotifier {
           preferences: preferences ?? _utilisateur!.preferences,
         ),
       );
+      _synchLangue();
       notifyListeners();
     } catch (e) {
       debugPrint('[AuthProvider] Error updating profile: $e');

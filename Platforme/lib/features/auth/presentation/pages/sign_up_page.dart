@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_hero_panel.dart';
 
@@ -72,11 +73,11 @@ class _SignUpPageState extends State<SignUpPage> {
       if (auth.isAuthenticated) {
         Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(auth.errorMessage ?? context.tr("Inscription réussie. Veuillez vérifier votre e-mail.", "Registration successful. Please check your email.")),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 5),
+        ToastUtils.show(
+          context,
+          context.tr(
+            "Inscription réussie. Veuillez vérifier votre e-mail.",
+            "Registration successful. Please check your email.",
           ),
         );
         Navigator.pushReplacementNamed(context, AppRoutes.login);

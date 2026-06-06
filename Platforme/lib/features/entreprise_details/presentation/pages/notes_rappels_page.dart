@@ -6,6 +6,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 import '../../../entreprises/domain/models/note_entreprise.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 
@@ -99,7 +100,11 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
     final targetId = entreprises.isNotEmpty ? entreprises.first.id : '';
 
     if (targetId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Aucune entreprise disponible pour créer une note.', 'No companies available to create a note.')), backgroundColor: AppColors.error));
+      ToastUtils.show(
+        context,
+        context.tr('Aucune entreprise disponible pour créer une note.', 'No companies available to create a note.'),
+        isError: true,
+      );
       return;
     }
 
@@ -138,11 +143,19 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
           _deadlineDate = null;
           _deadlineTime = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note ajoutée !', 'Note added!')), backgroundColor: AppColors.success));
+        ToastUtils.show(
+          context,
+          context.tr('Note ajoutée !', 'Note added!'),
+          isError: false,
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+        ToastUtils.show(
+          context,
+          'Erreur: $e',
+          isError: true,
+        );
       }
     }
   }
@@ -535,7 +548,11 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                                 await provider.updateNote(updated);
                               } catch (e) {
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+                                  ToastUtils.show(
+                                    context,
+                                    'Erreur: $e',
+                                    isError: true,
+                                  );
                                 }
                               }
                             },
@@ -544,11 +561,19 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                               try {
                                 await provider.supprimerNote(note.id, note.entrepriseId);
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note supprimée.', 'Note deleted.')), backgroundColor: AppColors.success));
+                                  ToastUtils.show(
+                                    context,
+                                    context.tr('Note supprimée.', 'Note deleted.'),
+                                    isError: false,
+                                  );
                                 }
                               } catch (e) {
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+                                  ToastUtils.show(
+                                    context,
+                                    'Erreur: $e',
+                                    isError: true,
+                                  );
                                 }
                               }
                             },
@@ -879,11 +904,19 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                     await provider.updateNote(updatedNote);
                     if (context.mounted) {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note modifiée.'), backgroundColor: AppColors.success));
+                      ToastUtils.show(
+                        context,
+                        context.trStatic('Note modifiée.', 'Note modified.'),
+                        isError: false,
+                      );
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error));
+                      ToastUtils.show(
+                        context,
+                        'Erreur: $e',
+                        isError: true,
+                      );
                     }
                   }
                 },

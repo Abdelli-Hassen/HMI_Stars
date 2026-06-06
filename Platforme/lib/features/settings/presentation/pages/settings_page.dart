@@ -9,6 +9,7 @@ import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 import '../../../auth/domain/models/platform_user.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -74,10 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
       telephone: _phoneController.text,
       cin: _cinController.text,
     );
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(context.tr('Profil sauvegardé avec succès !', 'Profile saved successfully!')),
-      backgroundColor: AppColors.success,
-    ));
+    ToastUtils.show(context, context.tr('Profil sauvegardé avec succès !', 'Profile saved successfully!'));
   }
 
   void _sauvegarderWorkspace() {
@@ -87,14 +85,10 @@ class _SettingsPageState extends State<SettingsPage> {
     context.read<AuthProvider>().mettreAJourProfil(
       preferences: prefs,
     );
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(context.tr('Espace de travail mis à jour avec succès !', 'Workspace updated successfully!')),
-      backgroundColor: AppColors.success,
-    ));
+    ToastUtils.show(context, context.tr('Espace de travail mis à jour avec succès !', 'Workspace updated successfully!'));
   }
 
   Future<void> _modifierPhoto() async {
-    final messenger = ScaffoldMessenger.of(context);
     final auth = context.read<AuthProvider>();
     try {
       final result = await FilePicker.pickFiles(
@@ -115,19 +109,21 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
       setState(() => _uploadingAvatar = false);
 
-      messenger.showSnackBar(SnackBar(
-        content: Text(success
+      ToastUtils.show(
+        context,
+        success
             ? context.tr('Photo de profil mise à jour avec succès !', 'Profile picture updated successfully!')
-            : context.tr('Erreur lors de la mise à jour de la photo.', 'Error updating picture.')),
-        backgroundColor: success ? AppColors.success : AppColors.error,
-      ));
+            : context.tr('Erreur lors de la mise à jour de la photo.', 'Error updating picture.'),
+        isError: !success,
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _uploadingAvatar = false);
-        messenger.showSnackBar(SnackBar(
-          content: Text(context.tr('Erreur lors de la sélection du fichier.', 'Error selecting file.')),
-          backgroundColor: AppColors.error,
-        ));
+        ToastUtils.show(
+          context,
+          context.tr('Erreur lors de la sélection du fichier.', 'Error selecting file.'),
+          isError: true,
+        );
       }
     }
   }
@@ -283,7 +279,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _lockedTextField(context.tr("Organisation", "Organization"), 'HMI Stars Consulting', Icons.corporate_fare),
         const SizedBox(height: 16),
-        _staticDropdownField(context.tr('Langue par dÃ©faut', 'Default Language'), _selectedLangue, ['FranÃ§ais (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
+        _staticDropdownField(context.tr('Langue par defaut', 'Default Language'), _selectedLangue, ['Francais (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -447,10 +443,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   } else {
                     final token = otpCtrl.text.trim();
                     if (token.length < 6) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(context.tr('Veuillez entrer un code de 6 chiffres.', 'Please enter a 6-digit code.')),
-                        backgroundColor: AppColors.error,
-                      ));
+                      ToastUtils.show(
+                        context,
+                        context.tr('Veuillez entrer un code de 6 chiffres.', 'Please enter a 6-digit code.'),
+                        isError: true,
+                      );
                       return;
                     }
                     setStateDialog(() => isLoading = true);
@@ -460,27 +457,29 @@ class _SettingsPageState extends State<SettingsPage> {
                       if (success) {
                         if (context.mounted) {
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(context.tr('Adresse e-mail modifiée avec succès !', 'Email address updated successfully!')),
-                            backgroundColor: AppColors.success,
-                          ));
+                          ToastUtils.show(
+                            context,
+                            context.tr('Adresse e-mail modifiée avec succès !', 'Email address updated successfully!'),
+                          );
                         }
                       } else {
                         setStateDialog(() => isLoading = false);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(context.tr('Code incorrect ou expiré.', 'Incorrect or expired code.')),
-                            backgroundColor: AppColors.error,
-                          ));
+                          ToastUtils.show(
+                            context,
+                            context.tr('Code incorrect ou expiré.', 'Incorrect or expired code.'),
+                            isError: true,
+                          );
                         }
                       }
                     } catch (e) {
                       setStateDialog(() => isLoading = false);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('${context.tr('Erreur: ', 'Error: ')}$e'),
-                          backgroundColor: AppColors.error,
-                        ));
+                        ToastUtils.show(
+                          context,
+                          '${context.tr('Erreur: ', 'Error: ')}$e',
+                          isError: true,
+                        );
                       }
                     }
                   }
@@ -593,17 +592,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   final ancien = ancienCtrl.text;
                   final nouveau = nouveauCtrl.text.trim();
                   if (ancien.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(context.tr('Veuillez entrer votre ancien mot de passe.', 'Please enter your current password.')),
-                      backgroundColor: AppColors.error,
-                    ));
+                    ToastUtils.show(
+                      context,
+                      context.tr('Veuillez entrer votre ancien mot de passe.', 'Please enter your current password.'),
+                      isError: true,
+                    );
                     return;
                   }
                   if (nouveau.length < 8) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(context.tr('Le mot de passe doit contenir au moins 8 caractères.', 'Password must be at least 8 characters long.')),
-                      backgroundColor: AppColors.error,
-                    ));
+                    ToastUtils.show(
+                      context,
+                      context.tr('Le mot de passe doit contenir au moins 8 caractères.', 'Password must be at least 8 characters long.'),
+                      isError: true,
+                    );
                     return;
                   }
                   setStateDialog(() => isLoading = true);
@@ -613,28 +614,30 @@ class _SettingsPageState extends State<SettingsPage> {
                     if (!isOldCorrect) {
                       setStateDialog(() => isLoading = false);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(context.tr('L\'ancien mot de passe est incorrect.', 'Current password is incorrect.')),
-                          backgroundColor: AppColors.error,
-                        ));
+                        ToastUtils.show(
+                          context,
+                          context.tr('L\'ancien mot de passe est incorrect.', 'Current password is incorrect.'),
+                          isError: true,
+                        );
                       }
                       return;
                     }
                     await auth.changePassword(nouveau);
                     if (context.mounted) {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(context.tr('Mot de passe mis à jour avec succès.', 'Password updated successfully.')),
-                        backgroundColor: AppColors.success,
-                      ));
+                      ToastUtils.show(
+                        context,
+                        context.tr('Mot de passe mis à jour avec succès.', 'Password updated successfully.'),
+                      );
                     }
                   } catch (e) {
                     setStateDialog(() => isLoading = false);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('${context.tr('Erreur: ', 'Error: ')}$e'),
-                        backgroundColor: AppColors.error,
-                      ));
+                      ToastUtils.show(
+                        context,
+                        '${context.tr('Erreur: ', 'Error: ')}$e',
+                        isError: true,
+                      );
                     }
                   }
                 },

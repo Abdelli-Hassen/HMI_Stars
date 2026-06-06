@@ -20,6 +20,7 @@ import '../../../../core/services/platform_data_service.dart';
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 
 class EntrepriseDetailsPage extends StatefulWidget {
   const EntrepriseDetailsPage({super.key});
@@ -492,7 +493,11 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       tooltip: context.tr('Archiver l\'employé', 'Archive employee'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).archiverSalarie(salarie.id, salarie.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Employé archivé avec succès.', 'Employee archived successfully.')), backgroundColor: Colors.orange));
+                        ToastUtils.show(
+                          context,
+                          context.tr('Employé archivé avec succès.', 'Employee archived successfully.'),
+                          isError: false,
+                        );
                       },
                     ),
                     const SizedBox(width: 4),
@@ -501,7 +506,11 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       tooltip: context.tr('Supprimer l\'employé', 'Delete employee'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(salarie.id, salarie.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Employé supprimé définitivement.', 'Employee deleted permanently.')), backgroundColor: AppColors.error));
+                        ToastUtils.show(
+                          context,
+                          context.tr('Employé supprimé définitivement.', 'Employee deleted permanently.'),
+                          isError: true,
+                        );
                       },
                     ),
                   ],
@@ -597,7 +606,11 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       tooltip: context.tr('Désarchiver l\'employé', 'Unarchive employee'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).desarchiverSalarie(s.id, s.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Employé désarchivé avec succès.', 'Employee unarchived successfully.')), backgroundColor: AppColors.success));
+                        ToastUtils.show(
+                          context,
+                          context.tr('Employé désarchivé avec succès.', 'Employee unarchived successfully.'),
+                          isError: false,
+                        );
                       },
                     ),
                     const SizedBox(width: 4),
@@ -606,7 +619,11 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       tooltip: context.tr('Supprimer l\'archive', 'Delete archive'),
                       onPressed: () {
                         Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(s.id, s.entrepriseId);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Archive supprimée définitivement.', 'Archive deleted permanently.')), backgroundColor: AppColors.error));
+                        ToastUtils.show(
+                          context,
+                          context.tr('Archive supprimée définitivement.', 'Archive deleted permanently.'),
+                          isError: true,
+                        );
                       },
                     ),
                   ],
@@ -677,11 +694,19 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                             try {
                               await Provider.of<EntrepriseProvider>(context, listen: false).supprimerNote(note.id, entrepriseId);
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note supprimée.', 'Note deleted.')), backgroundColor: AppColors.success));
+                                ToastUtils.show(
+                                  context,
+                                  context.tr('Note supprimée.', 'Note deleted.'),
+                                  isError: false,
+                                );
                               }
                             } catch (e) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Erreur: ', 'Error: ') + e.toString()), backgroundColor: AppColors.error));
+                                ToastUtils.show(
+                                  context,
+                                  context.tr('Erreur: ', 'Error: ') + e.toString(),
+                                  isError: true,
+                                );
                               }
                             }
                           },
@@ -746,7 +771,11 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
 
   Future<void> _ajouter() async {
     if (_titreController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Le titre est obligatoire.', 'Title is required.'))));
+      ToastUtils.show(
+        context,
+        context.tr('Le titre est obligatoire.', 'Title is required.'),
+        isError: true,
+      );
       return;
     }
 
@@ -778,12 +807,20 @@ class _AddNoteDialogState extends State<_AddNoteDialog> {
       await Provider.of<EntrepriseProvider>(context, listen: false).ajouterNote(note);
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Note ajoutée avec succès !', 'Note added successfully!')), backgroundColor: AppColors.success));
+        ToastUtils.show(
+          context,
+          context.tr('Note ajoutée avec succès !', 'Note added successfully!'),
+          isError: false,
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Erreur: ', 'Error: ') + e.toString()), backgroundColor: AppColors.error));
+        ToastUtils.show(
+          context,
+          context.tr('Erreur: ', 'Error: ') + e.toString(),
+          isError: true,
+        );
       }
     }
   }
@@ -977,7 +1014,6 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
   }
 
   Future<void> _changeLogo() async {
-    final messenger = ScaffoldMessenger.of(context);
     final provider = Provider.of<EntrepriseProvider>(context, listen: false);
     try {
       final result = await FilePicker.pickFiles(
@@ -1003,24 +1039,27 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
           _logoUrl = updatedEntreprise.logoUrl;
           _isUploadingLogo = false;
         });
-        messenger.showSnackBar(SnackBar(
-          content: Text(context.trStatic('Logo mis à jour avec succès !', 'Logo updated successfully!')),
-          backgroundColor: AppColors.success,
-        ));
+        ToastUtils.show(
+          context,
+          context.trStatic('Logo mis à jour avec succès !', 'Logo updated successfully!'),
+          isError: false,
+        );
       } else {
         setState(() => _isUploadingLogo = false);
-        messenger.showSnackBar(SnackBar(
-          content: Text(context.trStatic('Erreur lors de la mise à jour du logo.', 'Error updating logo.')),
-          backgroundColor: AppColors.error,
-        ));
+        ToastUtils.show(
+          context,
+          context.trStatic('Erreur lors de la mise à jour du logo.', 'Error updating logo.'),
+          isError: true,
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isUploadingLogo = false);
-        messenger.showSnackBar(SnackBar(
-          content: Text(context.trStatic('Erreur lors de la sélection du fichier : ', 'Error selecting file: ') + e.toString()),
-          backgroundColor: AppColors.error,
-        ));
+        ToastUtils.show(
+          context,
+          context.trStatic('Erreur lors de la sélection du fichier : ', 'Error selecting file: ') + e.toString(),
+          isError: true,
+        );
       }
     }
   }
@@ -1038,11 +1077,10 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
         _tvaController.text.isEmpty ||
         _rcsController.text.isEmpty ||
         _codeApeController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.trStatic('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
-          backgroundColor: AppColors.error,
-        ),
+      ToastUtils.show(
+        context,
+        context.trStatic('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.'),
+        isError: true,
       );
       return;
     }
@@ -1068,8 +1106,10 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
 
     Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(entrepriseAjournee);
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.trStatic('Informations modifiées avec succès !', 'Information modified successfully!')), backgroundColor: AppColors.success),
+    ToastUtils.show(
+      context,
+      context.trStatic('Informations modifiées avec succès !', 'Information modified successfully!'),
+      isError: false,
     );
   }
 
@@ -1387,6 +1427,7 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
   Future<void> _ajouter() async {
     if (_nomController.text.isEmpty ||
         _prenomController.text.isEmpty ||
+        _genre.isEmpty ||
         _nomNaissanceController.text.isEmpty ||
         _cinController.text.isEmpty ||
         _nssController.text.isEmpty ||
@@ -1397,21 +1438,19 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
         _emailController.text.isEmpty ||
         _dateEmbauche == null ||
         _emploiPosteController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
-          backgroundColor: AppColors.error,
-        ),
+      ToastUtils.show(
+        context,
+        context.tr('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.'),
+        isError: true,
       );
       return;
     }
 
     if (_needsDateFin && _dateFinContrat == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('La date de fin de contrat est obligatoire pour un contrat ', 'Contract End Date is required for contract ') + _typeContrat),
-          backgroundColor: AppColors.error,
-        ),
+      ToastUtils.show(
+        context,
+        context.tr('La date de fin de contrat est obligatoire pour un contrat ', 'Contract End Date is required for contract ') + _typeContrat,
+        isError: true,
       );
       return;
     }
@@ -1467,12 +1506,20 @@ class _AddSalarieDialogState extends State<_AddSalarieDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Salarié ajouté avec succès !', 'Employee added successfully!')), backgroundColor: AppColors.success));
+        ToastUtils.show(
+          context,
+          context.tr('Salarié ajouté avec succès !', 'Employee added successfully!'),
+          isError: false,
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${context.tr('Erreur: ', 'Error: ')}$e'), backgroundColor: AppColors.error));
+        ToastUtils.show(
+          context,
+          '${context.tr('Erreur: ', 'Error: ')}$e',
+          isError: true,
+        );
       }
     }
   }
@@ -1974,18 +2021,19 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
         _emailController.text.isEmpty ||
         _dateEmbauche == null ||
         _emploiPosteController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.trStatic('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
-          backgroundColor: AppColors.error,
-        ),
+      ToastUtils.show(
+        context,
+        context.trStatic('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.'),
+        isError: true,
       );
       return;
     }
 
     if (_needsDateFin && _dateFinContrat == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.trStatic('La date de fin de contrat est obligatoire pour un contrat ', 'Contract End Date is required for contract ') + _typeContrat), backgroundColor: AppColors.error),
+      ToastUtils.show(
+        context,
+        context.trStatic('La date de fin de contrat est obligatoire pour un contrat ', 'Contract End Date is required for contract ') + _typeContrat,
+        isError: true,
       );
       return;
     }
@@ -2040,12 +2088,20 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.trStatic('Données du salarié modifiées avec succès !', 'Employee data modified successfully!')), backgroundColor: AppColors.success));
+        ToastUtils.show(
+          context,
+          context.trStatic('Données du salarié modifiées avec succès !', 'Employee data modified successfully!'),
+          isError: false,
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.trStatic('Erreur: ', 'Error: ') + e.toString()), backgroundColor: AppColors.error));
+        ToastUtils.show(
+          context,
+          context.trStatic('Erreur: ', 'Error: ') + e.toString(),
+          isError: true,
+        );
       }
     }
   }
@@ -2562,20 +2618,18 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.trStatic('Rapport exporté avec succès : ', 'Report exported successfully: ') + fileName),
-            backgroundColor: AppColors.success,
-          ),
+        ToastUtils.show(
+          context,
+          context.trStatic('Rapport exporté avec succès : ', 'Report exported successfully: ') + fileName,
+          isError: false,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.trStatic('Erreur lors de l\'export : ', 'Error during export: ') + e.toString()),
-            backgroundColor: AppColors.error,
-          ),
+        ToastUtils.show(
+          context,
+          context.trStatic('Erreur lors de l\'export : ', 'Error during export: ') + e.toString(),
+          isError: true,
         );
       }
     } finally {
@@ -2748,15 +2802,19 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.trStatic('Impossible d\'ouvrir le fichier ', 'Unable to open file ') + label)),
+          ToastUtils.show(
+            context,
+            context.trStatic('Impossible d\'ouvrir le fichier ', 'Unable to open file ') + label,
+            isError: true,
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.trStatic('Erreur lors de l\'ouverture du fichier : ', 'Error opening file: ') + e.toString())),
+        ToastUtils.show(
+          context,
+          context.trStatic('Erreur lors de l\'ouverture du fichier : ', 'Error opening file: ') + e.toString(),
+          isError: true,
         );
       }
     }

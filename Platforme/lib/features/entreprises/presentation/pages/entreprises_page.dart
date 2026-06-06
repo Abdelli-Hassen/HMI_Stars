@@ -7,6 +7,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/staggered_column.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 import '../../domain/models/entreprise.dart';
 import '../providers/entreprise_provider.dart';
 
@@ -310,9 +311,11 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
 
   Future<void> _creerEntreprise() async {
     if (_nomController.text.isEmpty ||
+        _gerantController.text.isEmpty ||
+        _descController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _mdpController.text.isEmpty ||
-        _gerantController.text.isEmpty ||
+        _adresseController.text.isEmpty ||
         _effectifController.text.isEmpty ||
         _telephoneController.text.isEmpty ||
         _sirenController.text.isEmpty ||
@@ -322,11 +325,10 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
         _tvaController.text.isEmpty ||
         _rcsController.text.isEmpty ||
         _codeApeController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.')),
-          backgroundColor: AppColors.error,
-        ),
+      ToastUtils.show(
+        context,
+        context.tr('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.'),
+        isError: true,
       );
       return;
     }
@@ -359,20 +361,18 @@ class _AddEntrepriseDialogState extends State<_AddEntrepriseDialog> {
           .ajouterEntreprise(nouvelleEntreprise);
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('Entreprise ajoutée avec succès !', 'Company added successfully!')),
-          backgroundColor: AppColors.success,
-        ),
+      ToastUtils.show(
+        context,
+        context.tr('Entreprise ajoutée avec succès !', 'Company added successfully!'),
+        isError: false,
       );
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('Erreur: ', 'Error: ') + e.toString()),
-          backgroundColor: AppColors.error,
-        ),
+      ToastUtils.show(
+        context,
+        context.tr('Erreur: ', 'Error: ') + e.toString(),
+        isError: true,
       );
     }
   }
