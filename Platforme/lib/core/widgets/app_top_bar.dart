@@ -95,11 +95,7 @@ class AppTopBar extends StatelessWidget {
             ),
           ),
 
-          // ─── Search Bar ───
-          if (searchBar != null)
-            searchBar!
-          else
-            _AnimatedSearchBar(),
+
 
           const SizedBox(width: 16),
 

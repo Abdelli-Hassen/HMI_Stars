@@ -26,6 +26,7 @@ class MessageriePage extends StatefulWidget {
 class _MessageriePageState extends State<MessageriePage> {
   ColorScheme get cs => Theme.of(context).colorScheme;
   final _textController = TextEditingController();
+  final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
   bool _initialise = false;
@@ -60,6 +61,7 @@ class _MessageriePageState extends State<MessageriePage> {
   @override
   void dispose() {
     _textController.dispose();
+    _searchController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -212,8 +214,18 @@ class _MessageriePageState extends State<MessageriePage> {
 
   Widget _buildSidebar(MessagerieProvider messagerie, EntrepriseProvider entreprises) {
     final list = messagerie.conversations.where((conv) {
-      if (_activeFilter == 'Favoris') {
-        return messagerie.estFavori(conv.entreprise.id);
+      final matchesFilter = _activeFilter == 'Favoris'
+          ? messagerie.estFavori(conv.entreprise.id)
+          : true;
+      if (!matchesFilter) return false;
+      
+      if (_searchController.text.isNotEmpty) {
+        final query = _searchController.text.toLowerCase();
+        final ent = entreprises.entreprises.firstWhere(
+          (e) => e.id == conv.entreprise.id,
+          orElse: () => conv.entreprise,
+        );
+        return ent.nom.toLowerCase().contains(query);
       }
       return true;
     }).toList();
@@ -232,14 +244,39 @@ class _MessageriePageState extends State<MessageriePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 6),
             child: Text(
               context.tr('Messagerie', 'Messaging'),
               style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface),
             ),
           ),
+          // Search input on messages sidebar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Container(
+              height: 36,
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.25)),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: context.tr('Rechercher...', 'Search...'),
+                  hintStyle: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+                  prefixIcon: Icon(Icons.search, size: 16, color: cs.outline),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  isDense: true,
+                ),
+                style: AppTextStyles.bodySmall.copyWith(color: cs.onSurface),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Container(
               height: 36,
               decoration: BoxDecoration(

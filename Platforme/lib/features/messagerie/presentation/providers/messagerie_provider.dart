@@ -444,19 +444,32 @@ class MessagerieProvider extends ChangeNotifier {
 
   // --- Favoris et Envoi Fichiers -------------------------------------------
 
+  bool _favorisCharges = false;
+  Future<void>? _loadingFavorisFuture;
+
   Future<void> _chargerFavoris() async {
+    if (_favorisCharges) return;
+    _loadingFavorisFuture ??= _executeLoadFavoris();
+    await _loadingFavorisFuture;
+  }
+
+  Future<void> _executeLoadFavoris() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       _favorisIds = prefs.getStringList('entreprises_favorites') ?? [];
+      _favorisCharges = true;
       notifyListeners();
     } catch (e) {
       debugPrint('[MessagerieProvider] Erreur chargement favoris : $e');
+    } finally {
+      _loadingFavorisFuture = null;
     }
   }
 
   bool estFavori(String id) => _favorisIds.contains(id);
 
   Future<void> toggleFavori(String id) async {
+    await _chargerFavoris();
     if (_favorisIds.contains(id)) {
       _favorisIds.remove(id);
     } else {

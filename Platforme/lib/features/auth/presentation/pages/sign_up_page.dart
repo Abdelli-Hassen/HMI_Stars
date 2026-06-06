@@ -137,7 +137,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(context.tr('Créer un compte', 'Create an account'),
-                              style: AppTextStyles.headlineLarge.copyWith(fontSize: 30)),
+                              style: AppTextStyles.headlineLarge.copyWith(fontSize: 30, color: cs.onSurface)),
                           const SizedBox(height: 6),
                           Text(
                             context.tr('Démarrez votre transformation digitale aujourd\'hui.', 'Start your digital transformation today.'),

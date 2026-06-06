@@ -206,7 +206,7 @@ class _LoginPageState extends State<LoginPage> {
                         Text(
                           context.tr('Espace Client', 'Client Space'),
                           style:
-                              AppTextStyles.headlineLarge.copyWith(fontSize: 30),
+                              AppTextStyles.headlineLarge.copyWith(fontSize: 30, color: cs.onSurface),
                         ),
                         const SizedBox(height: 8),
                         Text(

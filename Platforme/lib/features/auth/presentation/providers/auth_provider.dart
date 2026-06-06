@@ -53,6 +53,39 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _init() async {
     debugPrint('[AuthProvider] init');
 
+    // 1. Listen to auth state changes first
+    _authService.onAuthStateChange.listen((state) async {
+      debugPrint('[AuthProvider] Auth event: ${state.event}');
+      if (state.event == AuthChangeEvent.passwordRecovery) {
+        _user = state.session?.user;
+        _status = AuthStatus.unauthenticated;
+        _errorMessage = null;
+        notifyListeners();
+        _navigateToResetPassword();
+        return;
+      }
+
+      if (state.session?.user != null) {
+        _user = state.session!.user;
+        await _verifierEtChargerProfil();
+      } else {
+        _user = null;
+        _utilisateur = null;
+        _status = AuthStatus.unauthenticated;
+      }
+      _errorMessage = null;
+      notifyListeners();
+    });
+
+    // 2. If recovery flow is detected in the URL, return early to keep the token session
+    final isRecovery = Uri.base.toString().contains('recovery');
+    if (isRecovery) {
+      debugPrint('[AuthProvider] Recovery flow detected, skipping initial checks');
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return;
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final rememberMe = prefs.getBool('remember_me') ?? false;
@@ -70,7 +103,7 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('[AuthProvider] No valid session');
       _user = null;
       _status = AuthStatus.unauthenticated;
-      _authService.signOut();
+      await _authService.signOut();
       notifyListeners();
       return;
     }
@@ -95,30 +128,6 @@ class AuthProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-
-    // Écouter les changements d'état auth
-    _authService.onAuthStateChange.listen((state) async {
-      debugPrint('[AuthProvider] Auth event: ${state.event}');
-      if (state.event == AuthChangeEvent.passwordRecovery) {
-        _user = state.session?.user;
-        _status = AuthStatus.unauthenticated;
-        _errorMessage = null;
-        notifyListeners();
-        _navigateToResetPassword();
-        return;
-      }
-
-      if (state.session?.user != null) {
-        _user = state.session!.user;
-        await _verifierEtChargerProfil();
-      } else {
-        _user = null;
-        _utilisateur = null;
-        _status = AuthStatus.unauthenticated;
-      }
-      _errorMessage = null;
-      notifyListeners();
-    });
   }
 
   /// Vérifie que l'utilisateur a un profil valide dans la base.

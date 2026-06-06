@@ -130,7 +130,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         children: [
                           Text(
                             context.tr('Mot de passe oublié ?', 'Forgot Password?'),
-                            style: AppTextStyles.headlineLarge.copyWith(fontSize: 30),
+                            style: AppTextStyles.headlineLarge.copyWith(fontSize: 30, color: cs.onSurface),
                           ),
                           const SizedBox(height: 8),
                           Text(

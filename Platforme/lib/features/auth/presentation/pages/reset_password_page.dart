@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
@@ -87,6 +88,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           ],
         ),
       );
+    } on AuthException catch (e) {
+      String msg = e.message;
+      if (msg.toLowerCase().contains('session missing') ||
+          msg.toLowerCase().contains('invalid token') ||
+          msg.toLowerCase().contains('expired')) {
+        msg = context.tr(
+          "Lien expiré ou invalide. Veuillez demander un nouveau lien de réinitialisation.",
+          "Expired or invalid link. Please request a new reset link.",
+        );
+      }
+      setState(() => _errorMessage = msg);
     } catch (e) {
       setState(() => _errorMessage = context.tr(
           "Une erreur est survenue lors de la réinitialisation.",
@@ -155,7 +167,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           Text(
                             context.tr('Réinitialiser le mot de passe',
                                 'Reset Password'),
-                            style: AppTextStyles.headlineLarge.copyWith(fontSize: 30),
+                            style: AppTextStyles.headlineLarge.copyWith(fontSize: 30, color: cs.onSurface),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -191,6 +203,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                 ],
                               ),
                             ),
+
+
 
                           // New Password
                           Text(

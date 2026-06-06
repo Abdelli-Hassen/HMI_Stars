@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 
 
+import '../../../../core/utils/translation_extension.dart';
+
 /// Reusable left-side hero panel for all authentication screens.
 class AuthHeroPanel extends StatelessWidget {
   final String headline;
@@ -110,7 +112,10 @@ class AuthHeroPanel extends StatelessWidget {
 
                 // ─── Footer ───
                 Text(
-                  '© 2026 HMI Stars Consulting. Tous droits réservés.',
+                  context.tr(
+                    '© 2026 HMI Stars Consulting. Tous droits réservés.',
+                    '© 2026 HMI Stars Consulting. All rights reserved.',
+                  ),
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.3),
@@ -163,7 +168,7 @@ class TrustBadgeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Certifié Sécurité Bancaire',
+                    context.tr('Certifié Sécurité Bancaire', 'Certified Bank Security'),
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -171,7 +176,7 @@ class TrustBadgeCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Chiffrement de bout en bout AES-256',
+                    context.tr('Chiffrement de bout en bout AES-256', 'End-to-end encryption AES-256'),
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.5),
@@ -189,7 +194,7 @@ class TrustBadgeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ACCOMPAGNEMENT ANNUEL',
+                    context.tr('ACCOMPAGNEMENT ANNUEL', 'ANNUAL SUPPORT'),
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -212,7 +217,7 @@ class TrustBadgeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Entreprises',
+                        context.tr('Entreprises', 'Companies'),
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: const Color(0xFF93C5FD),
@@ -228,72 +233,6 @@ class TrustBadgeCard extends StatelessWidget {
                 size: 24,
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Testimonial card shown on sign-up page hero.
-class TestimonialCard extends StatelessWidget {
-  const TestimonialCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: AppColors.surfaceContainer,
-                child: Icon(Icons.person, color: AppColors.onSurfaceVariant),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Clara Valmont',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    'EXPERT COMPTABLE SENIOR',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.6),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '"HMI Stars Consulting nous accompagne quotidiennement dans la création et la gestion de notre entreprise. Une expertise inestimable pour notre développement social et commercial."',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-              color: Colors.white.withValues(alpha: 0.85),
-              height: 1.6,
-            ),
           ),
         ],
       ),
