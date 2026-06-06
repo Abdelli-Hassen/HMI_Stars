@@ -298,6 +298,70 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> verifyRecoveryOTP(String email, String token) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final response = await _authService.verifyRecoveryOTP(email, token);
+      _user = response.user;
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return true;
+    } on AuthException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = 'Code invalide ou expiré.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> verifySignupOTP(String email, String token) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final response = await _authService.verifySignupOTP(email, token);
+      _user = response.user;
+      
+      _utilisateur = await _dataService.recupererUtilisateur(_user!.id);
+      if (_utilisateur == null) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        _utilisateur = await _dataService.recupererUtilisateur(_user!.id);
+      }
+
+      if (_utilisateur != null) {
+        _status = AuthStatus.authenticated;
+        _emailNonConfirme = false;
+        _emailEnAttente = null;
+        _errorMessage = null;
+      } else {
+        _status = AuthStatus.error;
+        _errorMessage = 'Le profil n\'a pas pu être créé. Contactez l\'administrateur.';
+        _user = null;
+        await _authService.signOut();
+      }
+
+      notifyListeners();
+      return _utilisateur != null;
+    } on AuthException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = 'Code invalide ou expiré.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Change the current user's password via Supabase Auth.
   Future<void> changePassword(String newPassword) async {
     await _authService.updatePassword(newPassword);

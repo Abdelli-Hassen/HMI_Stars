@@ -18,17 +18,21 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailController = TextEditingController();
+  final _otpController = TextEditingController();
   bool _loading = false;
   String? _errorMessage;
+  bool _codeSent = false;
 
   @override
   void dispose() {
     _emailController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
-  Future<void> _resetPassword() async {
-    if (_emailController.text.isEmpty) {
+  Future<void> _sendOTP() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
       setState(() => _errorMessage = context.tr(
           "Veuillez entrer votre adresse e-mail.",
           "Please enter your email address."));
@@ -42,7 +46,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     final auth = context.read<AuthProvider>();
     auth.clearError();
-    await auth.resetPassword(_emailController.text.trim());
+    await auth.resetPassword(email);
 
     if (!mounted) return;
     setState(() => _loading = false);
@@ -50,27 +54,46 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (auth.errorMessage != null) {
       setState(() => _errorMessage = auth.errorMessage);
     } else {
-      showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(context.tr(
-              'Vérification d\'email requise', 'Email Verification Required')),
+      setState(() {
+        _codeSent = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text(context.tr(
-              'Un lien de réinitialisation a été envoyé. Veuillez vérifier votre boîte de réception et cliquer sur le lien avant de vous connecter.',
-              'A reset link has been sent. Please check your inbox and click the link before logging in.')),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pushReplacementNamed(context, AppRoutes.login);
-              },
-              child: const Text('OK'),
-            ),
-          ],
+            "Un code OTP a été envoyé à votre adresse e-mail.",
+            "An OTP code has been sent to your email address.",
+          )),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
+    }
+  }
+
+  Future<void> _verifyOTP() async {
+    final email = _emailController.text.trim();
+    final otp = _otpController.text.trim();
+    if (otp.isEmpty) {
+      setState(() => _errorMessage = context.tr(
+          "Veuillez entrer le code OTP.",
+          "Please enter the OTP code."));
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+
+    final auth = context.read<AuthProvider>();
+    final success = await auth.verifyRecoveryOTP(email, otp);
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, AppRoutes.resetPassword);
+    } else if (auth.errorMessage != null) {
+      setState(() => _errorMessage = auth.errorMessage);
     }
   }
 
@@ -134,10 +157,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            context.tr(
-                              'Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.',
-                              'Enter your email address to receive a reset link.',
-                            ),
+                            _codeSent
+                                ? context.tr(
+                                    'Veuillez entrer le code de vérification à 6 chiffres reçu par e-mail.',
+                                    'Please enter the 6-digit verification code received by email.',
+                                  )
+                                : context.tr(
+                                    'Entrez votre adresse e-mail pour recevoir un code de réinitialisation.',
+                                    'Enter your email address to receive a reset code.',
+                                  ),
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -166,30 +194,81 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ),
                             ),
 
-                          Text(
-                            context.tr(
-                              'ADRESSE E-MAIL PROFESSIONNELLE',
-                              'PROFESSIONAL EMAIL ADDRESS',
-                            ),
-                            style: AppTextStyles.labelSmall.copyWith(
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.w700,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.email_outlined,
-                                  size: 20, color: cs.outline),
-                              hintText: context.tr(
-                                'nom@entreprise.fr',
-                                'name@company.com',
+                          if (!_codeSent) ...[
+                            Text(
+                              context.tr(
+                                'ADRESSE E-MAIL PROFESSIONNELLE',
+                                'PROFESSIONAL EMAIL ADDRESS',
+                              ),
+                              style: AppTextStyles.labelSmall.copyWith(
+                                letterSpacing: 1.2,
+                                fontWeight: FontWeight.w700,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                prefixIcon: Icon(Icons.email_outlined,
+                                    size: 20, color: cs.outline),
+                                hintText: context.tr(
+                                  'nom@entreprise.fr',
+                                  'name@company.com',
+                                ),
+                              ),
+                            ),
+                          ] else ...[
+                            Text(
+                              context.tr(
+                                'CODE DE VÉRIFICATION (OTP)',
+                                'VERIFICATION CODE (OTP)',
+                              ),
+                              style: AppTextStyles.labelSmall.copyWith(
+                                letterSpacing: 1.2,
+                                fontWeight: FontWeight.w700,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _otpController,
+                              keyboardType: TextInputType.number,
+                              maxLength: 6,
+                              decoration: InputDecoration(
+                                counterText: "",
+                                prefixIcon: Icon(Icons.lock_outline,
+                                    size: 20, color: cs.outline),
+                                hintText: '123456',
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _codeSent = false;
+                                  _otpController.clear();
+                                });
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                context.tr(
+                                  "Renvoyer le code ou changer d'e-mail",
+                                  "Resend code or change email",
+                                ),
+                                style: TextStyle(
+                                  color: cs.primary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 28),
 
                           // Submit Button
@@ -208,7 +287,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                 ],
                               ),
                               child: ElevatedButton(
-                                onPressed: _loading ? null : _resetPassword,
+                                onPressed: _loading ? null : (_codeSent ? _verifyOTP : _sendOTP),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   shadowColor: Colors.transparent,
@@ -229,8 +308,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            context.tr(
-                                                'Envoyer le lien', 'Send Link'),
+                                            _codeSent
+                                                ? context.tr(
+                                                    'Vérifier le code', 'Verify Code')
+                                                : context.tr(
+                                                    'Obtenir le code', 'Get Code'),
                                             style: GoogleFonts.manrope(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w700,
@@ -245,7 +327,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 28),
                           Divider(color: cs.surfaceContainer),
                           const SizedBox(height: 16),

@@ -51,80 +51,143 @@ class _LoginPageState extends State<LoginPage> {
       _afficherDialogueConfirmation(auth);
     }
   }
-
   void _afficherDialogueConfirmation(AuthProvider auth) {
     final cs = Theme.of(context).colorScheme;
+    final otpController = TextEditingController();
+    bool dialogLoading = false;
+    String? dialogError;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: Icon(Icons.mark_email_unread_outlined, size: 48, color: cs.primary),
-        title: Text(
-          context.tr('E-mail non confirmé', 'Email Unconfirmed'),
-          style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
-        ),
-        content: Text(
-          context.tr(
-            'Votre adresse e-mail n\'a pas encore été vérifiée.\n\nVoulez-vous recevoir un nouvel e-mail de confirmation ?',
-            'Your email address has not been verified yet.\n\nWould you like to receive a new confirmation email?',
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          icon: Icon(Icons.mark_email_unread_outlined, size: 48, color: cs.primary),
+          title: Text(
+            context.tr('Confirmez votre compte', 'Confirm Your Account'),
+            style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
           ),
-          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          TextButton(
-            onPressed: () {
-              auth.clearError();
-              Navigator.pop(ctx);
-            },
-            child: Text(
-              context.tr('Non, plus tard', 'No, later'),
-              style: AppTextStyles.labelMedium.copyWith(color: cs.outline),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.tr(
+                  'Veuillez entrer le code de confirmation (OTP) à 6 chiffres envoyé à votre adresse e-mail.',
+                  'Please enter the 6-digit confirmation code (OTP) sent to your email address.',
+                ),
+                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: InputDecoration(
+                  counterText: "",
+                  hintText: '123456',
+                  prefixIcon: Icon(Icons.lock_outline, color: cs.outline),
+                  errorText: dialogError,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: dialogLoading
+                    ? null
+                    : () async {
+                        setState(() {
+                          dialogLoading = true;
+                          dialogError = null;
+                        });
+                        final sent = await auth.renvoyerConfirmation();
+                        setState(() {
+                          dialogLoading = false;
+                        });
+                        if (sent) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(context.tr(
+                                'Code de confirmation renvoyé !',
+                                'Confirmation code resent!',
+                              )),
+                              backgroundColor: Colors.green.shade700,
+                            ),
+                          );
+                        } else {
+                          setState(() {
+                            dialogError = auth.errorMessage ?? context.tr('Erreur de renvoi.', 'Failed to resend.');
+                          });
+                        }
+                      },
+                child: Text(
+                  context.tr('Renvoyer le code', 'Resend Code'),
+                  style: TextStyle(color: cs.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+              if (dialogLoading)
+                const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: dialogLoading
+                  ? null
+                  : () {
+                      auth.clearError();
+                      Navigator.pop(ctx);
+                    },
+              child: Text(
+                context.tr('Annuler', 'Cancel'),
+                style: AppTextStyles.labelMedium.copyWith(color: cs.outline),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() => _loading = true);
-              final sent = await auth.renvoyerConfirmation();
-              if (!mounted) return;
-              setState(() => _loading = false);
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: dialogLoading
+                  ? null
+                  : () async {
+                      final code = otpController.text.trim();
+                      if (code.isEmpty) {
+                        setState(() => dialogError = context.tr('Veuillez entrer le code.', 'Please enter the code.'));
+                        return;
+                      }
 
-              if (sent) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.tr(
-                        '📧 E-mail de confirmation renvoyé ! Vérifiez votre boîte mail.',
-                        '📧 Confirmation email resent! Please check your inbox.')),
-                    backgroundColor: Colors.green.shade700,
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 5),
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.tr(
-                        'Impossible de renvoyer l\'e-mail. Réessayez dans quelques secondes.',
-                        'Unable to resend email. Please try again in a few seconds.')),
-                    backgroundColor: Colors.red.shade700,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            },
-            icon: const Icon(Icons.send, size: 18),
-            label: Text(context.tr('Oui, renvoyer', 'Yes, resend')),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: cs.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      setState(() {
+                        dialogLoading = true;
+                        dialogError = null;
+                      });
+
+                      final success = await auth.verifySignupOTP(auth.emailEnAttente ?? '', code);
+
+                      if (!ctx.mounted) return;
+
+                      setState(() {
+                        dialogLoading = false;
+                      });
+
+                      if (success) {
+                        Navigator.pop(ctx);
+                        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+                      } else {
+                        setState(() {
+                          dialogError = auth.errorMessage ?? context.tr('Code invalide ou expiré.', 'Invalid or expired code.');
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: cs.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(context.tr('Confirmer', 'Confirm')),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -72,6 +72,22 @@ class PlatformAuthService {
     await _client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
   }
 
+  Future<AuthResponse> verifyRecoveryOTP(String email, String token) async {
+    return await _client.auth.verifyOTP(
+      email: email,
+      token: token,
+      type: OtpType.recovery,
+    );
+  }
+
+  Future<AuthResponse> verifySignupOTP(String email, String token) async {
+    return await _client.auth.verifyOTP(
+      email: email,
+      token: token,
+      type: OtpType.signup,
+    );
+  }
+
   /// Updates the current user's password.
   Future<void> updatePassword(String newPassword) async {
     debugPrint('[Auth] Updating password');
