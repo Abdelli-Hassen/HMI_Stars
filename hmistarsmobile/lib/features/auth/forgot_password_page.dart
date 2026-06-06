@@ -14,12 +14,18 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailController = TextEditingController();
+  final _otpController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _sent = false;
   bool _loading = false;
+  bool _verifying = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
+    _otpController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -58,6 +64,55 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg)),
         );
+    }
+  }
+
+  Future<void> _verifyAndReset() async {
+    final token = _otpController.text.trim();
+    final newPassword = _passwordController.text.trim();
+    if (token.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez saisir le code OTP à 6 chiffres.')),
+      );
+      return;
+    }
+    if (newPassword.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Le nouveau mot de passe doit contenir au moins 8 caractères.')),
+      );
+      return;
+    }
+    setState(() => _verifying = true);
+    try {
+      final appState = context.read<AppState>();
+      final email = _emailController.text.trim();
+      final ok = await appState.verifyRecoveryOTP(email, token);
+      if (!ok) {
+        setState(() => _verifying = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Code incorrect ou expiré.')),
+          );
+        }
+        return;
+      }
+      await appState.updatePassword(newPassword);
+      if (mounted) {
+        setState(() => _verifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mot de passe réinitialisé avec succès.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/connexion');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _verifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: ${e.toString()}')),
+        );
       }
     }
   }
@@ -94,7 +149,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Entrez votre adresse e-mail institutionnelle. Nous vous enverrons un lien pour réinitialiser votre mot de passe.',
+                'Entrez votre adresse e-mail institutionnelle. Nous vous enverrons un code OTP pour réinitialiser votre mot de passe.',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -161,7 +216,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   ),
                                 )
                               : Text(
-                                  'Envoyer le lien',
+                                  'Envoyer le code',
                                   style: GoogleFonts.manrope(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
@@ -176,40 +231,99 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.green.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        color: Colors.green,
-                        size: 48,
-                      ),
-                      const SizedBox(height: 16),
                       Text(
-                        'Lien envoyé !',
-                        style: GoogleFonts.manrope(
-                          fontSize: 20,
+                        'CODE DE CONFIRMATION (OTP)',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: Theme.of(context).colorScheme.primary,
+                          letterSpacing: 1.2,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Vérifiez votre boîte mail et suivez les instructions pour réinitialiser votre mot de passe.',
+                      TextField(
+                        controller: _otpController,
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          height: 1.5,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 6,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: '000000',
+                          counterText: '',
                         ),
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () => context.go('/connexion'),
-                        child: const Text('Retour à la connexion'),
+                      Text(
+                        'NOUVEAU MOT DE PASSE',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.primary,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _verifying ? null : _verifyAndReset,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: _verifying
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Réinitialiser le mot de passe',
+                                  style: GoogleFonts.manrope(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                        ),
                       ),
                     ],
                   ),

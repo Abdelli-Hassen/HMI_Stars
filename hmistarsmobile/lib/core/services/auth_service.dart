@@ -30,8 +30,27 @@ class AuthService {
     await _client.auth.signOut();
   }
 
-  /// Sends a password reset email.
   Future<void> resetPassword(String email) async {
     await _client.auth.resetPasswordForEmail(email);
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
+  }
+
+  Future<AuthResponse> verifyRecoveryOTP(String email, String token) async {
+    return await _client.auth.verifyOTP(
+      email: email,
+      token: token,
+      type: OtpType.recovery,
+    );
+  }
+
+  Future<AuthResponse> verifySignupOTP(String email, String token) async {
+    return await _client.auth.verifyOTP(
+      email: email,
+      token: token,
+      type: OtpType.signup,
+    );
   }
 }

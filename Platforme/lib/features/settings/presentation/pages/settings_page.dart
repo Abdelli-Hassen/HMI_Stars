@@ -236,7 +236,28 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 28),
         _textField(context.tr('Nom Complet', 'Full Name'), _nomController, Icons.person_outline),
         const SizedBox(height: 16),
-        _disabledTextField(context.tr('Adresse E-mail', 'Email Address'), _emailController, Icons.email_outlined),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: _disabledTextField(context.tr('Adresse E-mail', 'Email Address'), _emailController, Icons.email_outlined),
+            ),
+            const SizedBox(width: 12),
+            OutlinedButton.icon(
+              onPressed: _changerAdresseEmailDialog,
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                side: BorderSide(color: cs.outline.withValues(alpha: 0.35)),
+              ),
+              icon: Icon(Icons.edit_outlined, size: 16, color: cs.primary),
+              label: Text(
+                context.tr('Modifier', 'Change'),
+                style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         _textField(context.tr('Téléphone', 'Phone'), _phoneController, Icons.phone_outlined),
         const SizedBox(height: 16),
@@ -262,9 +283,8 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _lockedTextField(context.tr("Organisation", "Organization"), 'HMI Stars Consulting', Icons.corporate_fare),
         const SizedBox(height: 16),
-        _staticDropdownField(context.tr('Langue par défaut', 'Default Language'), _selectedLangue, ['Français (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
+        _staticDropdownField(context.tr('Langue par dÃ©faut', 'Default Language'), _selectedLangue, ['FranÃ§ais (FR)', 'English (EN)'], (v) => setState(() => _selectedLangue = v!)),
         const SizedBox(height: 16),
-        // Dark Mode Toggle
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -283,46 +303,212 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('Mode Sombre', 'Dark Mode'),
-                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      themeProvider.isDarkMode ? context.tr('Activé', 'Enabled') : context.tr('Désactivé', 'Disabled'),
-                      style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                ),
+                Text(context.tr('Mode Sombre', 'Dark Mode'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)),
               ],
             ),
             Switch(
               value: themeProvider.isDarkMode,
               onChanged: (val) => themeProvider.toggleTheme(val),
               activeThumbColor: cs.primary,
-              activeTrackColor: cs.primary.withValues(alpha: 0.3),
-              inactiveThumbColor: cs.outline,
-              inactiveTrackColor: cs.surfaceContainerHigh,
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _saveButton(_sauvegarderWorkspace),
       ]),
     );
   }
 
+  void _changerAdresseEmailDialog() {
+    final emailCtrl = TextEditingController(text: _emailController.text);
+    final otpCtrl = TextEditingController();
+    bool showOtpStep = false;
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          final cs = Theme.of(context).colorScheme;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: cs.surfaceContainerLowest,
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+            actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: Icon(Icons.email_outlined, color: cs.primary),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  showOtpStep 
+                      ? context.tr('Vérification OTP', 'OTP Verification')
+                      : context.tr('Modifier l\'e-mail', 'Change Email'), 
+                  style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface)
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!showOtpStep) ...[
+                  Text(context.tr('Nouvelle adresse e-mail', 'New Email Address'), style: AppTextStyles.labelMedium.copyWith(color: cs.onSurfaceVariant)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      hintText: 'exemple@hmistars.com', 
+                      isDense: true,
+                      filled: true,
+                      fillColor: cs.surfaceContainerLow,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                      prefixIcon: Icon(Icons.mail_outline, size: 18, color: cs.outline),
+                    ), 
+                    style: TextStyle(color: cs.onSurface),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    context.tr('Un code de confirmation sera envoyé à cette adresse.', 'A confirmation code will be sent to this address.'), 
+                    style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)
+                  ),
+                ] else ...[
+                  Text(
+                    '${context.tr('Saisissez le code à 6 chiffres envoyé à', 'Enter the 6-digit code sent to')} ${emailCtrl.text.trim()}', 
+                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface)
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: otpCtrl,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24, 
+                      fontWeight: FontWeight.bold, 
+                      letterSpacing: 8, 
+                      color: cs.primary
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '000000',
+                      counterText: '',
+                      filled: true,
+                      fillColor: cs.surfaceContainerLow,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pop(context), 
+                style: TextButton.styleFrom(foregroundColor: cs.onSurfaceVariant),
+                child: Text(context.tr('Annuler', 'Cancel'))
+              ),
+              ElevatedButton(
+                onPressed: isLoading ? null : () async {
+                  if (!showOtpStep) {
+                    final targetEmail = emailCtrl.text.trim();
+                    if (targetEmail.isEmpty || !targetEmail.contains('@')) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(context.tr('Veuillez entrer un e-mail valide.', 'Please enter a valid email.')),
+                        backgroundColor: AppColors.error,
+                      ));
+                      return;
+                    }
+                    setStateDialog(() => isLoading = true);
+                    try {
+                      final auth = Provider.of<AuthProvider>(context, listen: false);
+                      await auth.updateEmail(targetEmail);
+                      setStateDialog(() {
+                        isLoading = false;
+                        showOtpStep = true;
+                      });
+                    } catch (e) {
+                      setStateDialog(() => isLoading = false);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('${context.tr('Erreur: ', 'Error: ')}$e'),
+                          backgroundColor: AppColors.error,
+                        ));
+                      }
+                    }
+                  } else {
+                    final token = otpCtrl.text.trim();
+                    if (token.length < 6) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(context.tr('Veuillez entrer un code de 6 chiffres.', 'Please enter a 6-digit code.')),
+                        backgroundColor: AppColors.error,
+                      ));
+                      return;
+                    }
+                    setStateDialog(() => isLoading = true);
+                    try {
+                      final auth = Provider.of<AuthProvider>(context, listen: false);
+                      final success = await auth.verifyEmailChangeOTP(emailCtrl.text.trim(), token);
+                      if (success) {
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(context.tr('Adresse e-mail modifiée avec succès !', 'Email address updated successfully!')),
+                            backgroundColor: AppColors.success,
+                          ));
+                        }
+                      } else {
+                        setStateDialog(() => isLoading = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(context.tr('Code incorrect ou expiré.', 'Incorrect or expired code.')),
+                            backgroundColor: AppColors.error,
+                          ));
+                        }
+                      }
+                    } catch (e) {
+                      setStateDialog(() => isLoading = false);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('${context.tr('Erreur: ', 'Error: ')}$e'),
+                          backgroundColor: AppColors.error,
+                        ));
+                      }
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary, 
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: isLoading
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(showOtpStep ? context.tr('Confirmer', 'Confirm') : context.tr('Envoyer le code', 'Send Code')),
+              ),
+            ],
+          );
+        }
+      )
+    );
+  }
 
   void _modifierMotDePasse() {
+    final ancienCtrl = TextEditingController();
+    final nouveauCtrl = TextEditingController();
     bool obscureAncien = true;
     bool obscureNouveau = true;
     bool isLoading = false;
-    final ancienCtrl = TextEditingController();
-    final nouveauCtrl = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -404,7 +590,15 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ElevatedButton(
                 onPressed: isLoading ? null : () async {
+                  final ancien = ancienCtrl.text;
                   final nouveau = nouveauCtrl.text.trim();
+                  if (ancien.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(context.tr('Veuillez entrer votre ancien mot de passe.', 'Please enter your current password.')),
+                      backgroundColor: AppColors.error,
+                    ));
+                    return;
+                  }
                   if (nouveau.length < 8) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(context.tr('Le mot de passe doit contenir au moins 8 caractères.', 'Password must be at least 8 characters long.')),
@@ -415,6 +609,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   setStateDialog(() => isLoading = true);
                   try {
                     final auth = Provider.of<AuthProvider>(context, listen: false);
+                    final isOldCorrect = await auth.verifyCurrentPassword(ancien);
+                    if (!isOldCorrect) {
+                      setStateDialog(() => isLoading = false);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(context.tr('L\'ancien mot de passe est incorrect.', 'Current password is incorrect.')),
+                          backgroundColor: AppColors.error,
+                        ));
+                      }
+                      return;
+                    }
                     await auth.changePassword(nouveau);
                     if (context.mounted) {
                       Navigator.pop(context);

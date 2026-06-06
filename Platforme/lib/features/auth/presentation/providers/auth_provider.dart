@@ -362,9 +362,69 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateEmail(String newEmail) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _authService.updateEmail(newEmail);
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+    } on AuthException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      rethrow;
+    } catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = 'Erreur lors de la modification de l\'e-mail.';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<bool> verifyEmailChangeOTP(String newEmail, String token) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _authService.verifyEmailChangeOTP(newEmail, token);
+      
+      if (_utilisateur != null) {
+        _utilisateur = await _dataService.mettreAJourUtilisateur(
+          _utilisateur!.copyWith(email: newEmail),
+        );
+      }
+      
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      return true;
+    } on AuthException catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = AuthStatus.error;
+      _errorMessage = 'Code invalide ou expiré.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Change the current user's password via Supabase Auth.
   Future<void> changePassword(String newPassword) async {
     await _authService.updatePassword(newPassword);
+  }
+
+  /// Verifies the current user's password.
+  Future<bool> verifyCurrentPassword(String password) async {
+    try {
+      await _authService.signIn(email: userEmail, password: password);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> signOut() async {

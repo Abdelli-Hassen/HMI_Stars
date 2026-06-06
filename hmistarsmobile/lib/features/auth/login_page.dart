@@ -39,11 +39,107 @@ class _LoginPageState extends State<LoginPage> {
       if (errorMessage == null) {
         context.go('/tableau-de-bord');
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        if (errorMessage.toLowerCase().contains('non confirm') ||
+            errorMessage.toLowerCase().contains('not confirmed')) {
+          _showOtpDialog(_emailController.text.trim());
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        }
       }
     }
+  }
+
+  void _showOtpDialog(String email) {
+    final otpController = TextEditingController();
+    bool isVerifying = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setStateDialog) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Confirmation de Compte'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Saisissez le code de confirmation à 6 chiffres envoyé à $email',
+                  style: GoogleFonts.inter(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 6,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: '000000',
+                    counterText: '',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isVerifying ? null : () => Navigator.pop(dialogContext),
+                child: const Text('Annuler'),
+              ),
+              ElevatedButton(
+                onPressed: isVerifying ? null : () async {
+                  final token = otpController.text.trim();
+                  if (token.length < 6) return;
+
+                  setStateDialog(() => isVerifying = true);
+                  try {
+                    final appState = context.read<AppState>();
+                    final ok = await appState.verifySignupOTP(email, token);
+                    if (mounted) {
+                      Navigator.pop(dialogContext);
+                      if (ok) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Compte confirmé avec succès !'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        context.go('/tableau-de-bord');
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Code incorrect ou expiré.')),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    setStateDialog(() => isVerifying = false);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erreur: ${e.toString()}')),
+                      );
+                    }
+                  }
+                },
+                child: isVerifying
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Valider'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   @override

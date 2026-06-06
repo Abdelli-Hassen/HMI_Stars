@@ -139,6 +139,34 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     await _authService.resetPassword(email);
   }
 
+  Future<void> updatePassword(String newPassword) async {
+    await _authService.updatePassword(newPassword);
+  }
+
+  Future<bool> verifyRecoveryOTP(String email, String token) async {
+    try {
+      final response = await _authService.verifyRecoveryOTP(email, token);
+      return response.user != null;
+    } catch (e) {
+      debugPrint('[AppState] verifyRecoveryOTP error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> verifySignupOTP(String email, String token) async {
+    try {
+      final response = await _authService.verifySignupOTP(email, token);
+      if (response.user != null) {
+        _onSignedIn(response.session);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('[AppState] verifySignupOTP error: $e');
+      return false;
+    }
+  }
+
   void _onSignedIn(Session? session) async {
     _isAuthenticated = true;
     notifyListeners();
