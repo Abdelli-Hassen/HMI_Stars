@@ -17,11 +17,21 @@ class UrgentsPage extends StatefulWidget {
 class _UrgentsPageState extends State<UrgentsPage> {
   bool _isLoading = true;
   bool _isListView = false;
+  String? _targetNoteId;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String) {
+      _targetNoteId = args;
+    }
   }
 
   Future<void> _loadData() async {
@@ -129,6 +139,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                           entrepriseNom: nom,
                           isList: true,
                           onTap: () => _navigateToSource(note),
+                          isHighlighted: note.id == _targetNoteId,
                         );
                       },
                     )
@@ -146,6 +157,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                             entrepriseNom: nom,
                             isList: false,
                             onTap: () => _navigateToSource(note),
+                            isHighlighted: note.id == _targetNoteId,
                           ),
                         );
                       }).toList(),
@@ -162,51 +174,128 @@ class _UrgentNoteCard extends StatefulWidget {
   final String entrepriseNom;
   final bool isList;
   final VoidCallback onTap;
+  final bool isHighlighted;
 
   const _UrgentNoteCard({
     required this.note,
     required this.entrepriseNom,
     required this.isList,
     required this.onTap,
+    this.isHighlighted = false,
   });
 
   @override
   State<_UrgentNoteCard> createState() => _UrgentNoteCardState();
 }
 
-class _UrgentNoteCardState extends State<_UrgentNoteCard> {
+class _UrgentNoteCardState extends State<_UrgentNoteCard> with TickerProviderStateMixin {
   bool _isHovered = false;
+  AnimationController? _highlightController;
+  Animation<double>? _highlightAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _highlightController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    _highlightAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.2).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.2, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.2).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.2, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)),
+        weight: 25,
+      ),
+    ]).animate(_highlightController!);
+
+    if (widget.isHighlighted) {
+      _highlightController?.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _UrgentNoteCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isHighlighted && !oldWidget.isHighlighted) {
+      _highlightController?.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _highlightController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final accentColor = AppColors.warning;
+    final anim = _highlightAnimation ?? const AlwaysStoppedAnimation<double>(0.0);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        width: widget.isList ? double.infinity : null,
-        transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _isHovered ? accentColor : accentColor.withValues(alpha: 0.4),
-            width: _isHovered ? 2 : 1,
-          ),
-          boxShadow: [
+      child: AnimatedBuilder(
+        animation: anim,
+        builder: (context, child) {
+          final animValue = anim.value;
+          final borderGlowColor = Color.lerp(
+            _isHovered ? accentColor : accentColor.withValues(alpha: 0.4),
+            AppColors.primary,
+            animValue,
+          )!;
+          final borderWidth = _isHovered ? 2.0 : 1.0 + (animValue * 1.5);
+          final shadows = [
             BoxShadow(
-              color: _isHovered
-                  ? accentColor.withValues(alpha: 0.2)
-                  : Colors.transparent,
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: Color.lerp(
+                _isHovered ? accentColor.withValues(alpha: 0.2) : Colors.transparent,
+                AppColors.primary.withValues(alpha: 0.65),
+                animValue,
+              )!,
+              blurRadius: _isHovered ? 16.0 : 8.0 + (animValue * 16.0),
+              spreadRadius: animValue * 2.0,
+              offset: Offset(0, _isHovered ? 8.0 : 4.0),
             ),
-          ],
-        ),
+          ];
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            width: widget.isList ? double.infinity : null,
+            transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: borderGlowColor,
+                width: borderWidth,
+              ),
+              boxShadow: shadows,
+            ),
+            child: child,
+          );
+        },
         child: Material(
           color: Colors.transparent,
           child: InkWell(

@@ -359,11 +359,14 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
   Widget _buildDeadlinesCard() {
     final cs = Theme.of(context).colorScheme;
     final entrepriseProvider = context.watch<EntrepriseProvider>();
-    final notes = entrepriseProvider.allNotes.where((n) => n.estRappel).take(3).toList();
+    final notes = entrepriseProvider.allNotes
+        .where((n) => n.estRappel && n.dateRappel != null)
+        .toList();
+    notes.sort((a, b) => a.dateRappel!.compareTo(b.dateRappel!));
+    final closestNotes = notes.take(3).toList();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -397,46 +400,31 @@ class _DashboardPageState extends State<DashboardPage>
             ),
           ),
           const SizedBox(height: 20),
-          if (notes.isEmpty)
-            // Render exact mockup reminders from the reference design if database has no warnings
-            ..._buildMockDeadlinesList()
+          if (closestNotes.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  context.tr('Aucune échéance à venir pour le moment.', 'No upcoming deadlines at the moment.'),
+                  style: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
+                ),
+              ),
+            )
           else
-            // Render actual note reminders dynamically
-            ...notes.map((note) => _DeadlineItem(
+            ...closestNotes.map((note) => _DeadlineItem(
                   title: note.titre,
                   description: note.contenu,
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.urgents,
+                      arguments: note.id,
+                    );
+                  },
                 )),
         ],
       ),
     );
-  }
-
-  List<Widget> _buildMockDeadlinesList() {
-    return [
-      _DeadlineItem(
-        title: context.tr('Rapport Pointage', 'Attendance Report'),
-        description: context.tr(
-          'Anomalie détectée : certains salariés présentent des heures supplémentaires déclarées non validées par le responsable d\'éq...',
-          'Anomaly detected: some employees present declared overtime hours not validated by the team manager...',
-        ),
-      ),
-      const Divider(),
-      _DeadlineItem(
-        title: context.tr('Visite Médicale', 'Medical Visit'),
-        description: context.tr(
-          'Relancer le centre de médecine du travail pour planifier la visite obligatoire de reprise suite à l\'arrêt maladie prolongé.',
-          'Follow up with the occupational health center to schedule the mandatory return visit following prolonged sick leave.',
-        ),
-      ),
-      const Divider(),
-      _DeadlineItem(
-        title: context.tr('Renouvellement Mutuelle', 'Mutual Insurance Renewal'),
-        description: context.tr(
-          'Vérifier la bonne affiliation du nouveau salarié à la mutuelle d\'entreprise ou récupérer son attestation de dispense.',
-          'Verify the correct affiliation of the new employee to the company mutual insurance or retrieve their waiver certificate.',
-        ),
-      ),
-    ];
   }
 }
 
@@ -601,56 +589,68 @@ class _ActiveCompanyItem extends StatelessWidget {
 class _DeadlineItem extends StatelessWidget {
   final String title;
   final String description;
+  final VoidCallback? onTap;
 
   const _DeadlineItem({
     required this.title,
     required this.description,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.notifications_none_outlined,
-              color: cs.primary,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: AppTextStyles.labelLarge.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.notifications_none_outlined,
+                    color: cs.primary,
+                    size: 16,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: cs.onSurfaceVariant,
-                    height: 1.3,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: cs.onSurfaceVariant,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
