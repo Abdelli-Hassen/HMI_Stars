@@ -361,7 +361,7 @@ class _EntrepriseCardState extends State<_EntrepriseCard> {
   Widget _buildAvatar() {
     final logoUrl = widget.entreprise.logoUrl;
 
-    if (logoUrl != null && logoUrl.isNotEmpty) {
+    if (logoUrl != null && logoUrl.isNotEmpty && !logoUrl.contains('dicebear.com')) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Image.network(

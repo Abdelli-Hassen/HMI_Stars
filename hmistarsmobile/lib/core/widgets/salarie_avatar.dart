@@ -24,7 +24,7 @@ class SalarieAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isSvg = avatarUrl != null && (avatarUrl!.contains('.svg') || avatarUrl!.contains('/svg'));
-    final hasAvatar = avatarUrl != null && avatarUrl!.isNotEmpty;
+    final hasAvatar = avatarUrl != null && avatarUrl!.isNotEmpty && !avatarUrl!.contains('dicebear.com');
 
     final defaultBgColor = backgroundColor ?? theme.colorScheme.primaryContainer.withOpacity(0.3);
 

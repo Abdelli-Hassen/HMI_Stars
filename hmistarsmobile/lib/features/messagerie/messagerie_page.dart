@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart' as fp;
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
@@ -20,6 +21,57 @@ class MessageriePage extends StatefulWidget {
 }
 
 class _MessageriePageState extends State<MessageriePage> {
+  Widget _buildAvatar(String? url, String initials, {double radius = 24, bool isSelected = false}) {
+    if (url != null && url.isNotEmpty && !url.contains('dicebear.com')) {
+      final cleanUrl = url.split('?').first;
+      final isSvg = cleanUrl.endsWith('.svg') || url.contains('.svg');
+      
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.transparent,
+        child: ClipOval(
+          child: isSvg
+              ? SvgPicture.network(
+                  url,
+                  width: radius * 2,
+                  height: radius * 2,
+                  fit: BoxFit.cover,
+                  placeholderBuilder: (_) => Container(
+                    color: Colors.grey[200],
+                    child: Icon(Icons.person, color: Colors.grey[400]),
+                  ),
+                )
+              : Image.network(
+                  url,
+                  width: radius * 2,
+                  height: radius * 2,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey[200],
+                    child: Text(initials),
+                  ),
+                ),
+        ),
+      );
+    }
+    
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: isSelected
+          ? Theme.of(context).colorScheme.tertiary
+          : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+      child: Text(
+        initials,
+        style: GoogleFonts.manrope(
+          fontWeight: FontWeight.bold,
+          color: isSelected
+              ? Colors.white
+              : Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   bool _showChat = false;
@@ -225,7 +277,7 @@ class _MessageriePageState extends State<MessageriePage> {
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            isClient ? 'Sélectionner un contact HMI' : 'Sélectionner un contact client',
+            isClient ? 'Support HMI Stars' : 'Sélectionner un contact client',
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -318,20 +370,10 @@ class _MessageriePageState extends State<MessageriePage> {
                               : '?';
 
                           return ListTile(
-                            leading: CircleAvatar(
-                              radius: 24,
-                              backgroundColor: isSelected
-                                  ? Theme.of(context).colorScheme.tertiary
-                                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              child: Text(
-                                initials,
-                                style: GoogleFonts.manrope(
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
+                            leading: _buildAvatar(
+                              contact['avatar_url'] as String?,
+                              initials,
+                              isSelected: isSelected,
                             ),
                             title: Text(
                               nom,
@@ -368,20 +410,10 @@ class _MessageriePageState extends State<MessageriePage> {
                               : '?';
 
                           return ListTile(
-                            leading: CircleAvatar(
-                              radius: 24,
-                              backgroundColor: isSelected
-                                  ? Theme.of(context).colorScheme.tertiary
-                                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              child: Text(
-                                initials,
-                                style: GoogleFonts.manrope(
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
+                            leading: _buildAvatar(
+                              comp.logoUrl,
+                              initials,
+                              isSelected: isSelected,
                             ),
                             title: Text(
                               comp.raisonSociale,
@@ -441,33 +473,63 @@ class _MessageriePageState extends State<MessageriePage> {
           },
         ),
         title: isClient
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ? Row(
                 children: [
-                  Text(
-                    _selectedPlatformContact?['nom'] ?? 'HMI Stars Consulting',
-                    style: GoogleFonts.manrope(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  _buildAvatar(
+                    _selectedPlatformContact?['avatar_url'] as String?,
+                    _selectedPlatformContact?['nom'] != null
+                        ? (_selectedPlatformContact!['nom'] as String).trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
+                        : 'HMI',
+                    radius: 18,
                   ),
-                  Text(
-                    _selectedPlatformContact?['role'] == 'admin' ? 'Administrateur' : 'Secrétaire',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.outline,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedPlatformContact?['nom'] ?? 'HMI Stars Consulting',
+                          style: GoogleFonts.manrope(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          _selectedPlatformContact?['role'] == 'admin' ? 'Administrateur' : 'Secrétaire',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               )
-            : Text(
-                currentCompany?.raisonSociale ?? 'HMI Stars',
-                style: GoogleFonts.manrope(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+            : Row(
+                children: [
+                  _buildAvatar(
+                    currentCompany?.logoUrl,
+                    currentCompany?.raisonSociale != null
+                        ? currentCompany!.raisonSociale.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
+                        : 'HMI',
+                    radius: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      currentCompany?.raisonSociale ?? 'HMI Stars',
+                      style: GoogleFonts.manrope(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
         actions: [
           // Documents button

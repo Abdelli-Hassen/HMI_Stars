@@ -506,7 +506,7 @@ class _ParametresPageState extends State<ParametresPage> {
           fit: BoxFit.contain,
         ),
       );
-    } else if (p.logoUrl != null && p.logoUrl!.startsWith('http')) {
+    } else if (p.logoUrl != null && p.logoUrl!.startsWith('http') && !p.logoUrl!.contains('dicebear.com')) {
       logoWidget = ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Image.network(

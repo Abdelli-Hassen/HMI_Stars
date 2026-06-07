@@ -50,7 +50,7 @@ class MessageBubble extends StatelessWidget {
       );
 
       if (salarie.id.isNotEmpty) {
-        if (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty) {
+        if (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty && !salarie.avatarUrl!.contains('dicebear.com')) {
           final url = salarie.avatarUrl!;
           if (url.startsWith('http')) {
             return CircleAvatar(
@@ -139,7 +139,7 @@ class MessageBubble extends StatelessWidget {
         );
         if (contact.isNotEmpty) {
           final avatarUrl = contact['avatar_url'] as String?;
-          if (avatarUrl != null && avatarUrl.isNotEmpty) {
+          if (avatarUrl != null && avatarUrl.isNotEmpty && !avatarUrl.contains('dicebear.com')) {
             return CircleAvatar(
               radius: 16,
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,

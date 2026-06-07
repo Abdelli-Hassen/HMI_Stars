@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
+import '../../core/widgets/salarie_avatar.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -465,10 +466,12 @@ class DashboardPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Row(
                         children: [
-                          CircleAvatar(
+                          SalarieAvatar(
                             radius: 14,
-                            backgroundImage: salarie.avatarUrl != null ? NetworkImage(salarie.avatarUrl!) : null,
-                            child: salarie.avatarUrl == null ? const Icon(Icons.person, size: 14) : null,
+                            avatarUrl: salarie.avatarUrl,
+                            initials: salarie.prenom.isNotEmpty
+                                ? salarie.prenom[0].toUpperCase()
+                                : (salarie.nom.isNotEmpty ? salarie.nom[0].toUpperCase() : '?'),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
