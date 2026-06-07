@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/mobile_file_previewer.dart';
+import '../../core/widgets/top_notification_banner.dart';
 
 class AddSalariePage extends StatefulWidget {
   final Salarie? salarie;
@@ -795,11 +796,10 @@ class _AddSalariePageState extends State<AddSalariePage> {
       if (!mounted) return;
       Navigator.pop(context); // Dismiss loading dialog
  
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Fichier "$fileName" téléversé avec succès'),
-          backgroundColor: Colors.green,
-        ),
+      TopNotificationBanner.show(
+        context,
+        'Fichier "$fileName" téléversé avec succès',
+        isError: false,
       );
  
       setState(() {
@@ -811,11 +811,10 @@ class _AddSalariePageState extends State<AddSalariePage> {
       debugPrint('[AddSalariePage] Upload error: $e');
       if (!mounted) return;
       Navigator.pop(context); // Dismiss loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors du téléversement : $e'),
-          backgroundColor: Colors.red,
-        ),
+      TopNotificationBanner.show(
+        context,
+        'Erreur lors du téléversement : $e',
+        isError: true,
       );
     }
   }
@@ -879,15 +878,54 @@ class _AddSalariePageState extends State<AddSalariePage> {
     );
   }
 
-  Widget _buildAvatarHeader() {
-    final hasInitials = _nomController.text.trim().isNotEmpty || _prenomController.text.trim().isNotEmpty;
-    final initials = ((_prenomController.text.isNotEmpty ? _prenomController.text[0] : '') +
-            (_nomController.text.isNotEmpty ? _nomController.text[0] : ''))
-        .toUpperCase();
+    final hasAvatar = _avatarUrl != null && _avatarUrl!.isNotEmpty;
+    
+    VoidCallback? handleTap;
+    if (_isUploadingAvatar) {
+      handleTap = null;
+    } else if (hasAvatar) {
+      handleTap = () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (sheetContext) {
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.visibility),
+                    title: const Text('Voir la photo de profil'),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      MobileFilePreviewer.show(context, _avatarUrl!, "Photo de profil");
+                    },
+                  ),
+                  if (!widget.readOnly)
+                    ListTile(
+                      leading: const Icon(Icons.edit),
+                      title: const Text('Modifier la photo de profil'),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _pickAndUploadAvatar();
+                      },
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      };
+    } else {
+      handleTap = widget.readOnly ? null : _pickAndUploadAvatar;
+    }
 
     return Center(
       child: GestureDetector(
-        onTap: (widget.readOnly || _isUploadingAvatar) ? null : _pickAndUploadAvatar,
+        onTap: handleTap,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -1039,31 +1077,28 @@ class _AddSalariePageState extends State<AddSalariePage> {
           _avatarUrl = publicUrl;
         });
         if (mounted) {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: const Text('Photo de profil mise à jour avec succès'),
-              backgroundColor: theme.colorScheme.primary,
-            ),
+          TopNotificationBanner.show(
+            context,
+            'Photo de profil mise à jour avec succès',
+            isError: false,
           );
         }
       } else {
         if (mounted) {
-          scaffoldMessenger.showSnackBar(
-            const SnackBar(
-              content: Text('Erreur lors de la mise à jour de la photo de profil'),
-              backgroundColor: Colors.red,
-            ),
+          TopNotificationBanner.show(
+            context,
+            'Erreur lors de la mise à jour de la photo de profil',
+            isError: true,
           );
         }
       }
     } catch (e) {
       debugPrint('[AddSalariePage] Error picking/uploading avatar: $e');
       if (mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Erreur : $e'),
-            backgroundColor: Colors.red,
-          ),
+        TopNotificationBanner.show(
+          context,
+          'Erreur : $e',
+          isError: true,
         );
       }
     } finally {

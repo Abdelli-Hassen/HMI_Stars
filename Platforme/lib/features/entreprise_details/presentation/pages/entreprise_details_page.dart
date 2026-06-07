@@ -507,14 +507,24 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      backgroundColor: cs.surfaceContainerLow,
-                      backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
-                          ? NetworkImage(salarie.avatarUrl!)
+                    GestureDetector(
+                      onTap: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                          ? () => FilePreviewer.show(context, salarie.avatarUrl!, '${salarie.nom}_${salarie.prenom}_avatar.png')
                           : null,
-                      child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
-                          ? Icon(Icons.person, color: cs.onSurfaceVariant)
-                          : null,
+                      child: MouseRegion(
+                        cursor: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                            ? SystemMouseCursors.click
+                            : SystemMouseCursors.basic,
+                        child: CircleAvatar(
+                          backgroundColor: cs.surfaceContainerLow,
+                          backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                              ? NetworkImage(salarie.avatarUrl!)
+                              : null,
+                          child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
+                              ? Icon(Icons.person, color: cs.onSurfaceVariant)
+                              : null,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -2231,17 +2241,27 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
               Center(
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: cs.surfaceContainerLow,
-                      backgroundImage: _avatarBytes != null
-                          ? MemoryImage(_avatarBytes!)
-                          : (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty
-                              ? NetworkImage(widget.salarie.avatarUrl!) as ImageProvider
-                              : null),
-                      child: (_avatarBytes == null && (widget.salarie.avatarUrl == null || widget.salarie.avatarUrl!.isEmpty))
-                          ? Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
+                    GestureDetector(
+                      onTap: (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty)
+                          ? () => FilePreviewer.show(context, widget.salarie.avatarUrl!, '${widget.salarie.nom}_${widget.salarie.prenom}_avatar.png')
                           : null,
+                      child: MouseRegion(
+                        cursor: (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty)
+                            ? SystemMouseCursors.click
+                            : SystemMouseCursors.basic,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: cs.surfaceContainerLow,
+                          backgroundImage: _avatarBytes != null
+                              ? MemoryImage(_avatarBytes!)
+                              : (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty
+                                  ? NetworkImage(widget.salarie.avatarUrl!) as ImageProvider
+                                  : null),
+                          child: (_avatarBytes == null && (widget.salarie.avatarUrl == null || widget.salarie.avatarUrl!.isEmpty))
+                              ? Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
+                              : null,
+                        ),
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
