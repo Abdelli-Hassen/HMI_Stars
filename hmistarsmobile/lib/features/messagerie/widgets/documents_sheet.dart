@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/widgets/mobile_file_previewer.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/providers/app_state.dart';
@@ -161,37 +162,7 @@ class _DocumentsSheetState extends State<DocumentsSheet>
 
   // ── open URL ────────────────────────────────────────────────────────────
   Future<void> _openFile(Fichier fichier) async {
-    final url = fichier.url;
-    if (url.isEmpty) return;
-
-    setState(() => _openingUrl = fichier.id);
-
-    try {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Impossible d\'ouvrir ce fichier.'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erreur lors de l\'ouverture du fichier.'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _openingUrl = null);
-    }
+    MobileFilePreviewer.show(context, fichier.url, fichier.nom);
   }
 
   // ─────────────────────────────────────────────────────────────────────────

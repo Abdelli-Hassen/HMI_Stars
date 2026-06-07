@@ -92,17 +92,9 @@ class _SalariesPageState extends State<SalariesPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+
                             Text(
-                              'Annuaire Institutionnel',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.tertiary,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            Text(
-                              'Gestion des Salariés',
+                              'Les Salariés',
                               style: GoogleFonts.manrope(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
@@ -517,6 +509,25 @@ class _SalariesPageState extends State<SalariesPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 GestureDetector(
+                  onTap: () => context.push(
+                    '/salaries/modifier/${salarie.id}?readOnly=false',
+                    extra: salarie,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
                   onTap: () => appState.desarchiverSalarie(salarie.id),
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -593,6 +604,17 @@ class _SalariesPageState extends State<SalariesPage>
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: InkWell(
             onTap: () => context.push(
@@ -642,6 +664,18 @@ class _SalariesPageState extends State<SalariesPage>
                         ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                  onPressed: () => context.push(
+                    '/salaries/modifier/${s.id}?readOnly=false',
+                    extra: s,
+                  ),
+                  tooltip: 'Modifier',
                 ),
                 IconButton(
                   icon: Icon(

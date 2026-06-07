@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/file_previewer.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -908,13 +909,10 @@ class _DocumentRowState extends State<_DocumentRow> {
     return Icons.description;
   }
 
-  Future<void> _viewDocument() async {
+  void _viewDocument() {
     final url = widget.doc.url;
     if (url != null) {
-      final uri = Uri.tryParse(url);
-      if (uri != null && await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+      FilePreviewer.show(context, url, widget.doc.nom);
     }
   }
 

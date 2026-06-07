@@ -21,6 +21,8 @@ import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/utils/translation_extension.dart';
 import '../../../../core/utils/toast_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/widgets/file_previewer.dart';
 
 class EntrepriseDetailsPage extends StatefulWidget {
   const EntrepriseDetailsPage({super.key});
@@ -33,14 +35,31 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
   ColorScheme get cs => Theme.of(context).colorScheme;
   String _activeTab = 'Informations';
   String? _loadedEntrepriseId;
+  String? _persistedEntrepriseId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPersistedId();
+  }
+
+  Future<void> _loadPersistedId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getString('last_viewed_entreprise_id');
+    if (id != null && mounted) {
+      setState(() {
+        _persistedEntrepriseId = id;
+      });
+    }
+  }
 
   void _ensureDataLoaded(String entrepriseId) {
     if (_loadedEntrepriseId == entrepriseId) return;
     _loadedEntrepriseId = entrepriseId;
     final provider = Provider.of<EntrepriseProvider>(context, listen: false);
-    provider.fetchSalariesForEntreprise(entrepriseId);
-    provider.fetchNotesForEntreprise(entrepriseId);
-    provider.fetchDocumentsForEntreprise(entrepriseId);
+    provider.fetchSalariesForEntreprise(entrepriseId, force: true);
+    provider.fetchNotesForEntreprise(entrepriseId, force: true);
+    provider.fetchDocumentsForEntreprise(entrepriseId, force: true);
   }
 
   Future<void> _exportSalariePdf(Salarie s) async {
@@ -137,11 +156,18 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
       );
     }
 
-    final entrepriseId = ModalRoute.of(context)?.settings.arguments as String?;
+    final argId = ModalRoute.of(context)?.settings.arguments as String?;
+    final resolvedId = argId ?? _persistedEntrepriseId;
+
+    if (argId != null && argId != _persistedEntrepriseId) {
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('last_viewed_entreprise_id', argId);
+      });
+    }
     
     // Fallback to first if no ID passed (e.g. direct load)
-    final entreprise = entrepriseId != null 
-        ? provider.entreprises.firstWhere((e) => e.id == entrepriseId, orElse: () => provider.entreprises.first) 
+    final entreprise = resolvedId != null 
+        ? provider.entreprises.firstWhere((e) => e.id == resolvedId, orElse: () => provider.entreprises.first) 
         : provider.entreprises.first;
 
     // Trigger data loading for this enterprise
@@ -210,26 +236,55 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  InkWell(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => _EditEntrepriseDialog(entreprise: entreprise),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(border: Border.all(color: cs.outlineVariant), borderRadius: BorderRadius.circular(10)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.edit_outlined, size: 16, color: cs.primary),
-                          const SizedBox(width: 6),
-                          Text(context.tr('Modifier', 'Edit'), style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
-                        ],
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InkWell(
+                        onTap: () async {
+                          final provider = Provider.of<EntrepriseProvider>(context, listen: false);
+                          await Future.wait([
+                            provider.fetchSalariesForEntreprise(entreprise.id, force: true),
+                            provider.fetchNotesForEntreprise(entreprise.id, force: true),
+                            provider.fetchDocumentsForEntreprise(entreprise.id, force: true),
+                          ]);
+                          if (mounted) {
+                            ToastUtils.show(
+                              context,
+                              context.trStatic('Données actualisées !', 'Data refreshed!'),
+                              isError: false,
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(border: Border.all(color: cs.outlineVariant), borderRadius: BorderRadius.circular(10)),
+                          child: Icon(Icons.refresh, size: 16, color: cs.primary),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      InkWell(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => _EditEntrepriseDialog(entreprise: entreprise),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(border: Border.all(color: cs.outlineVariant), borderRadius: BorderRadius.circular(10)),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.edit_outlined, size: 16, color: cs.primary),
+                              const SizedBox(width: 6),
+                              Text(context.tr('Modifier', 'Edit'), style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -2795,29 +2850,8 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
     }
   }
 
-  Future<void> _downloadOrViewFile(String label, String url) async {
-    try {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ToastUtils.show(
-            context,
-            context.trStatic('Impossible d\'ouvrir le fichier ', 'Unable to open file ') + label,
-            isError: true,
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ToastUtils.show(
-          context,
-          context.trStatic('Erreur lors de l\'ouverture du fichier : ', 'Error opening file: ') + e.toString(),
-          isError: true,
-        );
-      }
-    }
+  void _downloadOrViewFile(String label, String url) {
+    FilePreviewer.show(context, url, label);
   }
 
   Widget _readField(String label, String value) {

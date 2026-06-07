@@ -109,6 +109,70 @@ class PlatformDataService {
   }
 
   Future<Entreprise> updateEntreprise(Entreprise entreprise) async {
+    // 1. Récupérer l'ancien email de l'entreprise avant la mise à jour
+    String? oldEmail;
+    try {
+      final existing = await _client
+          .from('entreprises')
+          .select('email')
+          .eq('id', entreprise.id)
+          .maybeSingle();
+      if (existing != null) {
+        oldEmail = existing['email'] as String?;
+      }
+    } catch (e) {
+      debugPrint('[DataService] Error fetching old email before update: $e');
+    }
+
+    // 2. Mettre à jour l'utilisateur dans Supabase Auth si le mot de passe est modifié
+    // ou si l'email a changé.
+    if (entreprise.motDePasse.isNotEmpty ||
+        (oldEmail != null && oldEmail.toLowerCase() != entreprise.email.toLowerCase())) {
+      try {
+        final users = await _client.auth.admin.listUsers();
+        final emailToFind = oldEmail ?? entreprise.email;
+        
+        final user = users.firstWhere(
+          (u) => u.email?.toLowerCase() == emailToFind.toLowerCase(),
+          orElse: () => users.firstWhere(
+            (u) => u.email?.toLowerCase() == entreprise.email.toLowerCase(),
+          ),
+        );
+
+        final attributes = AdminUserAttributes(
+          password: entreprise.motDePasse.isNotEmpty ? entreprise.motDePasse : null,
+          email: (oldEmail != null && oldEmail.toLowerCase() != entreprise.email.toLowerCase())
+              ? entreprise.email
+              : null,
+        );
+
+        await _client.auth.admin.updateUserById(
+          user.id,
+          attributes: attributes,
+        );
+        debugPrint('[DataService] Auth user updated successfully for ${entreprise.email}');
+      } catch (e) {
+        debugPrint('[DataService] Failed to update auth credentials: $e');
+        // Fallback : Si l'utilisateur n'existe pas encore dans Auth, on le crée
+        if (entreprise.motDePasse.isNotEmpty) {
+          try {
+            await _client.auth.admin.createUser(
+              AdminUserAttributes(
+                email: entreprise.email,
+                password: entreprise.motDePasse,
+                emailConfirm: true,
+                userMetadata: {'user_type': 'client'},
+              ),
+            );
+            debugPrint('[DataService] Fallback: Auth user created for ${entreprise.email}');
+          } catch (err) {
+            debugPrint('[DataService] Fallback: Failed to create Auth user: $err');
+          }
+        }
+      }
+    }
+
+    // 3. Mettre à jour l'entreprise dans la table 'entreprises'
     final data = await _client
         .from('entreprises')
         .update(entreprise.toJson())

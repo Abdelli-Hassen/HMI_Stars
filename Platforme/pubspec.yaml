@@ -44,6 +44,7 @@ dependencies:
 
   # Supabase integration
   supabase_flutter: ^2.12.4
+  http: ^1.2.1
 
   # AI generation (Gemini)
   google_generative_ai: ^0.4.6

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' show ImageFilter;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' as io;
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/models.dart';
 import '../../../core/providers/app_state.dart';
+import '../../../core/widgets/mobile_file_previewer.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -28,258 +27,7 @@ class MessageBubble extends StatelessWidget {
         name.endsWith('.webp');
   }
 
-  void afficherGrandApercuImage(BuildContext context, String url, String nom) {
-    final isLocal = !url.startsWith('http');
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.9),
-      builder: (dialogContext) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(12),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                InteractiveViewer(
-                  maxScale: 5.0,
-                  child: isLocal
-                      ? Image.file(
-                          io.File(url),
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            padding: const EdgeInsets.all(24),
-                            color: Colors.transparent,
-                            child: const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.broken_image, size: 48, color: Colors.white70),
-                                SizedBox(height: 12),
-                                Text(
-                                  "Impossible de charger l'image locale",
-                                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : Image.network(
-                          url,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            padding: const EdgeInsets.all(24),
-                            color: Colors.transparent,
-                            child: const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.broken_image, size: 48, color: Colors.white70),
-                                SizedBox(height: 12),
-                                Text(
-                                  "Impossible de charger l'image",
-                                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.black.withValues(alpha: 0.5),
-                        ),
-                        icon: const Icon(Icons.close, color: Colors.white, size: 24),
-                        tooltip: 'Fermer',
-                        onPressed: () => Navigator.pop(dialogContext),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  bottom: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      nom,
-                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
-  void _onSingleFileTap(BuildContext context, String url, String name, bool currentIsImage) async {
-    if (url.isEmpty) return;
-
-    if (!url.startsWith('http')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Envoi du fichier en cours...')),
-      );
-      return;
-    }
-
-    final theme = Theme.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                name,
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  color: theme.colorScheme.primary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: Icon(Icons.open_in_new, color: theme.colorScheme.primary),
-              title: Text('Ouvrir le fichier', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              onTap: () async {
-                Navigator.pop(ctx);
-                if (currentIsImage) {
-                  afficherGrandApercuImage(context, url, name);
-                } else {
-                  try {
-                    final uri = Uri.parse(url);
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  } catch (e) {
-                    messenger.showSnackBar(
-                      SnackBar(content: Text('Impossible d\'ouvrir le fichier : $e')),
-                    );
-                  }
-                }
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.download, color: theme.colorScheme.primary),
-              title: Text('Télécharger sur l\'appareil', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              onTap: () async {
-                Navigator.pop(ctx);
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Téléchargement en cours...')),
-                );
-                try {
-                  final directory = await getApplicationDocumentsDirectory();
-                  final downloadDir = io.Directory('${directory.path}/Downloads');
-                  if (!await downloadDir.exists()) {
-                    await downloadDir.create(recursive: true);
-                  }
-
-                  final extDotIdx = name.lastIndexOf('.');
-                  final String baseName;
-                  final String extension;
-                  if (extDotIdx != -1) {
-                    baseName = name.substring(0, extDotIdx);
-                    extension = name.substring(extDotIdx);
-                  } else {
-                    baseName = name;
-                    extension = '';
-                  }
-
-                  io.File targetFile = io.File('${downloadDir.path}/$name');
-                  int counter = 0;
-                  while (await targetFile.exists()) {
-                    counter++;
-                    final suffix = getNumberWord(counter);
-                    final newName = '$baseName $suffix$extension';
-                    targetFile = io.File('${downloadDir.path}/$newName');
-                  }
-
-                  final httpClient = io.HttpClient();
-                  final request = await httpClient.getUrl(Uri.parse(url));
-                  final response = await request.close();
-                  final bytes = await response.fold<List<int>>([], (list, element) => list..addAll(element));
-                  await targetFile.writeAsBytes(bytes);
-
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text('Téléchargé avec succès :\n${targetFile.path.split("/").last}'),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                } catch (e) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text('Erreur de téléchargement : $e')),
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String getNumberWord(int index) {
-    const numberWords = [
-      'zero',
-      'one',
-      'two',
-      'three',
-      'four',
-      'five',
-      'six',
-      'seven',
-      'eight',
-      'nine',
-      'ten',
-    ];
-    if (index < numberWords.length) {
-      return numberWords[index];
-    }
-    return index.toString();
-  }
 
   Widget _buildAvatar(BuildContext context, bool isForSelf) {
     final appState = Provider.of<AppState>(context, listen: false);
@@ -668,12 +416,12 @@ class MessageBubble extends StatelessWidget {
           padding: EdgeInsets.only(bottom: i < urls.length - 1 ? 12.0 : 0),
           child: currentIsImage
             ? InkWell(
-                onTap: () => afficherGrandApercuImage(context, url, nom),
+                onTap: () => MobileFilePreviewer.show(context, url, nom),
                 borderRadius: BorderRadius.circular(12),
                 child: _buildSingleImage(isSent, context, url, i == urls.length - 1),
               )
             : InkWell(
-                onTap: () => _onSingleFileTap(context, url, nom, currentIsImage),
+                onTap: () => MobileFilePreviewer.show(context, url, nom),
                 borderRadius: BorderRadius.circular(12),
                 child: _buildSingleDocument(isSent, context, nom, i == urls.length - 1),
               ),

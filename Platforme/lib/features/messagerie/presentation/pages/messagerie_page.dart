@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/file_previewer.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -1230,7 +1231,7 @@ class _BubbleMessage extends StatelessWidget {
                           padding: EdgeInsets.only(bottom: index < fileUrls.length - 1 ? 8.0 : 0),
                           child: currentIsImage
                               ? GestureDetector(
-                                  onTap: () => afficherGrandApercuImage(
+                                  onTap: () => FilePreviewer.show(
                                     context,
                                     url,
                                     nom,
@@ -1268,7 +1269,7 @@ class _BubbleMessage extends StatelessWidget {
                                   ),
                                 )
                               : GestureDetector(
-                                  onTap: () => _ouvrirUrl(url),
+                                  onTap: () => FilePreviewer.show(context, url, nom),
                                   child: MouseRegion(
                                     cursor: SystemMouseCursors.click,
                                     child: Container(

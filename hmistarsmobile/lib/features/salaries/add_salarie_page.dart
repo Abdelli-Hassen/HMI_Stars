@@ -8,10 +8,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
+import '../../core/widgets/mobile_file_previewer.dart';
 
 class AddSalariePage extends StatefulWidget {
   final Salarie? salarie;
@@ -743,24 +743,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       );
       return;
     }
-    try {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Impossible d\'ouvrir le fichier $label.')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'ouverture du fichier : $e')),
-        );
-      }
-    }
+    MobileFilePreviewer.show(context, url, label);
   }
 
   Future<void> _pickAndUploadFile(String label, String docType, Function(bool) onChanged) async {
