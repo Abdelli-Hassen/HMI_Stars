@@ -488,25 +488,19 @@ class MessagerieProvider extends ChangeNotifier {
 
   Future<void> _executeLoadFavoris() async {
     try {
-      final myUid = _currentUserId;
-      if (myUid != null) {
-        final user = await _dataService.recupererUtilisateur(myUid);
-        if (user != null) {
-          final list = user.preferences['entreprises_favorites'];
-          if (list is List) {
-            _favorisIds = list.map((e) => e.toString()).toList();
-            _favorisCharges = true;
-            notifyListeners();
-            return;
-          }
-        }
+      final res = await _supabase
+          .from('preferences')
+          .select('entreprise')
+          .eq('favori', true);
+      if (res.isNotEmpty) {
+        _favorisIds = res.map((row) => row['entreprise'].toString()).toList();
+      } else {
+        _favorisIds = [];
       }
-      final prefs = await SharedPreferences.getInstance();
-      _favorisIds = prefs.getStringList('entreprises_favorites') ?? [];
       _favorisCharges = true;
       notifyListeners();
     } catch (e) {
-      debugPrint('[MessagerieProvider] Erreur chargement favoris : $e');
+      debugPrint('[MessagerieProvider] Erreur chargement favoris DB : $e');
     } finally {
       _loadingFavorisFuture = null;
     }
@@ -516,32 +510,28 @@ class MessagerieProvider extends ChangeNotifier {
 
   Future<void> toggleFavori(String id) async {
     await _chargerFavoris();
-    if (_favorisIds.contains(id)) {
+    final isFav = _favorisIds.contains(id);
+    if (isFav) {
       _favorisIds.remove(id);
     } else {
       _favorisIds.add(id);
     }
     notifyListeners();
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('entreprises_favorites', _favorisIds);
-    } catch (e) {
-      debugPrint('[MessagerieProvider] Erreur sauvegarde local favoris : $e');
-    }
 
     try {
-      final myUid = _currentUserId;
-      if (myUid != null) {
-        final user = await _dataService.recupererUtilisateur(myUid);
-        if (user != null) {
-          final prefs = Map<String, dynamic>.from(user.preferences);
-          prefs['entreprises_favorites'] = _favorisIds;
-          final updatedUser = user.copyWith(preferences: prefs);
-          await _dataService.mettreAJourUtilisateur(updatedUser);
-        }
-      }
+      await _supabase.from('preferences').upsert({
+        'entreprise': id,
+        'favori': !isFav,
+      }, onConflict: 'entreprise');
     } catch (e) {
       debugPrint('[MessagerieProvider] Erreur sauvegarde DB favoris : $e');
+      // Revert local state in case of failure
+      if (isFav) {
+        _favorisIds.add(id);
+      } else {
+        _favorisIds.remove(id);
+      }
+      notifyListeners();
     }
   }
 

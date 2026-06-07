@@ -478,11 +478,11 @@ class TemplateAvertissement {
     };
   }
 
-  TemplateAvertissement copyWith({String? contenu}) {
+  TemplateAvertissement copyWith({String? titre, String? contenu}) {
     return TemplateAvertissement(
       id: id,
       entrepriseId: entrepriseId,
-      titre: titre,
+      titre: titre ?? this.titre,
       contenu: contenu ?? this.contenu,
       type: type,
     );

@@ -881,93 +881,33 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
     try {
       _templates = await _avertissementService.getTemplates(eid);
-      // If no templates exist yet, seed the defaults
-      if (_templates.isEmpty) {
-        await _seedDefaultTemplates(eid);
-        _templates = await _avertissementService.getTemplates(eid);
-      }
     } finally {
       _isLoadingTemplates = false;
       notifyListeners();
     }
   }
 
-  Future<void> updateTemplate(String id, String newContent) async {
-    await _avertissementService.updateTemplate(id, newContent);
+  Future<void> updateTemplate(String id, String newTitre, String newContent) async {
+    await _avertissementService.updateTemplate(id, newTitre, newContent);
     final idx = _templates.indexWhere((t) => t.id == id);
     if (idx != -1) {
       final updated = List<TemplateAvertissement>.from(_templates);
-      updated[idx] = updated[idx].copyWith(contenu: newContent);
+      updated[idx] = updated[idx].copyWith(titre: newTitre, contenu: newContent);
       _templates = updated;
       notifyListeners();
     }
   }
 
-  /// Seeds the 3 default templates on first use for this enterprise.
-  Future<void> _seedDefaultTemplates(String entrepriseId) async {
-    final defaults = [
-      TemplateAvertissement(
-        id: '',
-        entrepriseId: entrepriseId,
-        titre: "Fiche d'Avertissement",
-        type: TypeAvertissement.ficheAvertissement,
-        contenu: '''Objet : Avertissement
+  Future<void> addTemplate(TemplateAvertissement t) async {
+    final created = await _avertissementService.addTemplate(t);
+    _templates = [..._templates, created];
+    notifyListeners();
+  }
 
-Madame / Monsieur [Nom Prénom],
-
-Nous avons constaté les faits suivants : [description des faits].
-
-Ces faits constituent une violation de [règle/procédure]. En conséquence, nous vous adressons le présent avertissement.
-
-Nous vous demandons de remédier à cette situation dans les plus brefs délais.
-
-Veuillez agréer, Madame/Monsieur, l\'expression de nos salutations distinguées.
-
-La Direction''',
-      ),
-      TemplateAvertissement(
-        id: '',
-        entrepriseId: entrepriseId,
-        titre: 'Convocation',
-        type: TypeAvertissement.convocation,
-        contenu: '''Objet : Convocation à un entretien
-
-Madame / Monsieur [Nom Prénom],
-
-Nous vous informons que vous êtes convoqué(e) à un entretien qui se tiendra le [date] à [heure] dans nos locaux situés [adresse].
-
-Cet entretien a pour objet : [motif de l\'entretien].
-
-Vous avez la possibilité de vous faire assister par une personne de votre choix appartenant au personnel de l\'entreprise.
-
-Veuillez agréer, Madame/Monsieur, l\'expression de nos salutations distinguées.
-
-La Direction''',
-      ),
-      TemplateAvertissement(
-        id: '',
-        entrepriseId: entrepriseId,
-        titre: "Note d'Information",
-        type: TypeAvertissement.information,
-        contenu: '''Objet : Note d\'information
-
-Madame / Monsieur [Nom Prénom],
-
-Nous vous informons de [sujet de l\'information].
-
-[Détails de l\'information]
-
-Pour toute question, n\'hésitez pas à vous rapprocher de votre responsable hiérarchique.
-
-Veuillez agréer, Madame/Monsieur, l\'expression de nos salutations distinguées.
-
-La Direction''',
-      ),
-    ];
-
-    for (final t in defaults) {
-      await _avertissementService.addTemplate(t);
-    }
+  Future<void> deleteTemplate(String id) async {
+    await _avertissementService.deleteTemplate(id);
+    _templates = _templates.where((t) => t.id != id).toList();
+    notifyListeners();
   }
 
   // ─── Congés ───────────────────────────────────────────────────────────────

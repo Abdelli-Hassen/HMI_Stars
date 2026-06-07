@@ -5,7 +5,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/widgets/app_top_bar.dart' show formatRelativeTime;
+import '../../../../core/services/platform_data_service.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
+import '../../domain/models/tache_urgente.dart';
 
 class UrgentsPage extends StatefulWidget {
   const UrgentsPage({super.key});
@@ -18,6 +20,8 @@ class _UrgentsPageState extends State<UrgentsPage> {
   bool _isLoading = true;
   bool _isListView = false;
   String? _targetNoteId;
+  int _activeTab = 0; // 0 = Notes, 1 = Tâches Urgentes
+  List<TacheUrgente> _taches = [];
 
   @override
   void initState() {
@@ -36,27 +40,63 @@ class _UrgentsPageState extends State<UrgentsPage> {
 
   Future<void> _loadData() async {
     final provider = Provider.of<EntrepriseProvider>(context, listen: false);
-    await Future.wait([
-      provider.fetchAllNotes(),
-      provider.fetchEntreprises(), // To get enterprise names
-    ]);
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    final dataService = PlatformDataService();
+    try {
+      final results = await Future.wait([
+        provider.fetchAllNotes(),
+        provider.fetchEntreprises(), // To get enterprise names
+        dataService.fetchTachesUrgentes(),
+      ]);
+      if (mounted) {
+        setState(() {
+          _taches = results[2] as List<TacheUrgente>;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[UrgentsPage] Error loading data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _navigateToSource(dynamic note) {
-    // Navigate to the global Notes & Rappels page where all notes can be modified or deleted.
     Navigator.pushNamed(context, AppRoutes.notesRappels);
+  }
+
+  Future<void> _toggleTacheAccomplie(TacheUrgente tache) async {
+    final dataService = PlatformDataService();
+    final nextVal = !tache.accomplie;
+    try {
+      await dataService.basculerTacheAccomplie(tache.id, nextVal);
+      setState(() {
+        _taches = _taches.map((t) => t.id == tache.id ? t.copyWith(accomplie: nextVal) : t).toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(nextVal ? 'Tâche marquée comme accomplie' : 'Tâche marquée comme non accomplie'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erreur lors de la mise à jour de la tâche'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final provider = Provider.of<EntrepriseProvider>(context);
-    // Filter to get only urgent rappels
     final urgentNotes = provider.allNotes.where((n) => n.estRappel).toList();
 
     return MainShell(
@@ -77,7 +117,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                         children: [
                           Text('Fichiers & Notes Urgentes', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
                           const SizedBox(height: 4),
-                          Text('Vérifiez rapidement les rappels urgents reçus des entreprises', 
+                          Text('Vérifiez rapidement les rappels et tâches urgentes reçus des entreprises', 
                               style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
@@ -104,67 +144,146 @@ class _UrgentsPageState extends State<UrgentsPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  if (urgentNotes.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(40),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainerLowest,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.warning_amber_rounded, size: 64, color: AppColors.warning.withValues(alpha: 0.5)),
-                            const SizedBox(height: 16),
-                            Text('Aucun rappel urgent pour le moment', style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
-                          ],
+                  const SizedBox(height: 24),
+                  
+                  // Tab selection
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _activeTab == 0 ? cs.primaryContainer : cs.surface,
+                          foregroundColor: _activeTab == 0 ? cs.onPrimaryContainer : cs.onSurface,
+                          elevation: 0,
+                          side: BorderSide(color: _activeTab == 0 ? cs.primary : cs.outlineVariant),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
+                        onPressed: () => setState(() => _activeTab = 0),
+                        icon: const Icon(Icons.note_rounded),
+                        label: Text('Notes & Rappels (${urgentNotes.length})'),
                       ),
-                    )
-                  else if (_isListView)
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: urgentNotes.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final note = urgentNotes[index];
-                        final entreprise = provider.entreprises.where((e) => e.id == note.entrepriseId).firstOrNull;
-                        final nom = entreprise?.nom ?? 'Entreprise Inconnue';
-                        return _UrgentNoteCard(
-                          note: note,
-                          entrepriseNom: nom,
-                          isList: true,
-                          onTap: () => _navigateToSource(note),
-                          isHighlighted: note.id == _targetNoteId,
-                        );
-                      },
-                    )
-                  else
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: urgentNotes.map((note) {
-                        final entreprise = provider.entreprises.where((e) => e.id == note.entrepriseId).firstOrNull;
-                        final nom = entreprise?.nom ?? 'Entreprise Inconnue';
-                        return ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 350),
-                          child: _UrgentNoteCard(
+                      const SizedBox(width: 16),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _activeTab == 1 ? cs.primaryContainer : cs.surface,
+                          foregroundColor: _activeTab == 1 ? cs.onPrimaryContainer : cs.onSurface,
+                          elevation: 0,
+                          side: BorderSide(color: _activeTab == 1 ? cs.primary : cs.outlineVariant),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                        onPressed: () => setState(() => _activeTab = 1),
+                        icon: const Icon(Icons.assignment_late_rounded),
+                        label: Text('Tâches Urgentes (${_taches.length})'),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 32),
+
+                  if (_activeTab == 0) ...[
+                    if (urgentNotes.isEmpty)
+                      _buildEmptyState(cs, 'Aucun rappel urgent pour le moment')
+                    else if (_isListView)
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: urgentNotes.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final note = urgentNotes[index];
+                          final entreprise = provider.entreprises.where((e) => e.id == note.entrepriseId).firstOrNull;
+                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
+                          return _UrgentNoteCard(
                             note: note,
                             entrepriseNom: nom,
-                            isList: false,
+                            isList: true,
                             onTap: () => _navigateToSource(note),
                             isHighlighted: note.id == _targetNoteId,
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                          );
+                        },
+                      )
+                    else
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: urgentNotes.map((note) {
+                          final entreprise = provider.entreprises.where((e) => e.id == note.entrepriseId).firstOrNull;
+                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
+                          return ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 350),
+                            child: _UrgentNoteCard(
+                              note: note,
+                              entrepriseNom: nom,
+                              isList: false,
+                              onTap: () => _navigateToSource(note),
+                              isHighlighted: note.id == _targetNoteId,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                  ] else ...[
+                    if (_taches.isEmpty)
+                      _buildEmptyState(cs, 'Aucune tâche urgente pour le moment')
+                    else if (_isListView)
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _taches.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final tache = _taches[index];
+                          final entreprise = provider.entreprises.where((e) => e.id == tache.entrepriseId).firstOrNull;
+                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
+                          return _TacheUrgenteCard(
+                            tache: tache,
+                            entrepriseNom: nom,
+                            isList: true,
+                            onToggle: () => _toggleTacheAccomplie(tache),
+                          );
+                        },
+                      )
+                    else
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: _taches.map((tache) {
+                          final entreprise = provider.entreprises.where((e) => e.id == tache.entrepriseId).firstOrNull;
+                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
+                          return ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 350),
+                            child: _TacheUrgenteCard(
+                              tache: tache,
+                              entrepriseNom: nom,
+                              isList: false,
+                              onToggle: () => _toggleTacheAccomplie(tache),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                  ]
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildEmptyState(ColorScheme cs, String message) {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.warning_amber_rounded, size: 64, color: AppColors.warning.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            Text(message, style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -337,6 +456,130 @@ class _UrgentNoteCardState extends State<_UrgentNoteCard> with TickerProviderSta
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TacheUrgenteCard extends StatefulWidget {
+  final TacheUrgente tache;
+  final String entrepriseNom;
+  final bool isList;
+  final VoidCallback onToggle;
+
+  const _TacheUrgenteCard({
+    required this.tache,
+    required this.entrepriseNom,
+    required this.isList,
+    required this.onToggle,
+  });
+
+  @override
+  State<_TacheUrgenteCard> createState() => _TacheUrgenteCardState();
+}
+
+class _TacheUrgenteCardState extends State<_TacheUrgenteCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final cardColor = widget.tache.accomplie 
+        ? cs.surfaceContainerLow.withValues(alpha: 0.6) 
+        : cs.surfaceContainerLowest;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        width: widget.isList ? double.infinity : null,
+        transform: Matrix4.translationValues(0.0, _isHovered && !widget.tache.accomplie ? -4.0 : 0.0, 0.0),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: widget.tache.accomplie 
+                ? cs.outlineVariant.withValues(alpha: 0.5)
+                : (_isHovered ? cs.primary : cs.outlineVariant.withValues(alpha: 0.3)),
+            width: widget.tache.accomplie ? 1.0 : (_isHovered ? 2.0 : 1.0),
+          ),
+          boxShadow: widget.tache.accomplie 
+              ? [] 
+              : [
+                  BoxShadow(
+                    color: _isHovered ? cs.primary.withValues(alpha: 0.1) : Colors.transparent,
+                    blurRadius: 12.0,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Checkbox directly on card
+              Transform.scale(
+                scale: 1.2,
+                child: Checkbox(
+                  value: widget.tache.accomplie,
+                  onChanged: (_) => widget.onToggle(),
+                  activeColor: cs.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          widget.entrepriseNom,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: widget.tache.accomplie ? cs.outline : cs.primary,
+                            decoration: widget.tache.accomplie ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                        Text(
+                          'Échéance: ${widget.tache.dateEcheance.day}/${widget.tache.dateEcheance.month}/${widget.tache.dateEcheance.year}',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: widget.tache.accomplie ? cs.outline : AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.tache.titre,
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: widget.tache.accomplie ? cs.outline : cs.onSurface,
+                        decoration: widget.tache.accomplie ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.tache.description,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: widget.tache.accomplie ? cs.outline : cs.onSurfaceVariant,
+                        decoration: widget.tache.accomplie ? TextDecoration.lineThrough : null,
+                      ),
+                      maxLines: widget.isList ? 10 : 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

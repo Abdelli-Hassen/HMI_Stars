@@ -13,6 +13,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/mobile_file_previewer.dart';
 import '../../core/widgets/top_notification_banner.dart';
+import '../../core/widgets/salarie_avatar.dart';
 
 class AddSalariePage extends StatefulWidget {
   final Salarie? salarie;
@@ -878,6 +879,11 @@ class _AddSalariePageState extends State<AddSalariePage> {
     );
   }
 
+  Widget _buildAvatarHeader() {
+    final prenom = _prenomController.text.trim();
+    final nom = _nomController.text.trim();
+    final initials = '${prenom.isNotEmpty ? prenom[0] : ''}${nom.isNotEmpty ? nom[0] : ''}'.toUpperCase();
+    final hasInitials = initials.isNotEmpty;
     final hasAvatar = _avatarUrl != null && _avatarUrl!.isNotEmpty;
     
     VoidCallback? handleTap;
@@ -885,39 +891,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       handleTap = null;
     } else if (hasAvatar) {
       handleTap = () {
-        showModalBottomSheet(
-          context: context,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (sheetContext) {
-            return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.visibility),
-                    title: const Text('Voir la photo de profil'),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      MobileFilePreviewer.show(context, _avatarUrl!, "Photo de profil");
-                    },
-                  ),
-                  if (!widget.readOnly)
-                    ListTile(
-                      leading: const Icon(Icons.edit),
-                      title: const Text('Modifier la photo de profil'),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        _pickAndUploadAvatar();
-                      },
-                    ),
-                ],
-              ),
-            );
-          },
-        );
+        MobileFilePreviewer.show(context, _avatarUrl!, "Photo de profil");
       };
     } else {
       handleTap = widget.readOnly ? null : _pickAndUploadAvatar;
@@ -937,28 +911,17 @@ class _AddSalariePageState extends State<AddSalariePage> {
                   width: 4,
                 ),
               ),
-              child: CircleAvatar(
+              child: SalarieAvatar(
+                avatarUrl: _avatarUrl,
+                initials: initials,
                 radius: 60,
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
-                backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
-                    ? NetworkImage(_avatarUrl!)
-                    : null,
-                child: _avatarUrl == null || _avatarUrl!.isEmpty
-                    ? (hasInitials
-                        ? Text(
-                            initials,
-                            style: GoogleFonts.manrope(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          )
-                        : Icon(
-                            Icons.person,
-                            size: 56,
-                            color: Theme.of(context).colorScheme.primary,
-                          ))
-                    : null,
+                textStyle: GoogleFonts.manrope(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                iconSize: 56,
               ),
             ),
             if (_isUploadingAvatar)
@@ -979,23 +942,26 @@ class _AddSalariePageState extends State<AddSalariePage> {
               Positioned(
                 bottom: 0,
                 right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.edit,
-                    size: 20,
-                    color: Colors.white,
+                child: GestureDetector(
+                  onTap: _pickAndUploadAvatar,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 20,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

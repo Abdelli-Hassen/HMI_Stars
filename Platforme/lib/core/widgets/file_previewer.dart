@@ -3,6 +3,7 @@ import 'package:printing/printing.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_text_styles.dart';
+import 'web_image.dart';
 
 class FilePreviewer {
   static void show(BuildContext context, String url, String fileName) {
@@ -11,11 +12,15 @@ class FilePreviewer {
         fileName.toLowerCase().endsWith('.jpeg') ||
         fileName.toLowerCase().endsWith('.gif') ||
         fileName.toLowerCase().endsWith('.webp') ||
+        fileName.toLowerCase().endsWith('.svg') ||
         url.toLowerCase().contains('.png') ||
         url.toLowerCase().contains('.jpg') ||
         url.toLowerCase().contains('.jpeg') ||
         url.toLowerCase().contains('.gif') ||
-        url.toLowerCase().contains('.webp');
+        url.toLowerCase().contains('.webp') ||
+        url.toLowerCase().contains('.svg') ||
+        url.toLowerCase().contains('dicebear.com') ||
+        url.toLowerCase().contains('/svg');
 
     final isPdf = fileName.toLowerCase().endsWith('.pdf') || url.toLowerCase().contains('.pdf');
 
@@ -24,6 +29,14 @@ class FilePreviewer {
       barrierColor: Colors.black.withOpacity(0.85),
       builder: (dialogContext) {
         final cs = Theme.of(dialogContext).colorScheme;
+        final mediaQuery = MediaQuery.of(dialogContext);
+        final double dialogWidth = isImage 
+            ? (mediaQuery.size.width * 0.8).clamp(300.0, 800.0) 
+            : 900.0;
+        final double dialogHeight = isImage 
+            ? (mediaQuery.size.height * 0.8).clamp(300.0, 800.0) 
+            : 750.0;
+
         return Dialog(
           backgroundColor: isImage ? Colors.transparent : cs.surface,
           insetPadding: const EdgeInsets.all(24),
@@ -31,8 +44,8 @@ class FilePreviewer {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Container(
-            width: isImage ? null : 900,
-            height: isImage ? null : 750,
+            width: dialogWidth,
+            height: dialogHeight,
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -72,23 +85,17 @@ class FilePreviewer {
                     child: Builder(
                       builder: (context) {
                         if (isImage) {
-                          return InteractiveViewer(
-                            maxScale: 4.0,
-                            child: Image.network(
-                              url,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.broken_image, size: 64, color: Colors.white54),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Impossible de charger l\'image',
-                                    style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              return InteractiveViewer(
+                                maxScale: 4.0,
+                                child: SizedBox(
+                                  width: constraints.maxWidth,
+                                  height: constraints.maxHeight,
+                                  child: WebImage(url: url),
+                                ),
+                              );
+                            },
                           );
                         } else if (isPdf) {
                           return PdfPreview(

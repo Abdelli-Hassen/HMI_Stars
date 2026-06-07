@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
+import '../../core/widgets/salarie_avatar.dart';
 
 class SalariesPage extends StatefulWidget {
   const SalariesPage({super.key});
@@ -257,26 +258,16 @@ class _SalariesPageState extends State<SalariesPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
+            SalarieAvatar(
+              avatarUrl: salarie.avatarUrl,
+              initials: salarie.prenom.isNotEmpty ? salarie.prenom[0].toUpperCase() : '?',
               radius: 38,
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withOpacity(0.3),
-              backgroundImage: salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty
-                  ? NetworkImage(salarie.avatarUrl!)
-                  : null,
-              child: salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty
-                  ? Text(
-                      salarie.prenom.isNotEmpty
-                          ? salarie.prenom[0].toUpperCase()
-                          : '?',
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 26,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    )
-                  : null,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              textStyle: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 26,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -447,26 +438,16 @@ class _SalariesPageState extends State<SalariesPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
+            SalarieAvatar(
+              avatarUrl: salarie.avatarUrl,
+              initials: salarie.prenom.isNotEmpty ? salarie.prenom[0].toUpperCase() : '?',
               radius: 38,
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest,
-              backgroundImage: salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty
-                  ? NetworkImage(salarie.avatarUrl!)
-                  : null,
-              child: salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty
-                  ? Text(
-                      salarie.prenom.isNotEmpty
-                          ? salarie.prenom[0].toUpperCase()
-                          : '?',
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 26,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  : null,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              textStyle: GoogleFonts.manrope(
+                fontWeight: FontWeight.w700,
+                fontSize: 26,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -623,22 +604,15 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                  backgroundImage: s.avatarUrl != null && s.avatarUrl!.isNotEmpty
-                      ? NetworkImage(s.avatarUrl!)
-                      : null,
-                  child: s.avatarUrl == null || s.avatarUrl!.isEmpty
-                      ? Text(
-                          s.prenom.isNotEmpty ? s.prenom[0].toUpperCase() : '?',
-                          style: GoogleFonts.manrope(
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        )
-                      : null,
+                SalarieAvatar(
+                  avatarUrl: s.avatarUrl,
+                  initials: s.prenom.isNotEmpty ? s.prenom[0].toUpperCase() : '?',
+                  radius: 24,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  textStyle: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -779,24 +753,15 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withOpacity(0.3),
-                  backgroundImage: current.avatarUrl != null && current.avatarUrl!.isNotEmpty
-                      ? NetworkImage(current.avatarUrl!)
-                      : null,
-                  child: current.avatarUrl == null || current.avatarUrl!.isEmpty
-                      ? Text(
-                          current.prenom.isNotEmpty
-                              ? current.prenom[0].toUpperCase()
-                              : '?',
-                          style: GoogleFonts.manrope(
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        )
-                      : null,
+                SalarieAvatar(
+                  avatarUrl: current.avatarUrl,
+                  initials: current.prenom.isNotEmpty ? current.prenom[0].toUpperCase() : '?',
+                  radius: 24,
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  textStyle: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

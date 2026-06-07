@@ -41,11 +41,14 @@ class AvertissementService {
     return TemplateAvertissement.fromJson(data);
   }
 
-  /// Updates the content of an existing template.
-  Future<void> updateTemplate(String id, String newContenu) async {
+  /// Updates the title and content of an existing template.
+  Future<void> updateTemplate(String id, String newTitre, String newContenu) async {
     await _client
         .from('modeles_avertissements')
-        .update({'contenu': newContenu})
+        .update({
+          'titre': newTitre,
+          'contenu': newContenu,
+        })
         .eq('id', id);
   }
 

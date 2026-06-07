@@ -23,6 +23,7 @@ import '../../../../core/utils/translation_extension.dart';
 import '../../../../core/utils/toast_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/widgets/file_previewer.dart';
+import '../../../../core/widgets/web_image.dart';
 
 class EntrepriseDetailsPage extends StatefulWidget {
   const EntrepriseDetailsPage({super.key});
@@ -190,16 +191,29 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    key: ValueKey(entreprise.logoUrl),
-                    radius: 44,
-                    backgroundColor: cs.surfaceContainerHigh,
-                    backgroundImage: (entreprise.logoUrl != null && entreprise.logoUrl!.isNotEmpty)
-                        ? NetworkImage(entreprise.logoUrl!)
+                  GestureDetector(
+                    onTap: (entreprise.logoUrl != null && entreprise.logoUrl!.isNotEmpty)
+                        ? () => FilePreviewer.show(context, entreprise.logoUrl!, '${entreprise.nom}_logo.png')
                         : null,
-                    child: (entreprise.logoUrl == null || entreprise.logoUrl!.isEmpty)
-                        ? Icon(Icons.domain, size: 44, color: cs.onSurfaceVariant)
-                        : null,
+                    child: MouseRegion(
+                      cursor: (entreprise.logoUrl != null && entreprise.logoUrl!.isNotEmpty)
+                          ? SystemMouseCursors.click
+                          : SystemMouseCursors.basic,
+                      child: Container(
+                        key: ValueKey(entreprise.logoUrl),
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHigh,
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipOval(
+                          child: (entreprise.logoUrl != null && entreprise.logoUrl!.isNotEmpty)
+                              ? WebImage(url: entreprise.logoUrl!, fit: BoxFit.cover)
+                              : Icon(Icons.domain, size: 44, color: cs.onSurfaceVariant),
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 24),
                   Expanded(
@@ -515,14 +529,18 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         cursor: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
                             ? SystemMouseCursors.click
                             : SystemMouseCursors.basic,
-                        child: CircleAvatar(
-                          backgroundColor: cs.surfaceContainerLow,
-                          backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
-                              ? NetworkImage(salarie.avatarUrl!)
-                              : null,
-                          child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
-                              ? Icon(Icons.person, color: cs.onSurfaceVariant)
-                              : null,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerLow,
+                            shape: BoxShape.circle,
+                          ),
+                          child: ClipOval(
+                            child: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                                ? WebImage(url: salarie.avatarUrl!, fit: BoxFit.cover)
+                                : Icon(Icons.person, color: cs.onSurfaceVariant),
+                          ),
                         ),
                       ),
                     ),
@@ -1215,16 +1233,19 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
             Center(
               child: Stack(
                 children: [
-                  CircleAvatar(
+                  Container(
                     key: ValueKey(_logoUrl),
-                    radius: 40,
-                    backgroundColor: cs.surfaceContainerHigh,
-                    backgroundImage: (_logoUrl != null && _logoUrl!.isNotEmpty)
-                        ? NetworkImage(_logoUrl!)
-                        : null,
-                    child: (_logoUrl == null || _logoUrl!.isEmpty)
-                        ? Icon(Icons.domain, size: 40, color: cs.onSurfaceVariant)
-                        : null,
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHigh,
+                      shape: BoxShape.circle,
+                    ),
+                    child: ClipOval(
+                      child: (_logoUrl != null && _logoUrl!.isNotEmpty)
+                          ? WebImage(url: _logoUrl!, fit: BoxFit.cover)
+                          : Icon(Icons.domain, size: 40, color: cs.onSurfaceVariant),
+                    ),
                   ),
                   if (_isUploadingLogo)
                     Positioned.fill(
@@ -2130,6 +2151,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
       aJustificatifDomicile: widget.salarie.aJustificatifDomicile || fichiers['justificatif_domicile'] != null,
       aContratSigne: widget.salarie.aContratSigne || fichiers['contrat_signe'] != null,
       estActif: widget.salarie.estActif,
+      avatarUrl: widget.salarie.avatarUrl,
     );
 
     try {
@@ -2249,17 +2271,20 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                         cursor: (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty)
                             ? SystemMouseCursors.click
                             : SystemMouseCursors.basic,
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: cs.surfaceContainerLow,
-                          backgroundImage: _avatarBytes != null
-                              ? MemoryImage(_avatarBytes!)
-                              : (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty
-                                  ? NetworkImage(widget.salarie.avatarUrl!) as ImageProvider
-                                  : null),
-                          child: (_avatarBytes == null && (widget.salarie.avatarUrl == null || widget.salarie.avatarUrl!.isEmpty))
-                              ? Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
-                              : null,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerLow,
+                            shape: BoxShape.circle,
+                          ),
+                          child: ClipOval(
+                            child: _avatarBytes != null
+                                ? Image.memory(_avatarBytes!, fit: BoxFit.cover)
+                                : (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty
+                                    ? WebImage(url: widget.salarie.avatarUrl!, fit: BoxFit.cover)
+                                    : Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)),
+                          ),
                         ),
                       ),
                     ),
@@ -3037,15 +3062,28 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
               ),
               const SizedBox(height: 24),
               Center(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: cs.surfaceContainerLow,
-                  backgroundImage: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(salarie.avatarUrl!)
+                child: GestureDetector(
+                  onTap: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                      ? () => FilePreviewer.show(context, salarie.avatarUrl!, '${salarie.nom}_${salarie.prenom}_avatar.png')
                       : null,
-                  child: (salarie.avatarUrl == null || salarie.avatarUrl!.isEmpty)
-                      ? Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)
-                      : null,
+                  child: MouseRegion(
+                    cursor: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                        ? SystemMouseCursors.click
+                        : SystemMouseCursors.basic,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerLow,
+                        shape: BoxShape.circle,
+                      ),
+                      child: ClipOval(
+                        child: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                            ? WebImage(url: salarie.avatarUrl!, fit: BoxFit.cover)
+                            : Icon(Icons.person, size: 50, color: cs.onSurfaceVariant),
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
