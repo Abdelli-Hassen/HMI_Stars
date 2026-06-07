@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
@@ -398,8 +399,43 @@ class _ParametresPageState extends State<ParametresPage> {
 
     // Show loading while enterprise data is being fetched
     if (p == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Center(
+          child: appState.isLoadingParametres
+              ? const CircularProgressIndicator()
+              : Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, size: 60, color: Colors.orange),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Aucune entreprise associée',
+                        style: GoogleFonts.manrope(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Votre compte (${Supabase.instance.client.auth.currentUser?.email}) n\'est rattaché à aucune entreprise active dans la base de données.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () => appState.logout(),
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Se déconnecter'),
+                      ),
+                    ],
+                  ),
+                ),
+        ),
       );
     }
 

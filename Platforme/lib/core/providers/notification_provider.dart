@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/entreprises/presentation/providers/entreprise_provider.dart';
+import '../supabase_config.dart';
 
 /// Représente un document de notification extrait des messages Supabase.
 class NotificationDocument {
@@ -50,7 +51,7 @@ class NotificationDocument {
 /// Gère l'état global et l'écoute en temps réel des documents reçus des clients.
 class NotificationProvider extends ChangeNotifier {
   final EntrepriseProvider entrepriseProvider;
-  final clientSupabase = Supabase.instance.client;
+  final clientSupabase = SupabaseConfig.adminClient;
 
   List<NotificationDocument> notifications = [];
   bool chargement = false;

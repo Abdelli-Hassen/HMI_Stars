@@ -326,6 +326,7 @@ class Message {
   final bool estFichier;
   final bool estLu;
   final String? userId;
+  final String? contactId;
 
   const Message({
     required this.id,
@@ -339,6 +340,7 @@ class Message {
     this.estFichier = false,
     this.estLu = false,
     this.userId,
+    this.contactId,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
@@ -347,10 +349,15 @@ class Message {
         ? DateTime.parse(dateStr)
         : DateTime.parse('${dateStr}Z');
 
+    final rawContenu = json['contenu'] as String? ?? '';
+    final match = RegExp(r'<!--contact:([a-zA-Z0-9\-]+)-->').firstMatch(rawContenu);
+    final contactId = match?.group(1);
+    final cleanContenu = rawContenu.replaceAll(RegExp(r'<!--contact:[a-zA-Z0-9\-]+-->'), '');
+
     return Message(
       id: json['id'] as String,
       entrepriseId: json['entreprise_id'] as String,
-      contenu: json['contenu'] as String,
+      contenu: cleanContenu,
       dateEnvoi: parsedDate.toLocal(),
       estEnvoyePar: json['est_envoye_par_user'] as bool? ?? true,
       fichierUrl: json['fichier_url'] as String?,
@@ -361,13 +368,15 @@ class Message {
       estFichier: json['est_fichier'] as bool? ?? false,
       estLu: json['est_lu'] as bool? ?? false,
       userId: json['user_id'] as String?,
+      contactId: contactId,
     );
   }
 
   Map<String, dynamic> toJson() {
+    final taggedContenu = contactId != null ? '<!--contact:$contactId-->$contenu' : contenu;
     return {
       'entreprise_id': entrepriseId,
-      'contenu': contenu,
+      'contenu': taggedContenu,
       'est_envoye_par_user': estEnvoyePar,
       'fichier_url': fichierUrl,
       'fichier_nom': fichierNom,
@@ -389,6 +398,7 @@ class Message {
     bool? estFichier,
     bool? estLu,
     String? userId,
+    String? contactId,
   }) {
     return Message(
       id: id ?? this.id,
@@ -402,6 +412,7 @@ class Message {
       estFichier: estFichier ?? this.estFichier,
       estLu: estLu ?? this.estLu,
       userId: userId ?? this.userId,
+      contactId: contactId ?? this.contactId,
     );
   }
 }

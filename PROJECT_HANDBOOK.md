@@ -512,4 +512,45 @@ Under Supabase's secure email change configuration, changing the account email r
 
 ---
 
+## 10. Web Client Deployment (Vercel Integration)
+
+The web administration platform (`Platforme`) is deployed using **Vercel** with a custom build script to support Flutter compilation inside serverless environments:
+
+### 1. Vercel Build Pipeline Configuration
+* **Application Preset**: `Other`
+* **Root Directory**: `Platforme`
+* **Build Command**:
+  Downloads the stable channel of the Flutter SDK on the fly and compiles the release build:
+  ```bash
+  if [ ! -d "flutter" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && ./flutter/bin/flutter build web --release
+  ```
+* **Output Directory**: `build/web`
+
+### 2. Single Page Application (SPA) Routing
+To resolve the 404 Not Found error when users refresh deep route paths (e.g., `/dashboard` or `/settings`), a `vercel.json` configuration file is added to the root of the project:
+* **File Location**: `Platforme/vercel.json`
+* **Routing Configuration**:
+  ```json
+  {
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ]
+  }
+  ```
+  This instructs the Vercel edge network to route all incoming requests to `index.html`, letting Flutter's internal navigator handle path resolution.
+
+### 3. Custom Branding Icon Replacement
+The default Flutter application icon branding was removed and replaced with custom company logos:
+* **Favicon replacement**: `tab_logo.png` copied to `Platforme/web/favicon.png`.
+* **PWA Icon Sets**: Scaled `tab_logo.png` into custom sizes:
+  - `web/icons/Icon-192.png` (192x192)
+  - `web/icons/Icon-512.png` (512x512)
+  - `web/icons/Icon-maskable-192.png` (192x192)
+  - `web/icons/Icon-maskable-512.png` (512x512)
+
+---
+
 

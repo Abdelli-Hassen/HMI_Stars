@@ -85,9 +85,17 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   String? _entrepriseId;
   String? get entrepriseId => _entrepriseId;
 
+  String? get currentUserId => _authService.currentUser?.id;
+
   // ─── Multi-company selector ────────────────────────────────────────────────
   List<ClientParametres> _entreprisesDisponibles = [];
   List<ClientParametres> get entreprisesDisponibles => _entreprisesDisponibles;
+
+  List<ClientParametres> _allEntreprises = [];
+  List<ClientParametres> get allEntreprises => _allEntreprises;
+
+  List<Map<String, dynamic>> _platformContacts = [];
+  List<Map<String, dynamic>> get platformContacts => _platformContacts;
 
   /// True when the user has multiple companies and hasn't chosen one yet.
   bool get needsCompanySelection =>
@@ -98,6 +106,20 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _entrepriseId = choix.id;
     _parametres = choix;
     _entreprisesDisponibles = []; // selection done
+    notifyListeners();
+    ServiceNotification().enregistrerJetonPourEntreprises([choix.id]);
+    await Future.wait([
+      loadSalaries(),
+      loadMessages(),
+      loadTemplates(),
+      loadConges(),
+    ]);
+  }
+
+  /// Switch between companies dynamically (e.g. from the messaging tab)
+  Future<void> switchEntreprise(ClientParametres choix) async {
+    _entrepriseId = choix.id;
+    _parametres = choix;
     notifyListeners();
     ServiceNotification().enregistrerJetonPourEntreprises([choix.id]);
     await Future.wait([
@@ -173,6 +195,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
     if (session != null) {
       await _loadEntreprise(session.user.id);
+      await loadPlatformContacts();
     }
   }
 
@@ -180,6 +203,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _isAuthenticated = false;
     _entrepriseId = null;
     _entreprisesDisponibles = [];
+    _allEntreprises = [];
+    _platformContacts = [];
     _salaries = [];
     _salariesArchives = [];
     _messages = [];
@@ -221,10 +246,21 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   bool get isLoadingParametres => _isLoadingParametres;
 
   Future<void> _loadEntreprise(String userId) async {
+    _isLoadingParametres = true;
+    notifyListeners();
+
     try {
       final entreprises = await _entrepriseService.getEntreprisesForUser(userId);
+      _allEntreprises = entreprises;
 
-      if (entreprises.isEmpty) return;
+      if (entreprises.isEmpty) {
+        _entrepriseId = null;
+        _parametres = null;
+        _entreprisesDisponibles = [];
+        _isLoadingParametres = false;
+        notifyListeners();
+        return;
+      }
 
       final ids = entreprises.map((e) => e.id).toList();
       ServiceNotification().enregistrerJetonPourEntreprises(ids);
@@ -234,6 +270,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         _entrepriseId = entreprises.first.id;
         _parametres = entreprises.first;
         _entreprisesDisponibles = [];
+        _isLoadingParametres = false;
         notifyListeners();
         await Future.wait([
           loadSalaries(),
@@ -246,10 +283,26 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         _entrepriseId = null;
         _parametres = null;
         _entreprisesDisponibles = entreprises;
+        _isLoadingParametres = false;
         notifyListeners();
       }
     } catch (e) {
       debugPrint('[AppState] _loadEntreprise error: $e');
+      _isLoadingParametres = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadPlatformContacts() async {
+    try {
+      final data = await Supabase.instance.client
+          .from('utilisateurs_plateforme')
+          .select()
+          .order('nom', ascending: true);
+      _platformContacts = List<Map<String, dynamic>>.from(data);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AppState] loadPlatformContacts error: $e');
     }
   }
 
@@ -639,37 +692,46 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _abonnementMessages?.cancel();
     _abonnementMessages = _messageService.abonnerNouveauxMessages(
       eid,
-      (messageEntrant) {
-        final idx = _messages.indexWhere((m) => m.id == messageEntrant.id);
-        if (idx != -1) {
-          // Si le message existe déjà, mettre à jour son état de lecture
-          if (_messages[idx].estLu != messageEntrant.estLu) {
-            final updated = List<Message>.from(_messages);
-            updated[idx] = updated[idx].copyWith(estLu: messageEntrant.estLu);
-            _messages = updated;
-            notifyListeners();
-          }
-        } else {
-          // Rechercher s'il y a un message optimiste correspondant
-          final idxOptimiste = _messages.indexWhere(
-            (m) => m.id.startsWith('optimistic_') && m.contenu == messageEntrant.contenu
-          );
+      (incomingMessages) {
+        bool hasChanges = false;
+        bool hasUnread = false;
 
-          var msg = messageEntrant;
-          if (!msg.estEnvoyePar) {
-            msg = msg.copyWith(estLu: true);
-            _messageService.marquerMessagesCommeLus(eid);
-          }
-          
-          final updated = List<Message>.from(_messages);
-          if (idxOptimiste != -1) {
-            updated[idxOptimiste] = msg;
+        final List<Message> updatedList = List<Message>.from(_messages);
+
+        for (final incoming in incomingMessages) {
+          final idx = updatedList.indexWhere((m) => m.id == incoming.id);
+          if (idx != -1) {
+            if (updatedList[idx].estLu != incoming.estLu) {
+              updatedList[idx] = updatedList[idx].copyWith(estLu: incoming.estLu);
+              hasChanges = true;
+            }
           } else {
-            updated.add(msg);
+            // Match with optimistic messages
+            final idxOptimiste = updatedList.indexWhere(
+              (m) => m.id.startsWith('optimistic_') && m.contenu == incoming.contenu
+            );
+
+            if (!incoming.estEnvoyePar && !incoming.estLu) {
+              hasUnread = true;
+            }
+
+            if (idxOptimiste != -1) {
+              updatedList[idxOptimiste] = incoming;
+            } else {
+              updatedList.add(incoming);
+            }
+            hasChanges = true;
           }
-          updated.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
-          _messages = updated;
+        }
+
+        if (hasChanges) {
+          updatedList.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
+          _messages = updatedList;
           notifyListeners();
+        }
+
+        if (hasUnread) {
+          _messageService.marquerMessagesCommeLus(eid);
         }
       },
       onError: (err) {

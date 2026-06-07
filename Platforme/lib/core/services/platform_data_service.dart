@@ -457,7 +457,7 @@ class PlatformDataService {
 
   /// Récupère le dernier message + nombre de messages non lus pour chaque entreprise.
   /// Utilisé pour peupler la barre latérale de la messagerie.
-  Future<Map<String, Map<String, dynamic>>> fetchApercuMessages() async {
+  Future<Map<String, Map<String, dynamic>>> fetchApercuMessages({String? myUid}) async {
     final data = await _client
         .from('messages')
         .select('entreprise_id, contenu, date_envoi, est_envoye_par_user, est_lu, est_fichier, fichier_nom')
@@ -474,12 +474,21 @@ class PlatformDataService {
 
     final Map<String, Map<String, dynamic>> apercu = {};
     for (final row in rows) {
+      final rawContenu = row['contenu'] as String? ?? '';
+      final match = RegExp(r'<!--contact:([a-zA-Z0-9\-]+)-->').firstMatch(rawContenu);
+      final contactId = match?.group(1);
+      final cleanContenu = rawContenu.replaceAll(RegExp(r'<!--contact:[a-zA-Z0-9\-]+-->'), '');
+
+      if (myUid != null && contactId != null && contactId != myUid) {
+        continue; // Skip messages for other contacts
+      }
+
       final eid = row['entreprise_id'] as String;
       final estDeUser = row['est_envoye_par_user'] as bool;
       final estLu = row['est_lu'] as bool? ?? false;
 
       if (!apercu.containsKey(eid)) {
-        String content = row['contenu'] as String? ?? '';
+        String content = cleanContenu;
         final estFichier = row['est_fichier'] as bool? ?? false;
         final fichierNom = row['fichier_nom'] as String?;
         if (estFichier && content.trim().isEmpty) {

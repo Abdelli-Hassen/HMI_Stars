@@ -383,6 +383,40 @@ class MessageBubble extends StatelessWidget {
       );
     } else {
       // Incoming message from HMI Stars support (without a mapping salarie)
+      final contactId = message.contactId;
+      if (contactId != null && contactId.isNotEmpty) {
+        final contact = appState.platformContacts.firstWhere(
+          (c) => c['id'] == contactId,
+          orElse: () => <String, dynamic>{},
+        );
+        if (contact.isNotEmpty) {
+          final avatarUrl = contact['avatar_url'] as String?;
+          if (avatarUrl != null && avatarUrl.isNotEmpty) {
+            return CircleAvatar(
+              radius: 16,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              backgroundImage: NetworkImage(avatarUrl),
+            );
+          }
+          final nom = contact['nom'] as String? ?? '';
+          final prenom = contact['prenom'] as String? ?? '';
+          final initial = prenom.isNotEmpty
+              ? prenom[0].toUpperCase()
+              : (nom.isNotEmpty ? nom[0].toUpperCase() : '?');
+          return CircleAvatar(
+            radius: 16,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            child: Text(
+              initial,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          );
+        }
+      }
       return Container(
         width: 32,
         height: 32,

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/platform_data_service.dart';
 import '../../../../core/supabase_config.dart';
 import '../../../entreprises/domain/models/entreprise.dart';
+import '../../../auth/domain/models/platform_user.dart';
 
 /// Un message de la messagerie plateforme.
 class MessagePlateforme {
@@ -18,6 +19,7 @@ class MessagePlateforme {
   final String? fichierUrl;
   final String? fichierNom;
   final bool estLu;
+  final String? contactId;
 
   const MessagePlateforme({
     required this.id,
@@ -29,6 +31,7 @@ class MessagePlateforme {
     this.fichierUrl,
     this.fichierNom,
     this.estLu = false,
+    this.contactId,
   });
 
   factory MessagePlateforme.fromJson(Map<String, dynamic> json) {
@@ -44,16 +47,22 @@ class MessagePlateforme {
       parsedDate = DateTime.now();
     }
         
+    final rawContenu = json['contenu']?.toString() ?? '';
+    final match = RegExp(r'<!--contact:([a-zA-Z0-9\-]+)-->').firstMatch(rawContenu);
+    final contactId = match?.group(1);
+    final cleanContenu = rawContenu.replaceAll(RegExp(r'<!--contact:[a-zA-Z0-9\-]+-->'), '');
+
     return MessagePlateforme(
       id: json['id']?.toString() ?? 'unknown',
       entrepriseId: json['entreprise_id']?.toString() ?? '',
-      contenu: json['contenu']?.toString() ?? '',
+      contenu: cleanContenu,
       dateEnvoi: parsedDate.toLocal(),
       estEnvoyeParUser: json['est_envoye_par_user'] as bool? ?? true,
       estFichier: json['est_fichier'] as bool? ?? false,
       fichierUrl: json['fichier_url'] as String?,
       fichierNom: json['fichier_nom'] as String?,
       estLu: json['est_lu'] as bool? ?? false,
+      contactId: contactId,
     );
   }
 }
@@ -93,24 +102,28 @@ class ApercuConversation {
 /// Provider gerant la messagerie plateforme <-> application mobile.
 class MessagerieProvider extends ChangeNotifier {
   final _dataService = PlatformDataService();
-  final _supabase = Supabase.instance.client;
+  final _supabase = SupabaseConfig.adminClient;
 
   // --- Etat ----------------------------------------------------------------
   List<ApercuConversation> _conversations = [];
   List<MessagePlateforme> _messagesActuels = [];
+  List<UtilisateurPlateforme> _platformUsers = [];
   String? _entrepriseSelectionneeId;
   bool _chargement = false;
   bool _envoi = false;
   bool _hasMore = true;
   bool _isLoadingMore = false;
   bool _hasUnreadForSidebar = false;
+  int _rawLoadedCount = 0;
   static const int _pageSize = 20;
   StreamSubscription<List<Map<String, dynamic>>>? _abonnementTempsReel;
   List<String> _favorisIds = [];
 
   // --- Getters -------------------------------------------------------------
+  String? get _currentUserId => SupabaseConfig.client.auth.currentUser?.id;
   List<ApercuConversation> get conversations => _conversations;
   List<MessagePlateforme> get messagesActuels => _messagesActuels;
+  List<UtilisateurPlateforme> get platformUsers => _platformUsers;
   String? get entrepriseSelectionneeId => _entrepriseSelectionneeId;
   bool get chargement => _chargement;
   bool get envoi => _envoi;
@@ -127,6 +140,16 @@ class MessagerieProvider extends ChangeNotifier {
     _chargerFavoris();
     _verifierNonLusInitial();
     _abonnerTempsReelGlobal();
+    chargerPlatformUsers();
+  }
+
+  Future<void> chargerPlatformUsers() async {
+    try {
+      _platformUsers = await _dataService.recupererTousUtilisateurs();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[MessagerieProvider] Error loading platform users: $e');
+    }
   }
 
   // --- Chargement ----------------------------------------------------------
@@ -155,7 +178,8 @@ class MessagerieProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final apercu = await _dataService.fetchApercuMessages();
+      final myUid = _currentUserId;
+      final apercu = await _dataService.fetchApercuMessages(myUid: myUid);
 
       _conversations = entreprises.map((e) {
         final a = apercu[e.id];
@@ -209,30 +233,27 @@ class MessagerieProvider extends ChangeNotifier {
       bool aChangeGlobal = false;
 
       for (final row in rows) {
-        final eid = row['entreprise_id'] as String;
-        final isFromClient = row['est_envoye_par_user'] as bool? ?? true;
-        String content = row['contenu'] as String? ?? '';
-        final estLu = row['est_lu'] as bool? ?? false;
-        final estFichier = row['est_fichier'] as bool? ?? false;
-        final fichierNom = row['fichier_nom'] as String?;
+        final m = MessagePlateforme.fromJson(row);
+        final myUid = _currentUserId;
+        if (myUid != null && m.contactId != null && m.contactId != myUid) {
+          continue; // Ignore messages for other contacts
+        }
+
+        final eid = m.entrepriseId;
+        final isFromClient = m.estEnvoyeParUser;
+        String content = m.contenu;
+        final estLu = m.estLu;
+        final estFichier = m.estFichier;
+        final fichierNom = m.fichierNom;
 
         if (estFichier && content.trim().isEmpty) {
           content = fichierNom ?? "Pièce jointe";
         }
 
         // 1. Mettre à jour l'aperçu dans la sidebar
-        final dateString = row['date_envoi']?.toString() ?? '';
-        DateTime parsedDate;
-        try {
-          parsedDate = dateString.endsWith('Z') || dateString.contains('+')
-              ? DateTime.parse(dateString)
-              : DateTime.parse('${dateString}Z');
-          parsedDate = parsedDate.toLocal();
-        } catch (_) {
-          parsedDate = DateTime.now();
-        }
+        final date = m.dateEnvoi;
 
-        final updated = _mettreAJourApercuDirect(eid, content, parsedDate, isFromClient, estLu);
+        final updated = _mettreAJourApercuDirect(eid, content, date, isFromClient, estLu);
         if (updated) aChangeGlobal = true;
 
         if (isFromClient && !estLu && eid != _entrepriseSelectionneeId) {
@@ -242,7 +263,6 @@ class MessagerieProvider extends ChangeNotifier {
 
         // 2. Si c'est l'entreprise actuellement ouverte, mettre à jour le chat
         if (eid == _entrepriseSelectionneeId) {
-          final m = MessagePlateforme.fromJson(row);
           final exists = _messagesActuels.any((existing) => existing.id == m.id);
           if (!exists) {
             final indexOptimiste = _messagesActuels.indexWhere(
@@ -347,7 +367,12 @@ class MessagerieProvider extends ChangeNotifier {
         offset: 0,
         limit: _pageSize,
       );
-      _messagesActuels = rows.map(MessagePlateforme.fromJson).toList()
+      _rawLoadedCount = rows.length;
+      final myUid = _currentUserId;
+      _messagesActuels = rows
+          .map(MessagePlateforme.fromJson)
+          .where((m) => myUid == null || m.contactId == null || m.contactId == myUid)
+          .toList()
         ..sort((a, b) {
           final cmp = b.dateEnvoi.compareTo(a.dateEnvoi);
           if (cmp != 0) return cmp;
@@ -370,11 +395,16 @@ class MessagerieProvider extends ChangeNotifier {
     try {
       final rows = await _dataService.fetchMessagesForEntreprise(
         _entrepriseSelectionneeId!,
-        offset: _messagesActuels.length,
+        offset: _rawLoadedCount,
         limit: _pageSize,
       );
+      _rawLoadedCount += rows.length;
 
-      final nouveauxMessages = rows.map(MessagePlateforme.fromJson).toList();
+      final myUid = _currentUserId;
+      final nouveauxMessages = rows
+          .map(MessagePlateforme.fromJson)
+          .where((m) => myUid == null || m.contactId == null || m.contactId == myUid)
+          .toList();
       _messagesActuels.addAll(nouveauxMessages);
       _hasMore = rows.length >= _pageSize;
     } catch (e) {
@@ -393,6 +423,8 @@ class MessagerieProvider extends ChangeNotifier {
     if (eid == null || contenu.trim().isEmpty) return;
 
     final texte = contenu.trim();
+    final myUid = _currentUserId;
+    final taggedTexte = myUid != null ? '<!--contact:$myUid-->$texte' : texte;
 
     // Optimistic UI update
     final optimisticMessage = MessagePlateforme(
@@ -401,6 +433,7 @@ class MessagerieProvider extends ChangeNotifier {
       contenu: texte,
       dateEnvoi: DateTime.now(),
       estEnvoyeParUser: false, // La plateforme envoie
+      contactId: myUid,
     );
 
     _messagesActuels.insert(0, optimisticMessage);
@@ -410,7 +443,7 @@ class MessagerieProvider extends ChangeNotifier {
     try {
       final res = await _dataService.envoyerMessagePlateforme(
         entrepriseId: eid,
-        contenu: texte,
+        contenu: taggedTexte,
       );
       final realMessage = MessagePlateforme.fromJson(res);
       final index = _messagesActuels.indexWhere((m) => m.id == optimisticMessage.id);
@@ -455,6 +488,19 @@ class MessagerieProvider extends ChangeNotifier {
 
   Future<void> _executeLoadFavoris() async {
     try {
+      final myUid = _currentUserId;
+      if (myUid != null) {
+        final user = await _dataService.recupererUtilisateur(myUid);
+        if (user != null) {
+          final list = user.preferences['entreprises_favorites'];
+          if (list is List) {
+            _favorisIds = list.map((e) => e.toString()).toList();
+            _favorisCharges = true;
+            notifyListeners();
+            return;
+          }
+        }
+      }
       final prefs = await SharedPreferences.getInstance();
       _favorisIds = prefs.getStringList('entreprises_favorites') ?? [];
       _favorisCharges = true;
@@ -480,7 +526,22 @@ class MessagerieProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('entreprises_favorites', _favorisIds);
     } catch (e) {
-      debugPrint('[MessagerieProvider] Erreur sauvegarde favoris : $e');
+      debugPrint('[MessagerieProvider] Erreur sauvegarde local favoris : $e');
+    }
+
+    try {
+      final myUid = _currentUserId;
+      if (myUid != null) {
+        final user = await _dataService.recupererUtilisateur(myUid);
+        if (user != null) {
+          final prefs = Map<String, dynamic>.from(user.preferences);
+          prefs['entreprises_favorites'] = _favorisIds;
+          final updatedUser = user.copyWith(preferences: prefs);
+          await _dataService.mettreAJourUtilisateur(updatedUser);
+        }
+      }
+    } catch (e) {
+      debugPrint('[MessagerieProvider] Erreur sauvegarde DB favoris : $e');
     }
   }
 
@@ -518,9 +579,12 @@ class MessagerieProvider extends ChangeNotifier {
       }
 
       // 2. Insérer le message
+      final myUid = _currentUserId;
+      final taggedContenu = myUid != null ? '<!--contact:$myUid-->$contenu' : contenu;
+
       await _dataService.envoyerMessagePlateformeFichier(
         entrepriseId: eid,
-        contenu: contenu,
+        contenu: taggedContenu,
         fichierUrl: urlFichier,
         fichierNom: nomFichier,
         typeDocument: typeDoc,

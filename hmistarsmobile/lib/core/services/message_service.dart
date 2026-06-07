@@ -104,11 +104,9 @@ class MessageService {
     return data;
   }
 
-  /// Ouvre un canal Supabase Realtime et appelle [onNouveauMessage]
-  /// pour chaque message mis à jour ou nouveau dans la conversation.
   StreamSubscription<List<Map<String, dynamic>>> abonnerNouveauxMessages(
     String entrepriseId,
-    void Function(Message message) onNouveauMessage, {
+    void Function(List<Message> messages) onMessages, {
     void Function(Object error)? onError,
   }) {
     return _client
@@ -118,14 +116,14 @@ class MessageService {
         .order('date_envoi')
         .listen(
       (rows) {
-        for (final row in rows) {
-          onNouveauMessage(Message.fromJson(row));
-        }
+        final messages = rows.map((e) => Message.fromJson(e)).toList();
+        onMessages(messages);
       },
       onError: onError,
       cancelOnError: false,
     );
   }
+
 
   /// Marque tous les messages reçus de la plateforme comme lus pour l'entreprise.
   Future<void> marquerMessagesCommeLus(String entrepriseId) async {

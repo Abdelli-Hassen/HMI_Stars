@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/app_state.dart';
+import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -72,6 +73,10 @@ class DashboardPage extends StatelessWidget {
 
                   // Notifications & Alerts
                   _buildRecentAlerts(context),
+                  const SizedBox(height: 24),
+
+                  // Leave Management
+                  _buildLeaveManagementSection(context),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -337,6 +342,213 @@ class DashboardPage extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaveManagementSection(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final pendingLeaves = appState.conges.where((c) => c.statut == 'en_attente').toList();
+    final approvedLeaves = appState.conges.where((c) => c.statut == 'approuve').toList();
+
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CONGÉS',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: cs.primary,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Gestion des Congés',
+                      style: GoogleFonts.manrope(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: cs.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => context.go('/conges'),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Voir tout',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: cs.primary,
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 12),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            height: 1,
+            color: cs.surfaceContainerHigh,
+          ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            color: cs.surfaceContainerLowest,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildLeaveMiniStat(
+                        context,
+                        title: 'En attente',
+                        count: pendingLeaves.length,
+                        color: Colors.orange,
+                        icon: Icons.hourglass_empty,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildLeaveMiniStat(
+                        context,
+                        title: 'Approuvés',
+                        count: approvedLeaves.length,
+                        color: Colors.green,
+                        icon: Icons.check_circle_outline,
+                      ),
+                    ),
+                  ],
+                ),
+                if (pendingLeaves.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Demandes récentes en attente',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...pendingLeaves.take(2).map((conge) {
+                    final salarie = appState.salaries.firstWhere(
+                      (s) => s.id == conge.salarieId,
+                      orElse: () => Salarie(id: '', entrepriseId: '', nom: 'Inconnu', prenom: '', nomDeNaissance: '', typeContrat: 'CDI'),
+                    );
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundImage: salarie.avatarUrl != null ? NetworkImage(salarie.avatarUrl!) : null,
+                            child: salarie.avatarUrl == null ? const Icon(Icons.person, size: 14) : null,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${salarie.prenom} ${salarie.nom}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  'Du ${conge.dateDebut.day}/${conge.dateDebut.month} au ${conge.dateFin.day}/${conge.dateFin.month}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.arrow_forward_ios, size: 14),
+                            onPressed: () => context.go('/conges'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaveMiniStat(
+    BuildContext context, {
+    required String title,
+    required int count,
+    required Color color,
+    required IconData icon,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: cs.outlineVariant.withOpacity(0.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$count',
+                style: GoogleFonts.manrope(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurface,
+                ),
+              ),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ],
       ),

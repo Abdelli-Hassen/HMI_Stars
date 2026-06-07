@@ -22,6 +22,9 @@ class MessageriePage extends StatefulWidget {
 class _MessageriePageState extends State<MessageriePage> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
+  bool _showChat = false;
+  String _searchQuery = '';
+  Map<String, dynamic>? _selectedPlatformContact;
 
   @override
   void initState() {
@@ -62,6 +65,12 @@ class _MessageriePageState extends State<MessageriePage> {
     if (text.isEmpty) return;
     final appState = context.read<AppState>();
     final entrepriseId = appState.entrepriseId ?? '';
+    final allCompanies = appState.allEntreprises;
+    final isClient = allCompanies.length <= 1;
+    final activeContactId = isClient
+        ? (_selectedPlatformContact?['id'] as String?)
+        : appState.currentUserId;
+
     _textController.clear();
     _scrollToBottom();
     try {
@@ -71,7 +80,8 @@ class _MessageriePageState extends State<MessageriePage> {
           entrepriseId: entrepriseId,
           contenu: text,
           dateEnvoi: DateTime.now(),
-          estEnvoyePar: true,
+          estEnvoyePar: isClient,
+          contactId: activeContactId,
         ),
       );
     } catch (e) {
@@ -145,6 +155,11 @@ class _MessageriePageState extends State<MessageriePage> {
     if (type == null || !mounted) return;
     final appState = context.read<AppState>();
     final entrepriseId = appState.entrepriseId ?? '';
+    final allCompanies = appState.allEntreprises;
+    final isClient = allCompanies.length <= 1;
+    final activeContactId = isClient
+        ? (_selectedPlatformContact?['id'] as String?)
+        : appState.currentUserId;
     
     _scrollToBottom();
     try {
@@ -154,11 +169,12 @@ class _MessageriePageState extends State<MessageriePage> {
           entrepriseId: entrepriseId,
           contenu: filename,
           dateEnvoi: DateTime.now(),
-          estEnvoyePar: true,
+          estEnvoyePar: isClient,
           fichierNom: filename,
           fichierUrl: path,
           typeDocument: type,
           estFichier: true,
+          contactId: activeContactId,
         ),
       );
     } catch (e) {
@@ -177,11 +193,282 @@ class _MessageriePageState extends State<MessageriePage> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final messages = appState.messages;
+    final allCompanies = appState.allEntreprises;
+    final currentCompany = appState.parametres;
+
+    final isClient = allCompanies.length <= 1;
+    final activeContactId = isClient
+        ? (_selectedPlatformContact?['id'] as String?)
+        : appState.currentUserId;
+
+    final filteredChatMessages = messages.where((msg) {
+      if (activeContactId == null) return true;
+      return msg.contactId == null || msg.contactId == activeContactId;
+    }).toList();
+
+    final shouldShowChat = (isClient && _selectedPlatformContact != null) || (!isClient && _showChat);
+
+    if (!shouldShowChat) {
+      // Search results filtering
+      final List<dynamic> filteredContacts = isClient
+          ? appState.platformContacts.where((u) {
+              final nom = u['nom'] as String? ?? '';
+              return nom.toLowerCase().contains(_searchQuery.toLowerCase());
+            }).toList()
+          : allCompanies.where((c) {
+              return c.raisonSociale.toLowerCase().contains(_searchQuery.toLowerCase());
+            }).toList();
+
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: Text(
+            isClient ? 'Sélectionner un contact HMI' : 'Sélectionner un contact client',
+            style: GoogleFonts.manrope(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+        body: Column(
+          children: [
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Rechercher un contact...',
+                    hintStyle: GoogleFonts.inter(
+                      color: Theme.of(context).colorScheme.outline,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Divider(
+              height: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            // Contact List
+            Expanded(
+              child: filteredContacts.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isClient ? Icons.people_outline : Icons.business,
+                            size: 60,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Aucun contact trouvé',
+                            style: GoogleFonts.manrope(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: filteredContacts.length,
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        indent: 72,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                      itemBuilder: (context, index) {
+                        final dynamic item = filteredContacts[index];
+
+                        if (isClient) {
+                          // Renders platform contact user (Map<String, dynamic>)
+                          final contact = item as Map<String, dynamic>;
+                          final nom = contact['nom'] as String? ?? 'Utilisateur';
+                          final role = contact['role'] as String? ?? '';
+                          final isSelected = _selectedPlatformContact?['id'] == contact['id'];
+
+                          final initials = nom.isNotEmpty
+                              ? nom.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
+                              : '?';
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: isSelected
+                                  ? Theme.of(context).colorScheme.tertiary
+                                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              child: Text(
+                                initials,
+                                style: GoogleFonts.manrope(
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              nom,
+                              style: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            subtitle: Text(
+                              role == 'admin' ? 'Administrateur' : 'Secrétaire',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            trailing: Icon(
+                              Icons.chevron_right,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _selectedPlatformContact = contact;
+                              });
+                            },
+                          );
+                        } else {
+                          // Renders Client Company (ClientParametres)
+                          final comp = item as ClientParametres;
+                          final isSelected = comp.id == currentCompany?.id;
+
+                          final initials = comp.raisonSociale.isNotEmpty
+                              ? comp.raisonSociale.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
+                              : '?';
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: isSelected
+                                  ? Theme.of(context).colorScheme.tertiary
+                                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              child: Text(
+                                initials,
+                                style: GoogleFonts.manrope(
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              comp.raisonSociale,
+                              style: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            subtitle: Text(
+                              comp.nomGerant?.isNotEmpty == true
+                                  ? 'Gérant: ${comp.nomGerant}'
+                                  : comp.email ?? '',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            trailing: Icon(
+                              Icons.chevron_right,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            onTap: () async {
+                              await appState.switchEntreprise(comp);
+                              setState(() {
+                                _showChat = true;
+                              });
+                            },
+                          );
+                        }
+                      },
+                    ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
-      appBar: AppHeader.standard(
-        context: context,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          onPressed: () {
+            setState(() {
+              if (isClient) {
+                _selectedPlatformContact = null;
+              } else {
+                _showChat = false;
+              }
+            });
+          },
+        ),
+        title: isClient
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _selectedPlatformContact?['nom'] ?? 'HMI Stars Consulting',
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  Text(
+                    _selectedPlatformContact?['role'] == 'admin' ? 'Administrateur' : 'Secrétaire',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                currentCompany?.raisonSociale ?? 'HMI Stars',
+                style: GoogleFonts.manrope(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
         actions: [
           // Documents button
           IconButton(
@@ -217,15 +504,14 @@ class _MessageriePageState extends State<MessageriePage> {
             height: 1,
             color: Theme.of(context).colorScheme.outlineVariant,
           ),
-          // Messages
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
               reverse: true,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemCount: messages.length + (appState.hasMoreMessages ? 1 : 0),
+              itemCount: filteredChatMessages.length + (appState.hasMoreMessages ? 1 : 0),
               itemBuilder: (ctx, idx) {
-                if (idx == messages.length) {
+                if (idx == filteredChatMessages.length) {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
@@ -238,9 +524,9 @@ class _MessageriePageState extends State<MessageriePage> {
                   );
                 }
 
-                final msg = messages[idx];
-                final showDate = idx == messages.length - 1 ||
-                    !_isSameDay(messages[idx + 1].dateEnvoi, msg.dateEnvoi);
+                final msg = filteredChatMessages[idx];
+                final showDate = idx == filteredChatMessages.length - 1 ||
+                    !_isSameDay(filteredChatMessages[idx + 1].dateEnvoi, msg.dateEnvoi);
                 return Column(
                   children: [
                     if (showDate) _buildDateSeparator(msg.dateEnvoi),

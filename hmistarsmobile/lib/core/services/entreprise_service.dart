@@ -15,10 +15,41 @@ class EntrepriseService {
     final email = _client.auth.currentUser?.email;
     if (email == null) return [];
 
+    try {
+      // Check if the user is a platform admin/secretary
+      final userCheck = await _client
+          .from('utilisateurs_plateforme')
+          .select('role')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (userCheck != null) {
+        // Platform user: load all enterprises
+        final data = await _client
+            .from('entreprises')
+            .select()
+            .order('raison_sociale', ascending: true);
+
+        return (data as List)
+            .map((row) => ClientParametres.fromJson(row as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('[EntrepriseService] Check platform user error: $e');
+    }
+
+    // Default: load company by email (regular client)
+    final List<String> emailsToCheck = [email];
+    if (email.endsWith('@gmail.com')) {
+      emailsToCheck.add(email.replaceAll('@gmail.com', '@mail.com'));
+    } else if (email.endsWith('@mail.com')) {
+      emailsToCheck.add(email.replaceAll('@mail.com', '@gmail.com'));
+    }
+
     final data = await _client
         .from('entreprises')
         .select()
-        .eq('email', email)
+        .inFilter('email', emailsToCheck)
         .order('raison_sociale', ascending: true);
 
     return (data as List)

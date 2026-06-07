@@ -14,6 +14,8 @@ import '../../../../features/entreprises/domain/models/document_entreprise.dart'
 import '../providers/messagerie_provider.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 import '../../../entreprises/domain/models/entreprise.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/models/platform_user.dart';
 import '../../../../core/utils/translation_extension.dart';
 import '../../../../core/utils/toast_utils.dart';
 
@@ -1111,6 +1113,32 @@ class _BubbleMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final provider = Provider.of<MessagerieProvider>(context, listen: false);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    String? senderAvatarUrl;
+    String senderInitials = '?';
+
+    final contactId = message.contactId;
+    if (contactId != null && contactId.isNotEmpty) {
+      final user = provider.platformUsers.firstWhere(
+        (u) => u.id == contactId,
+        orElse: () => UtilisateurPlateforme(id: '', nom: '', email: '', role: '', creeLe: DateTime.now(), misAJourLe: DateTime.now()),
+      );
+      if (user.id.isNotEmpty) {
+        senderAvatarUrl = user.avatarUrl;
+        senderInitials = user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?';
+      }
+    }
+
+    if (estMoi && (senderAvatarUrl == null || senderAvatarUrl.isEmpty) && senderInitials == '?') {
+      final curUser = auth.utilisateur;
+      if (curUser != null) {
+        senderAvatarUrl = curUser.avatarUrl;
+        senderInitials = curUser.nom.isNotEmpty ? curUser.nom[0].toUpperCase() : '?';
+      }
+    }
+
     final hasFile = message.estFichier && message.fichierUrl != null;
     final List<String> fileUrls = hasFile ? message.fichierUrl!.split(',') : [];
     final List<String> fileNames = hasFile ? (message.fichierNom?.split(',') ?? []) : [];
@@ -1335,11 +1363,25 @@ class _BubbleMessage extends StatelessWidget {
             CircleAvatar(
               radius: 14,
               backgroundColor: cs.primaryContainer,
-              child: Icon(
-                Icons.support_agent,
-                size: 14,
-                color: cs.primary,
-              ),
+              backgroundImage: (senderAvatarUrl != null && senderAvatarUrl.isNotEmpty)
+                  ? NetworkImage(senderAvatarUrl)
+                  : null,
+              child: (senderAvatarUrl == null || senderAvatarUrl.isEmpty)
+                  ? (senderInitials == '?'
+                      ? Icon(
+                          Icons.support_agent,
+                          size: 14,
+                          color: cs.primary,
+                        )
+                      : Text(
+                          senderInitials,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: cs.primary,
+                          ),
+                        ))
+                  : null,
             ),
           ],
         ],
