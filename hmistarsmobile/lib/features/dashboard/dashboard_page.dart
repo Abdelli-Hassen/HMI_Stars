@@ -13,23 +13,51 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-    final salariesActifs = appState.salaries.length;
     final params = appState.parametres;
 
     final today = DateTime.now();
     final todayKey = DateTime(today.year, today.month, today.day);
-    final congesAujourdhui = appState.conges.where((c) {
+
+    // --- Real metrics derived from live state ---
+
+    // Count employees on approved leave today
+    final congesApprouvesAujourd = appState.conges.where((c) {
       final start = DateTime(c.dateDebut.year, c.dateDebut.month, c.dateDebut.day);
       final end = DateTime(c.dateFin.year, c.dateFin.month, c.dateFin.day);
-      return (c.statut == 'approuve') &&
+      return c.statut == 'approuve' &&
           (start.isBefore(todayKey) || start.isAtSameMomentAs(todayKey)) &&
           (end.isAfter(todayKey) || end.isAtSameMomentAs(todayKey));
     }).length;
 
+    // Count employees who have NOT been pointed today and are not on approved leave
+    final nonPointes = appState.salaries.where((s) {
+      final pointed = appState.getPointageStatus(todayKey, s.id);
+      final enConge = appState.isSalarieEnConge(s.id, todayKey);
+      return !pointed && !enConge;
+    }).length;
+
+    // Pending leave requests
+    final congesEnAttente = appState.conges.where((c) => c.statut == 'en_attente').toList();
+
+    // Absences with undefined/unclassified type ('autre') - excludes fully-day approved
+    final absencesIndefinies = appState.conges.where((c) =>
+        c.typeConge == 'autre' && c.statut != 'refuse').toList();
+
+    // Unread messages from platform
+    final messagesNonLus = appState.messages.where((m) => !m.estEnvoyePar && !m.estLu).length;
+
+    // Warning templates ready to send
+    final templatesDisponibles = appState.templates.length;
+
+    // Day of week greeting
+    final weekdays = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+    final months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    final dateStr = '${weekdays[today.weekday - 1]} ${today.day} ${months[today.month - 1]}';
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Top App Bar
           AppHeader.sliver(context: context),
           SliverToBoxAdapter(
             child: Padding(
@@ -38,46 +66,53 @@ class DashboardPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
+
+                  // --- Greeting header ---
                   Text(
-                    'TABLEAU DE BORD DIRIGEANT',
+                    dateStr,
                     style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.tertiary,
-                      letterSpacing: 2,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.outline,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
-                    'Bonjour, ${params?.nomGerant ?? 'Admin'}',
+                    'Bonjour, ${params?.nomGerant ?? 'Admin'} 👋',
                     style: GoogleFonts.manrope(
-                      fontSize: 32,
+                      fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: Theme.of(context).colorScheme.primary,
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Aperçu global de l\'activité, des présences, et des urgences institutionnelles pour aujourd\'hui.',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
+                  const SizedBox(height: 24),
+
+                  // --- 4 KPI Cards ---
+                  _buildKPIGrid(context, appState,
+                    totalSalaries: appState.salaries.length,
+                    congesAujourd: congesApprouvesAujourd,
+                    nonPointes: nonPointes,
+                    congesEnAttente: congesEnAttente.length,
                   ),
                   const SizedBox(height: 24),
 
-                  // Key Metrics Map
-                  _buildKPISection(context, salariesActifs, congesAujourdhui),
+                  // --- Smart Reminders Section ---
+                  _buildReminders(context,
+                    nonPointes: nonPointes,
+                    congesEnAttente: congesEnAttente.length,
+                    absencesIndefinies: absencesIndefinies.length,
+                    messagesNonLus: messagesNonLus,
+                    templatesDisponibles: templatesDisponibles,
+                    today: today,
+                  ),
                   const SizedBox(height: 24),
 
-                  // Notifications & Alerts
-                  _buildRecentAlerts(context),
-                  const SizedBox(height: 24),
+                  // --- Pending Leave Requests ---
+                  if (congesEnAttente.isNotEmpty)
+                    _buildPendingLeaveSection(context, appState, congesEnAttente),
 
-                  // Leave Management
-                  _buildLeaveManagementSection(context),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -88,32 +123,51 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKPISection(BuildContext context, int salariesActifs, int congesAujourdhui) {
+  // ─── KPI Grid ─────────────────────────────────────────────────────────────
+
+  Widget _buildKPIGrid(
+    BuildContext context,
+    AppState appState, {
+    required int totalSalaries,
+    required int congesAujourd,
+    required int nonPointes,
+    required int congesEnAttente,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+
+    // Attendance percentage today (pointed or on approved leave)
+    final pointed = totalSalaries - nonPointes;
+    final pct = totalSalaries > 0 ? (pointed / totalSalaries * 100).round() : 0;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Expanded(
-              child: _buildKPICard(
+              child: _kpiCard(
                 context,
                 title: 'Effectif',
-                value: '$salariesActifs',
-                icon: Icons.people_outline,
-                color: Colors.blue,
+                value: '$totalSalaries',
                 subtitle: 'Salariés actifs',
+                icon: Icons.group_rounded,
+                accentColor: const Color(0xFF1E88E5),
+                onTap: () => context.go('/salaries'),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildKPICard(
+              child: _kpiCard(
                 context,
-                title: 'Présences',
-                value:
-                    '${salariesActifs > 2 ? salariesActifs - 2 : salariesActifs}',
-                icon: Icons.how_to_reg,
-                color: Colors.green,
-                subtitle: 'Confirmées',
+                title: 'Pointage',
+                value: '$pct%',
+                subtitle: '$pointed / $totalSalaries pointés',
+                icon: Icons.how_to_reg_rounded,
+                accentColor: pct == 100
+                    ? const Color(0xFF43A047)
+                    : pct >= 70
+                        ? const Color(0xFFFB8C00)
+                        : cs.error,
+                onTap: () => context.go('/pointage'),
               ),
             ),
           ],
@@ -122,25 +176,26 @@ class DashboardPage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildKPICard(
+              child: _kpiCard(
                 context,
                 title: 'Absences',
-                value: '$congesAujourdhui',
-                icon: Icons.person_off_outlined,
-                color: Colors.redAccent,
-                subtitle: 'Aujourd\'hui',
+                value: '$congesAujourd',
+                subtitle: 'Approuvées aujourd\'hui',
+                icon: Icons.person_off_rounded,
+                accentColor: const Color(0xFFE53935),
                 onTap: () => context.go('/conges'),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildKPICard(
+              child: _kpiCard(
                 context,
-                title: 'Avertissements',
-                value: '1',
-                icon: Icons.warning_amber_rounded,
-                color: Colors.orange,
-                subtitle: 'En attente',
+                title: 'En attente',
+                value: '$congesEnAttente',
+                subtitle: 'Demandes à traiter',
+                icon: Icons.hourglass_top_rounded,
+                accentColor: const Color(0xFFFB8C00),
+                onTap: () => context.go('/conges'),
               ),
             ),
           ],
@@ -149,44 +204,42 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKPICard(
+  Widget _kpiCard(
     BuildContext context, {
     required String title,
     required String value,
-    required IconData icon,
-    required Color color,
     required String subtitle,
+    required IconData icon,
+    required Color accentColor,
     VoidCallback? onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
     final card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outlineVariant.withOpacity(0.5), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
+            color: accentColor.withOpacity(0.06),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: accentColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: color, size: 18),
+                child: Icon(icon, color: accentColor, size: 18),
               ),
             ],
           ),
@@ -194,10 +247,10 @@ class DashboardPage extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.manrope(
-              fontSize: 28,
+              fontSize: 30,
               fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.primary,
-              height: 1.1,
+              color: accentColor,
+              height: 1.0,
             ),
           ),
           const SizedBox(height: 4),
@@ -206,14 +259,14 @@ class DashboardPage extends StatelessWidget {
             style: GoogleFonts.manrope(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: cs.onSurface,
             ),
           ),
           Text(
             subtitle,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: cs.onSurfaceVariant,
             ),
           ),
         ],
@@ -221,103 +274,229 @@ class DashboardPage extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: card,
-      );
+      return GestureDetector(onTap: onTap, child: card);
     }
     return card;
   }
 
-  Widget _buildRecentAlerts(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Row(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'RAPPORTS',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.error,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Alertes et urgences',
-                      style: GoogleFonts.manrope(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
+  // ─── Smart Reminders ──────────────────────────────────────────────────────
+
+  Widget _buildReminders(
+    BuildContext context, {
+    required int nonPointes,
+    required int congesEnAttente,
+    required int absencesIndefinies,
+    required int messagesNonLus,
+    required int templatesDisponibles,
+    required DateTime today,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final isWeekday = today.weekday <= 5;
+
+    // Build list of contextual reminder items
+    final List<_ReminderData> reminders = [];
+
+    // 1. Attendance reminder (only on weekdays)
+    if (isWeekday && nonPointes > 0) {
+      reminders.add(_ReminderData(
+        icon: Icons.touch_app_rounded,
+        color: const Color(0xFF1E88E5),
+        title: 'Pointage du jour à faire',
+        desc: '$nonPointes salarié${nonPointes > 1 ? 's' : ''} non pointé${nonPointes > 1 ? 's' : ''} aujourd\'hui.',
+        route: '/pointage',
+        urgent: nonPointes > 2,
+      ));
+    }
+
+    // 2. Pending leave requests
+    if (congesEnAttente > 0) {
+      reminders.add(_ReminderData(
+        icon: Icons.pending_actions_rounded,
+        color: const Color(0xFFFB8C00),
+        title: 'Demandes de congé en attente',
+        desc: '$congesEnAttente demande${congesEnAttente > 1 ? 's' : ''} à valider ou refuser.',
+        route: '/conges',
+        urgent: congesEnAttente > 3,
+      ));
+    }
+
+    // 3. Undefined absences reminder
+    if (absencesIndefinies > 0) {
+      reminders.add(_ReminderData(
+        icon: Icons.help_outline_rounded,
+        color: const Color(0xFF8E24AA),
+        title: 'Absences non classifiées',
+        desc: '$absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} de type "Autre" à préciser.',
+        route: '/conges',
+        urgent: false,
+      ));
+    }
+
+    // 4. Warning templates available to send
+    if (templatesDisponibles > 0) {
+      reminders.add(_ReminderData(
+        icon: Icons.warning_amber_rounded,
+        color: const Color(0xFFE53935),
+        title: 'Avertissements disponibles',
+        desc: '$templatesDisponibles modèle${templatesDisponibles > 1 ? 's' : ''} prêt${templatesDisponibles > 1 ? 's' : ''} à envoyer.',
+        route: '/avertissements',
+        urgent: false,
+      ));
+    }
+
+    // 5. Unread messages
+    if (messagesNonLus > 0) {
+      reminders.add(_ReminderData(
+        icon: Icons.mark_chat_unread_rounded,
+        color: const Color(0xFF00897B),
+        title: 'Nouveaux messages',
+        desc: '$messagesNonLus message${messagesNonLus > 1 ? 's' : ''} non lu${messagesNonLus > 1 ? 's' : ''} de la plateforme.',
+        route: '/messagerie',
+        urgent: false,
+      ));
+    }
+
+    if (reminders.isEmpty) {
+      return _buildAllClearCard(context);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'À FAIRE AUJOURD\'HUI',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: cs.onSurfaceVariant.withOpacity(0.8),
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: cs.outlineVariant.withOpacity(0.5), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              for (int i = 0; i < reminders.length; i++) ...[
+                _reminderTile(context, reminders[i]),
+                if (i < reminders.length - 1)
+                  Divider(
+                    height: 1,
+                    indent: 64,
+                    color: cs.outlineVariant.withOpacity(0.4),
+                  ),
               ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _reminderTile(BuildContext context, _ReminderData data) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => context.go(data.route),
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: data.color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(data.icon, color: data.color, size: 20),
             ),
-          ),
-          Divider(
-            height: 1,
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          ),
-          Container(
-            color: Theme.of(context).colorScheme.surfaceContainerLowest,
-            child: Column(
-              children: [
-                _buildAlertItem(
-                  'Absence non justifiée',
-                  '2 salariés n\'ont pas pointé aujourd\'hui.',
-                  Icons.person_off,
-                  Colors.redAccent,
-                  context,
-                ),
-                Divider(height: 1, indent: 64),
-                _buildAlertItem(
-                  'Nouveau Message entrant',
-                  'Client ABC a envoyé des documents.',
-                  Icons.message_outlined,
-                  Theme.of(context).colorScheme.tertiary,
-                  context,
-                ),
-              ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          data.title,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ),
+                      if (data.urgent)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE53935).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'URGENT',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFE53935),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    data.desc,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: cs.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Icon(Icons.arrow_forward_ios_rounded, size: 13, color: cs.outline),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAlertItem(
-    String title,
-    String desc,
-    IconData icon,
-    Color color,
-    BuildContext context,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+  Widget _buildAllClearCard(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF43A047).withOpacity(0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF43A047).withOpacity(0.2), width: 1),
+      ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: const Color(0xFF43A047).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: const Icon(Icons.check_circle_rounded, color: Color(0xFF43A047), size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -325,20 +504,18 @@ class DashboardPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.primary,
+                  'Tout est à jour !',
+                  style: GoogleFonts.manrope(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF43A047),
                   ),
                 ),
                 Text(
-                  desc,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  'Aucune action requise pour le moment.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -349,212 +526,170 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLeaveManagementSection(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final pendingLeaves = appState.conges.where((c) => c.statut == 'en_attente').toList();
-    final approvedLeaves = appState.conges.where((c) => c.statut == 'approuve').toList();
+  // ─── Pending Leave Requests ───────────────────────────────────────────────
 
+  Widget _buildPendingLeaveSection(
+    BuildContext context,
+    AppState appState,
+    List congesEnAttente,
+  ) {
     final cs = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CONGÉS',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: cs.primary,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Gestion des Congés',
-                      style: GoogleFonts.manrope(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: cs.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                TextButton(
-                  onPressed: () => context.go('/conges'),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Voir tout',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: cs.primary,
-                        ),
-                      ),
-                      const Icon(Icons.arrow_forward_ios, size: 12),
-                    ],
-                  ),
-                ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'DEMANDES EN ATTENTE',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: cs.onSurfaceVariant.withOpacity(0.8),
+                letterSpacing: 1.2,
+              ),
             ),
-          ),
-          Divider(
-            height: 1,
-            color: cs.surfaceContainerHigh,
-          ),
-          Container(
-            padding: const EdgeInsets.all(20),
-            color: cs.surfaceContainerLowest,
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildLeaveMiniStat(
-                        context,
-                        title: 'En attente',
-                        count: pendingLeaves.length,
-                        color: Colors.orange,
-                        icon: Icons.hourglass_empty,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildLeaveMiniStat(
-                        context,
-                        title: 'Approuvés',
-                        count: approvedLeaves.length,
-                        color: Colors.green,
-                        icon: Icons.check_circle_outline,
-                      ),
-                    ),
-                  ],
-                ),
-                if (pendingLeaves.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Demandes récentes en attente',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...pendingLeaves.take(2).map((conge) {
-                    final salarie = appState.salaries.firstWhere(
-                      (s) => s.id == conge.salarieId,
-                      orElse: () => Salarie(id: '', entrepriseId: '', nom: 'Inconnu', prenom: '', nomDeNaissance: '', typeContrat: 'CDI'),
-                    );
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          SalarieAvatar(
-                            radius: 14,
-                            avatarUrl: salarie.avatarUrl,
-                            initials: salarie.prenom.isNotEmpty
-                                ? salarie.prenom[0].toUpperCase()
-                                : (salarie.nom.isNotEmpty ? salarie.nom[0].toUpperCase() : '?'),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${salarie.prenom} ${salarie.nom}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Du ${conge.dateDebut.day}/${conge.dateDebut.month} au ${conge.dateFin.day}/${conge.dateFin.month}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_forward_ios, size: 14),
-                            onPressed: () => context.go('/conges'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeaveMiniStat(
-    BuildContext context, {
-    required String title,
-    required int count,
-    required Color color,
-    required IconData icon,
-  }) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: cs.outlineVariant.withOpacity(0.5),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$count',
-                style: GoogleFonts.manrope(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: cs.onSurface,
+            GestureDetector(
+              onTap: () => context.go('/conges'),
+              child: Text(
+                'Voir tout',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: cs.primary,
                 ),
               ),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: cs.onSurfaceVariant,
-                ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: cs.outlineVariant.withOpacity(0.5), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-        ],
+          child: Column(
+            children: [
+              for (int i = 0; i < congesEnAttente.take(3).length; i++) ...[
+                _buildLeaveRequestTile(context, appState, congesEnAttente[i]),
+                if (i < congesEnAttente.take(3).length - 1)
+                  Divider(
+                    height: 1,
+                    indent: 64,
+                    color: cs.outlineVariant.withOpacity(0.4),
+                  ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildLeaveRequestTile(BuildContext context, AppState appState, dynamic conge) {
+    final cs = Theme.of(context).colorScheme;
+    final salarie = appState.salaries.firstWhere(
+      (s) => s.id == conge.salarieId,
+      orElse: () => Salarie(
+        id: '', entrepriseId: '', nom: 'Inconnu', prenom: '',
+        nomDeNaissance: '', typeContrat: 'CDI',
+      ),
+    );
+
+    // Type label
+    final typeLabels = {
+      'conge_paye': 'Congé Payé',
+      'maladie': 'Arrêt Maladie',
+      'rtt': 'RTT',
+      'exceptionnel': 'Congé Exceptionnel',
+      'autre': 'Autre Absence',
+    };
+    final typeLabel = typeLabels[conge.typeConge] ?? 'Absence';
+
+    return InkWell(
+      onTap: () => context.go('/conges'),
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            SalarieAvatar(
+              radius: 20,
+              avatarUrl: salarie.avatarUrl,
+              initials: salarie.prenom.isNotEmpty
+                  ? salarie.prenom[0].toUpperCase()
+                  : (salarie.nom.isNotEmpty ? salarie.nom[0].toUpperCase() : '?'),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${salarie.prenom} ${salarie.nom}',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$typeLabel · Du ${conge.dateDebut.day}/${conge.dateDebut.month} au ${conge.dateFin.day}/${conge.dateFin.month}',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFB8C00).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'En attente',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFFB8C00),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _ReminderData {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String desc;
+  final String route;
+  final bool urgent;
+
+  const _ReminderData({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.desc,
+    required this.route,
+    required this.urgent,
+  });
 }
