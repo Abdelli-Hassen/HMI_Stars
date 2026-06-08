@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/top_notification_banner.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -32,14 +33,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Future<void> _sendReset() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez saisir votre adresse e-mail.')),
+      TopNotificationBanner.show(
+        context,
+        'Veuillez saisir votre adresse e-mail.',
+        isError: true,
       );
       return;
     }
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez saisir une adresse e-mail valide.')),
+      TopNotificationBanner.show(
+        context,
+        'Veuillez saisir une adresse e-mail valide.',
+        isError: true,
       );
       return;
     }
@@ -61,8 +66,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             msg = str;
           }
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
+        TopNotificationBanner.show(
+          context,
+          msg,
+          isError: true,
         );
       }
     }
@@ -72,14 +79,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final token = _otpController.text.trim();
     final newPassword = _passwordController.text.trim();
     if (token.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez saisir le code OTP à 6 chiffres.')),
+      TopNotificationBanner.show(
+        context,
+        'Veuillez saisir le code OTP à 6 chiffres.',
+        isError: true,
       );
       return;
     }
     if (newPassword.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Le nouveau mot de passe doit contenir au moins 8 caractères.')),
+      TopNotificationBanner.show(
+        context,
+        'Le nouveau mot de passe doit contenir au moins 8 caractères.',
+        isError: true,
       );
       return;
     }
@@ -91,8 +102,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       if (!ok) {
         setState(() => _verifying = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Code incorrect ou expiré.')),
+          TopNotificationBanner.show(
+            context,
+            'Code incorrect ou expiré.',
+            isError: true,
           );
         }
         return;
@@ -100,19 +113,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       await appState.updatePassword(newPassword);
       if (mounted) {
         setState(() => _verifying = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Mot de passe réinitialisé avec succès.'),
-            backgroundColor: Colors.green,
-          ),
+        TopNotificationBanner.show(
+          context,
+          'Mot de passe réinitialisé avec succès.',
+          isError: false,
         );
         context.go('/connexion');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _verifying = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ${e.toString()}')),
+        TopNotificationBanner.show(
+          context,
+          'Erreur: ${e.toString()}',
+          isError: true,
         );
       }
     }

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
+import '../../core/widgets/top_notification_banner.dart';
 
 class CongesPage extends StatefulWidget {
   const CongesPage({super.key});
@@ -299,20 +300,18 @@ class _CongesPageState extends State<CongesPage> {
               try {
                 await appState.deleteConge(conge.id!);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Absence supprimée avec succès.'),
-                      backgroundColor: Colors.green,
-                    ),
+                  TopNotificationBanner.show(
+                    context,
+                    'Absence supprimée avec succès.',
+                    isError: false,
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Erreur lors de la suppression: $e'),
-                      backgroundColor: Colors.redAccent,
-                    ),
+                  TopNotificationBanner.show(
+                    context,
+                    'Erreur lors de la suppression: $e',
+                    isError: true,
                   );
                 }
               }
@@ -329,11 +328,10 @@ class _CongesPageState extends State<CongesPage> {
 
   void _showAddCongeSheet(BuildContext context, List<Salarie> salaries, AppState appState) {
     if (salaries.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez ajouter des salariés avant d\'enregistrer une absence.'),
-          backgroundColor: Colors.orange,
-        ),
+      TopNotificationBanner.show(
+        context,
+        'Veuillez ajouter des salariés avant d\'enregistrer une absence.',
+        isError: true,
       );
       return;
     }
@@ -577,20 +575,18 @@ class _CongesPageState extends State<CongesPage> {
                           await appState.addConge(newConge);
                           if (context.mounted) {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Absence enregistrée avec succès'),
-                                backgroundColor: Colors.green,
-                              ),
+                            TopNotificationBanner.show(
+                              context,
+                              'Absence enregistrée avec succès',
+                              isError: false,
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Erreur: $e'),
-                                backgroundColor: Colors.redAccent,
-                              ),
+                            TopNotificationBanner.show(
+                              context,
+                              'Erreur: $e',
+                              isError: true,
                             );
                           }
                         }
@@ -851,20 +847,18 @@ class _CongesPageState extends State<CongesPage> {
                           await appState.updateConge(conge.id!, updates);
                           if (context.mounted) {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Absence modifiée avec succès'),
-                                backgroundColor: Colors.green,
-                              ),
+                            TopNotificationBanner.show(
+                              context,
+                              'Absence modifiée avec succès',
+                              isError: false,
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Erreur: $e'),
-                                backgroundColor: Colors.redAccent,
-                              ),
+                            TopNotificationBanner.show(
+                              context,
+                              'Erreur: $e',
+                              isError: true,
                             );
                           }
                         }

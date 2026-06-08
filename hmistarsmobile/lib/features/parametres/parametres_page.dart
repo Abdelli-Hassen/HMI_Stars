@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
+import '../../core/widgets/top_notification_banner.dart';
 
 
 class ParametresPage extends StatefulWidget {
@@ -95,25 +96,6 @@ class _ParametresPageState extends State<ParametresPage> {
       );
       if (image != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                ),
-                SizedBox(width: 16),
-                Text('Mise à jour du logo...'),
-              ],
-            ),
-            duration: Duration(minutes: 1),
-          ),
-        );
 
         final appState = context.read<AppState>();
         final currentParams = appState.parametres;
@@ -127,25 +109,13 @@ class _ParametresPageState extends State<ParametresPage> {
               _localLogoFile = null;
               _loaded = false;
             });
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Logo mis à jour avec succès !'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            TopNotificationBanner.show(context, 'Logo mis à jour avec succès !', isError: false);
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        TopNotificationBanner.show(context, 'Erreur: ${e.toString()}', isError: true);
       }
     }
   }
@@ -172,162 +142,82 @@ class _ParametresPageState extends State<ParametresPage> {
     final rcsVal = _rcsController.text.trim();
 
     if (raisonSocialeVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La Raison Sociale est requise'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'La Raison Sociale est requise', isError: true);
       return;
     }
 
     if (nomGerantVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le nom du gérant est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le nom du gérant est requis', isError: true);
       return;
     }
 
     if (emailVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('L\'adresse email est requise'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'L\'adresse email est requise', isError: true);
       return;
     }
 
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailVal)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez saisir une adresse e-mail valide.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Veuillez saisir une adresse e-mail valide.', isError: true);
       return;
     }
 
     if (telephoneVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro de téléphone est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro de téléphone est requis', isError: true);
       return;
     }
 
     if (!RegExp(r'^[+0-9\s-]{9,15}$').hasMatch(telephoneVal)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro de téléphone saisi est invalide.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro de téléphone saisi est invalide.', isError: true);
       return;
     }
 
     if (siretVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro SIRET est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro SIRET est requis', isError: true);
       return;
     }
 
     if (!RegExp(r'^\d{14}$').hasMatch(siretVal)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro SIRET doit comporter exactement 14 chiffres.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro SIRET doit comporter exactement 14 chiffres.', isError: true);
       return;
     }
 
     if (sirenVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro SIREN est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro SIREN est requis', isError: true);
       return;
     }
 
     if (!RegExp(r'^\d{9}$').hasMatch(sirenVal)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro SIREN doit comporter exactement 9 chiffres.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro SIREN doit comporter exactement 9 chiffres.', isError: true);
       return;
     }
 
     if (adresseVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('L\'adresse est requise'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'L\'adresse est requise', isError: true);
       return;
     }
 
     if (tvaVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro de TVA est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro de TVA est requis', isError: true);
       return;
     }
 
     if (formeJuridiqueVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La forme juridique est requise'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'La forme juridique est requise', isError: true);
       return;
     }
 
     if (capitalSocialVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le capital social est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le capital social est requis', isError: true);
       return;
     }
 
     if (codeApeVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le code APE est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le code APE est requis', isError: true);
       return;
     }
 
     if (rcsVal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le numéro RCS est requis'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      TopNotificationBanner.show(context, 'Le numéro RCS est requis', isError: true);
       return;
     }
 
@@ -375,21 +265,11 @@ class _ParametresPageState extends State<ParametresPage> {
           _localLogoFile = null;
           _loaded = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Paramètres enregistrés'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        TopNotificationBanner.show(context, 'Paramètres enregistrés', isError: false);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        TopNotificationBanner.show(context, 'Erreur: ${e.toString()}', isError: true);
       }
     }
   }

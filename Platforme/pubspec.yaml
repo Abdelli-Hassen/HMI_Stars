@@ -43,7 +43,7 @@ dependencies:
   file_saver: ^0.3.1
 
   # Supabase integration
-  supabase_flutter: ^2.12.4
+  supabase_flutter: ^2.13.1
   http: ^1.2.1
 
   # AI generation (Gemini)

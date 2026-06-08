@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -117,6 +118,7 @@ class MessagerieProvider extends ChangeNotifier {
   int _rawLoadedCount = 0;
   static const int _pageSize = 20;
   StreamSubscription<List<Map<String, dynamic>>>? _abonnementTempsReel;
+  Timer? _pollingTimer;
   List<String> _favorisIds = [];
 
   // --- Getters -------------------------------------------------------------
@@ -223,78 +225,103 @@ class MessagerieProvider extends ChangeNotifier {
 
   void _abonnerTempsReelGlobal() {
     _abonnementTempsReel?.cancel();
-    _abonnementTempsReel = _supabase
-        .from('messages')
-        .stream(primaryKey: ['id'])
-        .order('date_envoi')
-        .listen((rows) {
-      if (rows.isEmpty) return;
+    _pollingTimer?.cancel();
 
-      bool aChangeGlobal = false;
-
-      for (final row in rows) {
-        final m = MessagePlateforme.fromJson(row);
-        final myUid = _currentUserId;
-        if (myUid != null && m.contactId != null && m.contactId != myUid) {
-          continue; // Ignore messages for other contacts
+    if (kIsWeb) {
+      // Use polling on Web to avoid Realtime WebSocket encodable errors
+      _pollingTimer = Timer.periodic(const Duration(seconds: 4), (timer) async {
+        try {
+          final response = await _supabase
+              .from('messages')
+              .select()
+              .order('date_envoi', ascending: false)
+              .limit(50);
+          
+          if (response.isNotEmpty) {
+            _handleIncomingRows(List<Map<String, dynamic>>.from(response));
+          }
+        } catch (e) {
+          debugPrint('[MessagerieProvider] Web Polling error: $e');
         }
+      });
+    } else {
+      _abonnementTempsReel = _supabase
+          .from('messages')
+          .stream(primaryKey: ['id'])
+          .order('date_envoi')
+          .listen((rows) {
+        _handleIncomingRows(rows);
+      }, onError: (error) {
+        debugPrint('[MessagerieProvider] Erreur de connexion temps réel (flux global) : $error. Reconnexion dans 5 secondes...');
+        Future.delayed(const Duration(seconds: 5), () {
+          _abonnerTempsReelGlobal();
+        });
+      });
+    }
+  }
 
-        final eid = m.entrepriseId;
-        final isFromClient = m.estEnvoyeParUser;
-        String content = m.contenu;
-        final estLu = m.estLu;
-        final estFichier = m.estFichier;
-        final fichierNom = m.fichierNom;
+  void _handleIncomingRows(List<Map<String, dynamic>> rows) {
+    if (rows.isEmpty) return;
 
-        if (estFichier && content.trim().isEmpty) {
-          content = fichierNom ?? "Pièce jointe";
-        }
+    bool aChangeGlobal = false;
 
-        // 1. Mettre à jour l'aperçu dans la sidebar
-        final date = m.dateEnvoi;
+    for (final row in rows) {
+      final m = MessagePlateforme.fromJson(row);
+      final myUid = _currentUserId;
+      if (myUid != null && m.contactId != null && m.contactId != myUid) {
+        continue; // Ignore messages for other contacts
+      }
 
-        final updated = _mettreAJourApercuDirect(eid, content, date, isFromClient, estLu);
-        if (updated) aChangeGlobal = true;
+      final eid = m.entrepriseId;
+      final isFromClient = m.estEnvoyeParUser;
+      String content = m.contenu;
+      final estLu = m.estLu;
+      final estFichier = m.estFichier;
+      final fichierNom = m.fichierNom;
 
-        if (isFromClient && !estLu && eid != _entrepriseSelectionneeId) {
-          _hasUnreadForSidebar = true;
+      if (estFichier && content.trim().isEmpty) {
+        content = fichierNom ?? "Pièce jointe";
+      }
+
+      // 1. Mettre à jour l'aperçu dans la sidebar
+      final date = m.dateEnvoi;
+
+      final updated = _mettreAJourApercuDirect(eid, content, date, isFromClient, estLu);
+      if (updated) aChangeGlobal = true;
+
+      if (isFromClient && !estLu && eid != _entrepriseSelectionneeId) {
+        _hasUnreadForSidebar = true;
+        aChangeGlobal = true;
+      }
+
+      // 2. Si c'est l'entreprise actuellement ouverte, mettre à jour le chat
+      if (eid == _entrepriseSelectionneeId) {
+        final exists = _messagesActuels.any((existing) => existing.id == m.id);
+        if (!exists) {
+          final indexOptimiste = _messagesActuels.indexWhere(
+            (existing) => existing.id.startsWith('optimistic_') && existing.contenu == m.contenu
+          );
+          if (indexOptimiste != -1) {
+            _messagesActuels[indexOptimiste] = m;
+          } else {
+            _messagesActuels.insert(0, m); // Insert at top for reverse list
+          }
+          _messagesActuels.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
           aChangeGlobal = true;
-        }
 
-        // 2. Si c'est l'entreprise actuellement ouverte, mettre à jour le chat
-        if (eid == _entrepriseSelectionneeId) {
-          final exists = _messagesActuels.any((existing) => existing.id == m.id);
-          if (!exists) {
-            final indexOptimiste = _messagesActuels.indexWhere(
-              (existing) => existing.id.startsWith('optimistic_') && existing.contenu == m.contenu
-            );
-            if (indexOptimiste != -1) {
-              _messagesActuels[indexOptimiste] = m;
-            } else {
-              _messagesActuels.insert(0, m); // Insert at top for reverse list
-            }
-            _messagesActuels.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
-            aChangeGlobal = true;
-
-            // Marquer comme lu dans la DB si c'est le client qui envoie
-            if (isFromClient && !estLu) {
-              _dataService.marquerMessagesCommeLus(eid).catchError((e) {
-                debugPrint('[MessagerieProvider] Erreur marquage lu temps réel : $e');
-              });
-            }
+          // Marquer comme lu dans la DB si c'est le client qui envoie
+          if (isFromClient && !estLu) {
+            _dataService.marquerMessagesCommeLus(eid).catchError((e) {
+              debugPrint('[MessagerieProvider] Erreur marquage lu temps réel : $e');
+            });
           }
         }
       }
-      
-      if (aChangeGlobal) {
-        notifyListeners();
-      }
-    }, onError: (error) {
-      debugPrint('[MessagerieProvider] Erreur de connexion temps réel (flux global) : $error. Reconnexion dans 5 secondes...');
-      Future.delayed(const Duration(seconds: 5), () {
-        _abonnerTempsReelGlobal();
-      });
-    });
+    }
+    
+    if (aChangeGlobal) {
+      notifyListeners();
+    }
   }
 
   bool _mettreAJourApercuDirect(String eid, String contenu, DateTime date, bool estUser, bool estLu) {
@@ -602,6 +629,7 @@ class MessagerieProvider extends ChangeNotifier {
   @override
   void dispose() {
     _abonnementTempsReel?.cancel();
+    _pollingTimer?.cancel();
     super.dispose();
   }
 }

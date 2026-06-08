@@ -11,7 +11,7 @@ class ToastUtils {
     late OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        bottom: 24,
+        top: 24,
         right: 24,
         child: Material(
           color: Colors.transparent,

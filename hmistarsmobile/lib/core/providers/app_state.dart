@@ -556,6 +556,18 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  Conge? getCongeForSalarieOnDay(String salarieId, DateTime day) {
+    final target = DateTime(day.year, day.month, day.day);
+    final matchConge = _conges.where((c) {
+      if (c.salarieId != salarieId) return false;
+      final start = DateTime(c.dateDebut.year, c.dateDebut.month, c.dateDebut.day);
+      final end = DateTime(c.dateFin.year, c.dateFin.month, c.dateFin.day);
+      return (target.isAfter(start) || target.isAtSameMomentAs(start)) &&
+             (target.isBefore(end) || target.isAtSameMomentAs(end));
+    });
+    return matchConge.isNotEmpty ? matchConge.first : null;
+  }
+
   String getCongeDescriptionForSalarie(String salarieId, DateTime day) {
     // 1. Check in conges list
     final target = DateTime(day.year, day.month, day.day);
@@ -1040,7 +1052,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
     for (int i = 0; i < daysCount; i++) {
       final day = DateTime(start.year, start.month, start.day + i);
-      final label = _getTypeLabel(conge.typeConge);
+      final typeLabel = _getTypeLabel(conge.typeConge);
+      final label = conge.estDemiJournee ? '$typeLabel (Demi-journée)' : typeLabel;
       final note = conge.commentaire.trim().isNotEmpty
           ? '$label : ${conge.commentaire.trim()}'
           : label;

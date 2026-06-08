@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/top_notification_banner.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,9 +44,11 @@ class _LoginPageState extends State<LoginPage> {
             errorMessage.toLowerCase().contains('not confirmed')) {
           _showOtpDialog(_emailController.text.trim());
         } else {
-          ScaffoldMessenger.of(
+          TopNotificationBanner.show(
             context,
-          ).showSnackBar(SnackBar(content: Text(errorMessage)));
+            errorMessage,
+            isError: true,
+          );
         }
       }
     }
@@ -105,24 +108,27 @@ class _LoginPageState extends State<LoginPage> {
                     if (mounted) {
                       Navigator.pop(dialogContext);
                       if (ok) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Compte confirmé avec succès !'),
-                            backgroundColor: Colors.green,
-                          ),
+                        TopNotificationBanner.show(
+                          context,
+                          'Compte confirmé avec succès !',
+                          isError: false,
                         );
                         context.go('/tableau-de-bord');
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Code incorrect ou expiré.')),
+                        TopNotificationBanner.show(
+                          context,
+                          'Code incorrect ou expiré.',
+                          isError: true,
                         );
                       }
                     }
                   } catch (e) {
                     setStateDialog(() => isVerifying = false);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur: ${e.toString()}')),
+                      TopNotificationBanner.show(
+                        context,
+                        'Erreur: ${e.toString()}',
+                        isError: true,
                       );
                     }
                   }

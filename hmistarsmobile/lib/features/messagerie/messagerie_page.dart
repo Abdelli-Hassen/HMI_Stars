@@ -11,6 +11,7 @@ import 'widgets/document_type_picker.dart';
 import 'widgets/company_info_sheet.dart';
 import 'widgets/documents_sheet.dart';
 import 'widgets/document_scanner_view.dart';
+import '../../core/widgets/top_notification_banner.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MessageriePage extends StatefulWidget {
@@ -138,8 +139,10 @@ class _MessageriePageState extends State<MessageriePage> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Impossible d\'envoyer le message : $e')),
+        TopNotificationBanner.show(
+          context,
+          'Impossible d\'envoyer le message : $e',
+          isError: true,
         );
       }
     }
@@ -231,11 +234,10 @@ class _MessageriePageState extends State<MessageriePage> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Échec de l\'envoi du fichier : $e'),
-            backgroundColor: Colors.redAccent,
-          ),
+        TopNotificationBanner.show(
+          context,
+          'Échec de l\'envoi du fichier : $e',
+          isError: true,
         );
       }
     }

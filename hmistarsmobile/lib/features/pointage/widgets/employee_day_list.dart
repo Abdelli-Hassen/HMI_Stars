@@ -350,6 +350,8 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
               children: [
                 Text(
                   salarie.nomComplet,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
@@ -361,12 +363,16 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                     children: [
                       Icon(Icons.check_circle, color: Colors.green, size: 13),
                       const SizedBox(width: 4),
-                      Text(
-                        'Présence Validée',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green,
+                      Expanded(
+                        child: Text(
+                          'Présence Validée',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green,
+                          ),
                         ),
                       ),
                     ],
@@ -376,12 +382,16 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                     children: [
                       Icon(Icons.beach_access, color: Colors.blue, size: 13),
                       const SizedBox(width: 4),
-                      Text(
-                        'En Congé ($congeLabel)',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue,
+                      Expanded(
+                        child: Text(
+                          'En Congé ($congeLabel)',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue,
+                          ),
                         ),
                       ),
                     ],
@@ -399,6 +409,8 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                     ),
                     child: Text(
                       'Attente Vérification',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -482,9 +494,59 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
     Salarie salarie,
     AppState appState,
   ) {
+    final conge = appState.getCongeForSalarieOnDay(salarie.id, widget.day);
+    final rawNote = appState.getNoteForDay(widget.day, salarie.id) ?? '';
     final noteController = TextEditingController(
-      text: appState.getNoteForDay(widget.day, salarie.id),
+      text: rawNote,
     );
+
+    // Parse leave type and comment from note if it starts with known types
+    String? parsedTypeLabel;
+    String? parsedMotif;
+
+    if (conge != null) {
+      parsedTypeLabel = conge.estDemiJournee 
+          ? '${_getCongeTypeLabel(conge.typeConge)} (Demi-journée)' 
+          : _getCongeTypeLabel(conge.typeConge);
+      parsedMotif = conge.commentaire.isNotEmpty ? conge.commentaire : 'Aucun commentaire';
+    } else if (rawNote.isNotEmpty) {
+      final prefixes = [
+        'Congé Payé (Demi-journée)',
+        'Congé Payé',
+        'Arrêt Maladie (Demi-journée)',
+        'Arrêt Maladie',
+        'RTT (Demi-journée)',
+        'RTT',
+        'Congé Exceptionnel (Demi-journée)',
+        'Congé Exceptionnel',
+        'Autre Absence (Demi-journée)',
+        'Autre Absence',
+        'Maladie (Demi-journée)',
+        'Maladie',
+        'Arrêt (Demi-journée)',
+        'Arrêt',
+        'Conge (Demi-journée)',
+        'Conge'
+      ];
+      for (final prefix in prefixes) {
+        if (rawNote.startsWith(prefix)) {
+          parsedTypeLabel = prefix;
+          final remaining = rawNote.substring(prefix.length).trim();
+          if (remaining.startsWith(':')) {
+            parsedMotif = remaining.substring(1).trim();
+          } else {
+            parsedMotif = remaining;
+          }
+          if (parsedMotif.isEmpty) {
+            parsedMotif = 'Aucun commentaire';
+          }
+          break;
+        }
+      }
+    }
+
+    final isSeparatedView = conge != null || parsedTypeLabel != null;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -514,49 +576,133 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'NOTE',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.primary,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: noteController,
-              maxLines: 5,
-              decoration: InputDecoration(
-                hintText: 'Écrire une note pour ce salarié...',
-                hintStyle: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: Theme.of(context).colorScheme.outlineVariant,
+            if (isSeparatedView) ...[
+              Text(
+                'TYPE DE CONGÉ / ABSENCE',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.primary,
+                  letterSpacing: 1.2,
                 ),
               ),
-            ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  parsedTypeLabel ?? '',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'MOTIF / COMMENTAIRE',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.primary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  parsedMotif ?? '',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: (parsedMotif != null && parsedMotif != 'Aucun commentaire')
+                        ? Theme.of(context).colorScheme.onSurface 
+                        : Theme.of(context).colorScheme.outline,
+                  ),
+                ),
+              ),
+            ] else ...[
+              Text(
+                'NOTE / COMMENTAIRE',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.primary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: noteController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText: 'Écrire une note pour ce salarié...',
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+              ),
+            ]
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Annuler',
-              style: GoogleFonts.inter(
-                color: Theme.of(context).colorScheme.outline,
+          if (isSeparatedView) ...[
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Fermer',
+                style: GoogleFonts.inter(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              appState.setNote(widget.day, salarie.id, noteController.text);
-              Navigator.pop(ctx);
-            },
-            child: const Text('Enregistrer'),
-          ),
+          ] else ...[
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Annuler',
+                style: GoogleFonts.inter(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                appState.setNote(widget.day, salarie.id, noteController.text);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  String _getCongeTypeLabel(String type) {
+    switch (type) {
+      case 'conge_paye':
+        return 'Congé Payé';
+      case 'maladie':
+        return 'Arrêt Maladie';
+      case 'rtt':
+        return 'RTT';
+      case 'exceptionnel':
+        return 'Congé Exceptionnel';
+      default:
+        return 'Autre Absence';
+    }
   }
 
   String _formatDate(DateTime day) {

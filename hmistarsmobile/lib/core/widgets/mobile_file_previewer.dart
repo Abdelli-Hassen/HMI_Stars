@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'top_notification_banner.dart';
 
 class MobileFilePreviewer {
   static void show(BuildContext context, String url, String name) {
@@ -170,20 +171,23 @@ class MobileFilePreviewer {
   }
 
   static Future<void> _triggerDownload(BuildContext context, String url, String name) async {
-    final messenger = ScaffoldMessenger.of(context);
     try {
       final downloadUrl = url.contains('?') ? '$url&download=' : '$url?download=';
       final uri = Uri.parse(downloadUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Impossible d\'ouvrir le téléchargeur externe de votre téléphone.')),
+        TopNotificationBanner.show(
+          context,
+          'Impossible d\'ouvrir le téléchargeur externe de votre téléphone.',
+          isError: true,
         );
       }
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Erreur lors du lancement du téléchargement : $e')),
+      TopNotificationBanner.show(
+        context,
+        'Erreur lors du lancement du téléchargement : $e',
+        isError: true,
       );
     }
   }

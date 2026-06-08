@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import '../../../core/widgets/top_notification_banner.dart';
 
 class DocumentScannerView extends StatefulWidget {
   final Function(String pdfPath) onScanCompleted;
@@ -49,8 +50,10 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de la création du PDF: $e')),
+        TopNotificationBanner.show(
+          context,
+          'Erreur lors de la création du PDF: $e',
+          isError: true,
         );
       }
     } finally {

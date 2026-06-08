@@ -257,6 +257,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                         onTap: () async {
                           final provider = Provider.of<EntrepriseProvider>(context, listen: false);
                           await Future.wait([
+                            provider.fetchEntreprises(force: true),
                             provider.fetchSalariesForEntreprise(entreprise.id, force: true),
                             provider.fetchNotesForEntreprise(entreprise.id, force: true),
                             provider.fetchDocumentsForEntreprise(entreprise.id, force: true),
@@ -2771,12 +2772,15 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
         final displayDate = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
         String status = '';
-        String note = '';
+        String typeOfLeave = '';
+        String displayNote = '';
 
         if (pointageMap.containsKey(dateKey)) {
           final p = pointageMap[dateKey]!;
           final estPointe = p['est_pointe'] as bool? ?? false;
-          note = p['note'] as String? ?? '';
+          final note = p['note'] as String? ?? '';
+          displayNote = note;
+
           if (estPointe) {
             status = context.trStatic('Présent', 'Present');
             presents++;
@@ -2785,13 +2789,47 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
                 ? context.trStatic('Congé', 'Leave') 
                 : context.trStatic('Absent', 'Absent');
             absents++;
+
+            if (note.isNotEmpty) {
+              final prefixes = [
+                'Congé Payé (Demi-journée)',
+                'Congé Payé',
+                'Arrêt Maladie (Demi-journée)',
+                'Arrêt Maladie',
+                'RTT (Demi-journée)',
+                'RTT',
+                'Congé Exceptionnel (Demi-journée)',
+                'Congé Exceptionnel',
+                'Autre Absence (Demi-journée)',
+                'Autre Absence',
+                'Maladie (Demi-journée)',
+                'Maladie',
+                'Arrêt (Demi-journée)',
+                'Arrêt',
+                'Conge (Demi-journée)',
+                'Conge'
+              ];
+
+              for (final prefix in prefixes) {
+                if (note.startsWith(prefix)) {
+                  typeOfLeave = prefix;
+                  final remaining = note.substring(prefix.length).trim();
+                  if (remaining.startsWith(':')) {
+                    displayNote = remaining.substring(1).trim();
+                  } else if (remaining.isEmpty) {
+                    displayNote = '';
+                  }
+                  break;
+                }
+              }
+            }
           }
         } else {
           status = context.trStatic('Non renseigné', 'Unreported');
           nonRenseignes++;
         }
 
-        rows.add([displayDate, status, note]);
+        rows.add([displayDate, status, typeOfLeave, displayNote]);
       }
 
       final buffer = StringBuffer();
@@ -2805,6 +2843,7 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
       final unrepLbl = context.trStatic('Jours Non Renseignés', 'Days Unreported');
       final dateLbl = context.trStatic('Date', 'Date');
       final statusLbl = context.trStatic('Statut', 'Status');
+      final typeLbl = context.trStatic('Type d\'absence/congé', 'Type of Leave/Absence');
       final noteLbl = context.trStatic('Note / Description', 'Note / Description');
 
       buffer.writeln('$title$separator');
@@ -2816,13 +2855,14 @@ class _ExportPointageDialogState extends State<_ExportPointageDialog> {
       buffer.writeln('$unrepLbl$separator$nonRenseignes');
       buffer.writeln('');
       
-      buffer.writeln('$dateLbl$separator$statusLbl$separator$noteLbl');
+      buffer.writeln('$dateLbl$separator$statusLbl$separator$typeLbl$separator$noteLbl');
       
       for (final row in rows) {
         final dateEsc = escapeCsv(row[0], separator);
         final statusEsc = escapeCsv(row[1], separator);
-        final noteEsc = escapeCsv(row[2], separator);
-        buffer.writeln('$dateEsc$separator$statusEsc$separator$noteEsc');
+        final typeEsc = escapeCsv(row[2], separator);
+        final noteEsc = escapeCsv(row[3], separator);
+        buffer.writeln('$dateEsc$separator$statusEsc$separator$typeEsc$separator$noteEsc');
       }
 
       final csvContent = buffer.toString();

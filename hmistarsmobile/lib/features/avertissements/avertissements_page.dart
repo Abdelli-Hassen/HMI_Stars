@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
+import '../../core/widgets/top_notification_banner.dart';
 
 /// Global helper to show the recipient selector dialog and launch mail client.
 void showTemplateSendDialog(
@@ -98,13 +99,10 @@ void showTemplateSendDialog(
                         .join(',');
 
                     if (emails.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Aucun salarié sélectionné n\'a d\'adresse e-mail.',
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
+                      TopNotificationBanner.show(
+                        context,
+                        'Aucun salarié sélectionné n\'a d\'adresse e-mail.',
+                        isError: true,
                       );
                       return;
                     }
@@ -127,11 +125,10 @@ void showTemplateSendDialog(
                         await launchUrl(emailUri);
                       }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Erreur lors de l\'envoi de l\'e-mail : $e'),
-                          backgroundColor: Colors.red,
-                        ),
+                      TopNotificationBanner.show(
+                        context,
+                        'Erreur lors de l\'envoi de l\'e-mail : $e',
+                        isError: true,
                       );
                     }
                   },
@@ -504,11 +501,10 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                 if (confirm == true) {
                   await appState.deleteTemplate(template.id);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Modèle supprimé avec succès.'),
-                        backgroundColor: Colors.green,
-                      ),
+                    TopNotificationBanner.show(
+                      context,
+                      'Modèle supprimé avec succès.',
+                      isError: false,
                     );
                   }
                 }
@@ -745,11 +741,10 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
     final content = _contentController.text.trim();
 
     if (title.isEmpty || content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez remplir le titre et le contenu.'),
-          backgroundColor: Colors.red,
-        ),
+      TopNotificationBanner.show(
+        context,
+        'Veuillez remplir le titre et le contenu.',
+        isError: true,
       );
       return;
     }
@@ -777,22 +772,20 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Modèle enregistré avec succès.'),
-            backgroundColor: Colors.green,
-          ),
+        TopNotificationBanner.show(
+          context,
+          'Modèle enregistré avec succès.',
+          isError: false,
         );
       }
     } catch (e) {
       setState(() {
         _isSaving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de l\'enregistrement : $e'),
-          backgroundColor: Colors.red,
-        ),
+      TopNotificationBanner.show(
+        context,
+        'Erreur lors de l\'enregistrement : $e',
+        isError: true,
       );
     }
   }

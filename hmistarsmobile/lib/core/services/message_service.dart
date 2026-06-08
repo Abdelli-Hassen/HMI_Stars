@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
@@ -109,19 +110,63 @@ class MessageService {
     void Function(List<Message> messages) onMessages, {
     void Function(Object error)? onError,
   }) {
-    return _client
-        .from('messages')
-        .stream(primaryKey: ['id'])
-        .eq('entreprise_id', entrepriseId)
-        .order('date_envoi')
-        .listen(
-      (rows) {
-        final messages = rows.map((e) => Message.fromJson(e)).toList();
-        onMessages(messages);
-      },
-      onError: onError,
-      cancelOnError: false,
-    );
+    if (kIsWeb) {
+      final controller = StreamController<List<Map<String, dynamic>>>();
+      final timer = Timer.periodic(const Duration(seconds: 4), (t) async {
+        if (controller.isClosed) {
+          t.cancel();
+          return;
+        }
+        try {
+          final data = await _client
+              .from('messages')
+              .select()
+              .eq('entreprise_id', entrepriseId)
+              .order('date_envoi', ascending: false)
+              .limit(50);
+          if (!controller.isClosed) {
+            controller.add(List<Map<String, dynamic>>.from(data));
+          }
+        } catch (e) {
+          if (!controller.isClosed && onError != null) {
+            onError(e);
+          }
+        }
+      });
+      
+      final sub = controller.stream.listen(
+        (rows) {
+          final messages = rows.map((e) => Message.fromJson(e)).toList();
+          onMessages(messages);
+        },
+        onError: onError,
+        cancelOnError: false,
+      );
+      
+      // Hook cancel to clean up timer and controller
+      final originalCancel = sub.cancel;
+      sub.cancel = () async {
+        timer.cancel();
+        await controller.close();
+        await originalCancel();
+      };
+      
+      return sub;
+    } else {
+      return _client
+          .from('messages')
+          .stream(primaryKey: ['id'])
+          .eq('entreprise_id', entrepriseId)
+          .order('date_envoi')
+          .listen(
+        (rows) {
+          final messages = rows.map((e) => Message.fromJson(e)).toList();
+          onMessages(messages);
+        },
+        onError: onError,
+        cancelOnError: false,
+      );
+    }
   }
 
 

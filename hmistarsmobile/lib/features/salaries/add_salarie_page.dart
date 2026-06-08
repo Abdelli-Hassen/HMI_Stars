@@ -300,12 +300,10 @@ class _AddSalariePageState extends State<AddSalariePage> {
       });
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${newSalarie.nomComplet} enregistré avec succès'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        duration: const Duration(seconds: 2),
-      ),
+    TopNotificationBanner.show(
+      context,
+      '${newSalarie.nomComplet} enregistré avec succès',
+      isError: false,
     );
     context.pop();
   }
@@ -740,8 +738,10 @@ class _AddSalariePageState extends State<AddSalariePage> {
 
   Future<void> _downloadOrViewFile(String label, String? url) async {
     if (url == null || url.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aucun lien disponible pour ce fichier.')),
+      TopNotificationBanner.show(
+        context,
+        'Aucun lien disponible pour ce fichier.',
+        isError: true,
       );
       return;
     }

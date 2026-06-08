@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/entreprises/presentation/providers/entreprise_provider.dart';
@@ -56,6 +57,7 @@ class NotificationProvider extends ChangeNotifier {
   List<NotificationDocument> notifications = [];
   bool chargement = false;
   StreamSubscription<List<Map<String, dynamic>>>? abonnementTempsReel;
+  Timer? pollingTimer;
   bool _disposed = false;
 
   NotificationProvider(this.entrepriseProvider) {
@@ -67,6 +69,7 @@ class NotificationProvider extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     abonnementTempsReel?.cancel();
+    pollingTimer?.cancel();
     super.dispose();
   }
 
@@ -103,49 +106,74 @@ class NotificationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Initialise le flux en temps réel Supabase pour écouter les nouveaux messages.
   void initialiserAbonnement() {
     abonnementTempsReel?.cancel();
-    abonnementTempsReel = clientSupabase
-        .from('messages')
-        .stream(primaryKey: ['id'])
-        .order('date_envoi')
-        .listen((lignes) {
-      if (lignes.isEmpty) return;
+    pollingTimer?.cancel();
 
-      bool changement = false;
-      for (final ligne in lignes) {
-        final estFichier = ligne['est_fichier'] as bool? ?? false;
-        final estUser = ligne['est_envoye_par_user'] as bool? ?? true;
-
-        if (estFichier && estUser) {
-          final doc = NotificationDocument.fromJson(ligne);
-          final index = notifications.indexWhere((n) => n.id == doc.id);
-
-          if (index == -1) {
-            // Ajouter en haut et maintenir la limite de 50
-            notifications.insert(0, doc);
-            if (notifications.length > 50) {
-              notifications.removeLast();
-            }
-            changement = true;
-          } else if (notifications[index].estLu != doc.estLu) {
-            notifications[index] = doc;
-            changement = true;
+    if (kIsWeb) {
+      pollingTimer = Timer.periodic(const Duration(seconds: 4), (timer) async {
+        try {
+          final reponse = await clientSupabase
+              .from('messages')
+              .select()
+              .eq('est_fichier', true)
+              .eq('est_envoye_par_user', true)
+              .order('date_envoi', ascending: false)
+              .limit(50);
+          
+          if (reponse.isNotEmpty) {
+            _handleIncomingRows(List<Map<String, dynamic>>.from(reponse));
           }
+        } catch (e) {
+          debugPrint('[NotificationProvider] Web Polling error: $e');
+        }
+      });
+    } else {
+      abonnementTempsReel = clientSupabase
+          .from('messages')
+          .stream(primaryKey: ['id'])
+          .order('date_envoi')
+          .listen((lignes) {
+        _handleIncomingRows(lignes);
+      }, onError: (error) {
+        debugPrint('[NotificationProvider] Erreur de connexion temps réel (notifications) : $error. Reconnexion dans 5 secondes...');
+        Future.delayed(const Duration(seconds: 5), () {
+          initialiserAbonnement();
+        });
+      });
+    }
+  }
+
+  void _handleIncomingRows(List<Map<String, dynamic>> lignes) {
+    if (lignes.isEmpty) return;
+
+    bool changement = false;
+    for (final ligne in lignes) {
+      final estFichier = ligne['est_fichier'] as bool? ?? false;
+      final estUser = ligne['est_envoye_par_user'] as bool? ?? true;
+
+      if (estFichier && estUser) {
+        final doc = NotificationDocument.fromJson(ligne);
+        final index = notifications.indexWhere((n) => n.id == doc.id);
+
+        if (index == -1) {
+          // Ajouter en haut et maintenir la limite de 50
+          notifications.insert(0, doc);
+          if (notifications.length > 50) {
+            notifications.removeLast();
+          }
+          changement = true;
+        } else if (notifications[index].estLu != doc.estLu) {
+          notifications[index] = doc;
+          changement = true;
         }
       }
+    }
 
-      if (changement) {
-        notifications.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
-        notifyListeners();
-      }
-    }, onError: (error) {
-      debugPrint('[NotificationProvider] Erreur de connexion temps réel (notifications) : $error. Reconnexion dans 5 secondes...');
-      Future.delayed(const Duration(seconds: 5), () {
-        initialiserAbonnement();
-      });
-    });
+    if (changement) {
+      notifications.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
+      notifyListeners();
+    }
   }
 
   /// Marque un document comme lu dans Supabase et met à jour l'état local.
