@@ -89,12 +89,10 @@ class DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // --- 4 KPI Cards ---
-                  _buildKPIGrid(context, appState,
+                  // --- KPI Cards ---
+                  _buildKPIGrid(context,
                     totalSalaries: appState.salaries.length,
-                    congesAujourd: congesApprouvesAujourd,
                     nonPointes: nonPointes,
-                    congesEnAttente: congesEnAttente.length,
                   ),
                   const SizedBox(height: 24),
 
@@ -126,79 +124,38 @@ class DashboardPage extends StatelessWidget {
   // ─── KPI Grid ─────────────────────────────────────────────────────────────
 
   Widget _buildKPIGrid(
-    BuildContext context,
-    AppState appState, {
+    BuildContext context, {
     required int totalSalaries,
-    required int congesAujourd,
     required int nonPointes,
-    required int congesEnAttente,
   }) {
-    final cs = Theme.of(context).colorScheme;
-
-    // Attendance percentage today (pointed or on approved leave)
-    final pointed = totalSalaries - nonPointes;
-    final pct = totalSalaries > 0 ? (pointed / totalSalaries * 100).round() : 0;
-
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _kpiCard(
-                context,
-                title: 'Effectif',
-                value: '$totalSalaries',
-                subtitle: 'Salariés actifs',
-                icon: Icons.group_rounded,
-                accentColor: const Color(0xFF1E88E5),
-                onTap: () => context.go('/salaries'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _kpiCard(
-                context,
-                title: 'Pointage',
-                value: '$pct%',
-                subtitle: '$pointed / $totalSalaries pointés',
-                icon: Icons.how_to_reg_rounded,
-                accentColor: pct == 100
-                    ? const Color(0xFF43A047)
-                    : pct >= 70
-                        ? const Color(0xFFFB8C00)
-                        : cs.error,
-                onTap: () => context.go('/pointage'),
-              ),
-            ),
-          ],
+        Expanded(
+          child: _kpiCard(
+            context,
+            title: 'Effectif',
+            value: '$totalSalaries',
+            subtitle: 'Salariés actifs',
+            icon: Icons.group_rounded,
+            accentColor: const Color(0xFF1E88E5),
+            onTap: () => context.go('/salaries'),
+          ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _kpiCard(
-                context,
-                title: 'Absences',
-                value: '$congesAujourd',
-                subtitle: 'Approuvées aujourd\'hui',
-                icon: Icons.person_off_rounded,
-                accentColor: const Color(0xFFE53935),
-                onTap: () => context.go('/conges'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _kpiCard(
-                context,
-                title: 'En attente',
-                value: '$congesEnAttente',
-                subtitle: 'Demandes à traiter',
-                icon: Icons.hourglass_top_rounded,
-                accentColor: const Color(0xFFFB8C00),
-                onTap: () => context.go('/conges'),
-              ),
-            ),
-          ],
+        const SizedBox(width: 12),
+        Expanded(
+          child: _kpiCard(
+            context,
+            title: 'Non pointés',
+            value: '$nonPointes',
+            subtitle: nonPointes == 0 ? 'Tout le monde pointé ✓' : 'À pointer aujourd\'hui',
+            icon: Icons.edit_note_rounded,
+            accentColor: nonPointes == 0
+                ? const Color(0xFF43A047)
+                : nonPointes == 1
+                    ? const Color(0xFFFB8C00)
+                    : const Color(0xFFE53935),
+            onTap: () => context.go('/pointage'),
+          ),
         ),
       ],
     );
