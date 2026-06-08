@@ -79,7 +79,7 @@ class DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Bonjour, ${params?.nomGerant ?? 'Admin'} 👋',
+                    'Bonjour, ${params?.nomGerant ?? 'Admin'} !',
                     style: GoogleFonts.manrope(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -96,14 +96,11 @@ class DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // --- Smart Reminders Section ---
-                  _buildReminders(context,
+                  // --- Action Cards ---
+                  _buildActionCards(context, appState,
                     nonPointes: nonPointes,
-                    congesEnAttente: congesEnAttente.length,
                     absencesIndefinies: absencesIndefinies.length,
-                    messagesNonLus: messagesNonLus,
                     templatesDisponibles: templatesDisponibles,
-                    today: today,
                   ),
                   const SizedBox(height: 24),
 
@@ -236,96 +233,86 @@ class DashboardPage extends StatelessWidget {
     return card;
   }
 
-  // ─── Smart Reminders ──────────────────────────────────────────────────────
+  // ─── Fixed Action Cards ────────────────────────────────────────────────────
 
-  Widget _buildReminders(
-    BuildContext context, {
+  Widget _buildActionCards(
+    BuildContext context,
+    AppState appState, {
     required int nonPointes,
-    required int congesEnAttente,
     required int absencesIndefinies,
-    required int messagesNonLus,
     required int templatesDisponibles,
-    required DateTime today,
   }) {
     final cs = Theme.of(context).colorScheme;
-    final isWeekday = today.weekday <= 5;
+    final totalSalaries = appState.salaries.length;
 
-    // Build list of contextual reminder items
-    final List<_ReminderData> reminders = [];
-
-    // 1. Attendance reminder (only on weekdays)
-    if (isWeekday && nonPointes > 0) {
-      reminders.add(_ReminderData(
-        icon: Icons.touch_app_rounded,
-        color: const Color(0xFF1E88E5),
-        title: 'Pointage du jour à faire',
-        desc: '$nonPointes salarié${nonPointes > 1 ? 's' : ''} non pointé${nonPointes > 1 ? 's' : ''} aujourd\'hui.',
+    final items = [
+      // 1. Employees overview
+      _ActionItem(
+        icon: Icons.group_outlined,
+        iconBg: cs.primaryContainer,
+        iconColor: cs.onPrimaryContainer,
+        title: 'Effectif total',
+        badge: '$totalSalaries',
+        badgeBg: cs.primaryContainer,
+        badgeColor: cs.onPrimaryContainer,
+        desc: totalSalaries == 0
+            ? 'Aucun salarié enregistré'
+            : '$totalSalaries salarié${totalSalaries > 1 ? 's' : ''} actif${totalSalaries > 1 ? 's' : ''}',
+        route: '/salaries',
+      ),
+      // 2. Attendance
+      _ActionItem(
+        icon: Icons.edit_note_rounded,
+        iconBg: nonPointes == 0 ? cs.tertiaryContainer : cs.errorContainer,
+        iconColor: nonPointes == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
+        title: 'Pointage du jour',
+        badge: nonPointes == 0 ? '✓' : '$nonPointes',
+        badgeBg: nonPointes == 0 ? cs.tertiaryContainer : cs.errorContainer,
+        badgeColor: nonPointes == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
+        desc: nonPointes == 0
+            ? 'Tout le monde est pointé'
+            : '$nonPointes salarié${nonPointes > 1 ? 's' : ''} non pointé${nonPointes > 1 ? 's' : ''}',
         route: '/pointage',
-        urgent: nonPointes > 2,
-      ));
-    }
-
-    // 2. Pending leave requests
-    if (congesEnAttente > 0) {
-      reminders.add(_ReminderData(
-        icon: Icons.pending_actions_rounded,
-        color: const Color(0xFFFB8C00),
-        title: 'Demandes de congé en attente',
-        desc: '$congesEnAttente demande${congesEnAttente > 1 ? 's' : ''} à valider ou refuser.',
+      ),
+      // 3. Undefined absences
+      _ActionItem(
+        icon: Icons.help_center_outlined,
+        iconBg: absencesIndefinies == 0 ? cs.surfaceContainerHighest : cs.errorContainer,
+        iconColor: absencesIndefinies == 0 ? cs.onSurfaceVariant : cs.onErrorContainer,
+        title: 'Absences indéfinies',
+        badge: '$absencesIndefinies',
+        badgeBg: absencesIndefinies == 0 ? cs.surfaceContainerHighest : cs.errorContainer,
+        badgeColor: absencesIndefinies == 0 ? cs.onSurfaceVariant : cs.onErrorContainer,
+        desc: absencesIndefinies == 0
+            ? 'Aucune absence à clarifier'
+            : '$absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} de type "Autre" à préciser',
         route: '/conges',
-        urgent: congesEnAttente > 3,
-      ));
-    }
-
-    // 3. Undefined absences reminder
-    if (absencesIndefinies > 0) {
-      reminders.add(_ReminderData(
-        icon: Icons.help_outline_rounded,
-        color: const Color(0xFF8E24AA),
-        title: 'Absences non classifiées',
-        desc: '$absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} de type "Autre" à préciser.',
-        route: '/conges',
-        urgent: false,
-      ));
-    }
-
-    // 4. Warning templates available to send
-    if (templatesDisponibles > 0) {
-      reminders.add(_ReminderData(
+      ),
+      // 4. Warnings
+      _ActionItem(
         icon: Icons.warning_amber_rounded,
-        color: const Color(0xFFE53935),
-        title: 'Avertissements disponibles',
-        desc: '$templatesDisponibles modèle${templatesDisponibles > 1 ? 's' : ''} prêt${templatesDisponibles > 1 ? 's' : ''} à envoyer.',
+        iconBg: cs.secondaryContainer,
+        iconColor: cs.onSecondaryContainer,
+        title: 'Avertissements',
+        badge: '$templatesDisponibles',
+        badgeBg: cs.secondaryContainer,
+        badgeColor: cs.onSecondaryContainer,
+        desc: templatesDisponibles == 0
+            ? 'Aucun modèle disponible'
+            : '$templatesDisponibles modèle${templatesDisponibles > 1 ? 's' : ''} prêt${templatesDisponibles > 1 ? 's' : ''} à envoyer',
         route: '/avertissements',
-        urgent: false,
-      ));
-    }
-
-    // 5. Unread messages
-    if (messagesNonLus > 0) {
-      reminders.add(_ReminderData(
-        icon: Icons.mark_chat_unread_rounded,
-        color: const Color(0xFF00897B),
-        title: 'Nouveaux messages',
-        desc: '$messagesNonLus message${messagesNonLus > 1 ? 's' : ''} non lu${messagesNonLus > 1 ? 's' : ''} de la plateforme.',
-        route: '/messagerie',
-        urgent: false,
-      ));
-    }
-
-    if (reminders.isEmpty) {
-      return _buildAllClearCard(context);
-    }
+      ),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'À FAIRE AUJOURD\'HUI',
+          'RAPPELS',
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.w800,
-            color: cs.onSurfaceVariant.withOpacity(0.8),
+            color: cs.onSurfaceVariant,
             letterSpacing: 1.2,
           ),
         ),
@@ -334,25 +321,14 @@ class DashboardPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: cs.outlineVariant.withOpacity(0.5), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: cs.outlineVariant, width: 1),
           ),
           child: Column(
             children: [
-              for (int i = 0; i < reminders.length; i++) ...[
-                _reminderTile(context, reminders[i]),
-                if (i < reminders.length - 1)
-                  Divider(
-                    height: 1,
-                    indent: 64,
-                    color: cs.outlineVariant.withOpacity(0.4),
-                  ),
+              for (int i = 0; i < items.length; i++) ...[
+                _actionTile(context, items[i]),
+                if (i < items.length - 1)
+                  Divider(height: 1, indent: 66, color: cs.outlineVariant),
               ],
             ],
           ),
@@ -361,127 +337,71 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _reminderTile(BuildContext context, _ReminderData data) {
+  Widget _actionTile(BuildContext context, _ActionItem item) {
     final cs = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: () => context.go(data.route),
+      onTap: () => context.go(item.route),
       borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: data.color.withOpacity(0.1),
-                shape: BoxShape.circle,
+                color: item.iconBg,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(data.icon, color: data.color, size: 20),
+              child: Icon(item.icon, color: item.iconColor, size: 20),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          data.title,
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (data.urgent)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE53935).withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'URGENT',
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFFE53935),
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ),
-                    ],
+                  Text(
+                    item.title,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: cs.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    data.desc,
+                    item.desc,
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: cs.onSurfaceVariant,
-                      height: 1.4,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.arrow_forward_ios_rounded, size: 13, color: cs.outline),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: item.badgeBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                item.badge,
+                style: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: item.badgeColor,
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAllClearCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF43A047).withOpacity(0.06),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF43A047).withOpacity(0.2), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF43A047).withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.check_circle_rounded, color: Color(0xFF43A047), size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tout est à jour !',
-                  style: GoogleFonts.manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF43A047),
-                  ),
-                ),
-                Text(
-                  'Aucune action requise pour le moment.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ─── (Removed old conditional reminder methods) ──────────────────────────
 
   // ─── Pending Leave Requests ───────────────────────────────────────────────
 
@@ -633,20 +553,26 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
-class _ReminderData {
+class _ActionItem {
   final IconData icon;
-  final Color color;
+  final Color iconBg;
+  final Color iconColor;
   final String title;
   final String desc;
+  final String badge;
+  final Color badgeBg;
+  final Color badgeColor;
   final String route;
-  final bool urgent;
 
-  const _ReminderData({
+  const _ActionItem({
     required this.icon,
-    required this.color,
+    required this.iconBg,
+    required this.iconColor,
     required this.title,
     required this.desc,
+    required this.badge,
+    required this.badgeBg,
+    required this.badgeColor,
     required this.route,
-    required this.urgent,
   });
 }
