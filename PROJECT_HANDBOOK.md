@@ -357,6 +357,9 @@ All tables have RLS enabled. Clients are restricted to row selections containing
 * **Check-In Verification**: To resolve conflicts between checking in an employee who is already on leave:
   * The check-in loader queries both the `pointages` list and active approved leaves in the `conges` table.
   * If a match occurs in the date span, the UI automatically disables pointage checkboxes and renders a leave warning tag (e.g. `RTT`, `Maladie`).
+* **Block vs. Liste View Toggle**: Users can toggle the attendance view between a traditional grid calendar (`TableCalendar`) and a linear chronological list view. 
+* **Smart Future Day Filtering**: The linear list view intelligently hides future days of the current month to keep the UI clean, unless an employee has an approved leave scheduled for that future date.
+* **Historical Month/Year Picker**: A dedicated popup picker allows fast navigation to historical attendance records, dynamically restricting the selectable years based on the company's official creation date parameter.
 
 ### 2. Disciplinary Warnings Creator & Categories Engine
 * **Hierarchical UI & Navigation**:
@@ -371,6 +374,7 @@ All tables have RLS enabled. Clients are restricted to row selections containing
 * **Recipients & Email Dispatcher**:
   * When executing a warning template, a recipient picker dialog fetches the list of active employees (`salaries`).
   * The manager can select multiple employees, and the application compiles their email addresses, launching the default system mail client pre-filled with the warning text.
+* **Interface & Styling Refinements**: Continuous UI upgrades ensure high-fidelity layouts in the warnings pipeline, providing managers with a premium, focused writing and template review experience.
 
 ### 3. Real-Time Chat & Document Uploads Pipeline (Support HMI Stars)
 * **Enterprise Isolation**:
@@ -400,6 +404,11 @@ All tables have RLS enabled. Clients are restricted to row selections containing
   * The targeted `_UrgentNoteCard` reads the note ID argument inside the Urgents page context.
   * If the card's ID matches the argument, it executes a high-fidelity pulsing gold glow animation (`AppColors.primary`) on its borders and box shadows using a `TweenSequence` driven by an `AnimationController` and `TickerProviderStateMixin`.
   * Utilizes `AnimatedBuilder` for performance-efficient repaints and nullable animation states for lifecycle safety.
+
+### 6. Command-Driven Dashboard & Imperative Action Reminders
+* **KPI Simplification**: The top of the dashboard delivers immediate, focused oversight through two primary KPI cards: **Effectif** (Total active employees) and **Non pointés** (Employees pending check-in for the day).
+* **Imperative "RAPPELS" Center**: The dashboard utilizes a fixed Action Center emphasizing direct, commanding descriptions that order the user to act (e.g., "Effectuez le pointage maintenant !").
+* **Gold-Brown Brand Theming**: The Action Center is styled heavily with the application's signature gold-brown accent (`tertiary` color token). This ensures critical actions—like resolving undefined absences or sending warning templates—are prominently highlighted while maintaining strict adherence to the brand's premium Material 3 theme.
 
 ---
 
