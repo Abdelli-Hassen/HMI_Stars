@@ -451,19 +451,17 @@ class _MessageriePageState extends State<MessageriePage> {
                 radius: 20,
                 backgroundColor: cs.primaryContainer,
                 backgroundImage: (liveEntreprise.logoUrl != null &&
-                        liveEntreprise.logoUrl!.isNotEmpty &&
-                        !liveEntreprise.logoUrl!.contains('dicebear.com'))
+                        liveEntreprise.logoUrl!.isNotEmpty)
                     ? NetworkImage(liveEntreprise.logoUrl!)
                     : null,
                 child: (liveEntreprise.logoUrl == null ||
-                        liveEntreprise.logoUrl!.isEmpty ||
-                        liveEntreprise.logoUrl!.contains('dicebear.com'))
+                        liveEntreprise.logoUrl!.isEmpty)
                     ? Text(
                         liveEntreprise.nom.isNotEmpty
                             ? liveEntreprise.nom[0].toUpperCase()
                             : '?',
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: cs.primary,
+                          color: Colors.white,
                           fontWeight: FontWeight.w700,
                         ),
                       )
@@ -720,19 +718,17 @@ class _MessageriePageState extends State<MessageriePage> {
               radius: 32,
               backgroundColor: cs.primaryContainer,
               backgroundImage: (liveEntreprise.logoUrl != null &&
-                      liveEntreprise.logoUrl!.isNotEmpty &&
-                      !liveEntreprise.logoUrl!.contains('dicebear.com'))
+                      liveEntreprise.logoUrl!.isNotEmpty)
                   ? NetworkImage(liveEntreprise.logoUrl!)
                   : null,
               child: (liveEntreprise.logoUrl == null ||
-                      liveEntreprise.logoUrl!.isEmpty ||
-                      liveEntreprise.logoUrl!.contains('dicebear.com'))
+                      liveEntreprise.logoUrl!.isEmpty)
                   ? Text(
                       liveEntreprise.nom.isNotEmpty
                           ? liveEntreprise.nom[0].toUpperCase()
                           : '?',
                       style: AppTextStyles.titleMedium.copyWith(
-                        color: cs.primary,
+                        color: Colors.white,
                         fontWeight: FontWeight.w800,
                       ),
                     )
@@ -1034,13 +1030,11 @@ class _EntrepriseContactItem extends StatelessWidget {
                   ? cs.primary
                   : cs.surfaceContainerHighest,
               backgroundImage: (logoUrl != null &&
-                      logoUrl!.isNotEmpty &&
-                      !logoUrl!.contains('dicebear.com'))
+                      logoUrl!.isNotEmpty)
                   ? NetworkImage(logoUrl!)
                   : null,
               child: (logoUrl == null ||
-                      logoUrl!.isEmpty ||
-                      logoUrl!.contains('dicebear.com'))
+                      logoUrl!.isEmpty)
                   ? Text(
                       raisonSociale.isNotEmpty
                           ? raisonSociale[0].toUpperCase()
@@ -1174,13 +1168,11 @@ class _BubbleMessage extends StatelessWidget {
               radius: 14,
               backgroundColor: cs.surfaceContainer,
               backgroundImage: (entrepriseLogoUrl != null &&
-                      entrepriseLogoUrl!.isNotEmpty &&
-                      !entrepriseLogoUrl!.contains('dicebear.com'))
+                      entrepriseLogoUrl!.isNotEmpty)
                   ? NetworkImage(entrepriseLogoUrl!)
                   : null,
               child: (entrepriseLogoUrl == null ||
-                      entrepriseLogoUrl!.isEmpty ||
-                      entrepriseLogoUrl!.contains('dicebear.com'))
+                      entrepriseLogoUrl!.isEmpty)
                   ? Icon(
                       Icons.business,
                       size: 14,
@@ -1385,17 +1377,17 @@ class _BubbleMessage extends StatelessWidget {
                   : null,
               child: (senderAvatarUrl == null || senderAvatarUrl.isEmpty)
                   ? (senderInitials == '?'
-                      ? Icon(
+                      ? const Icon(
                           Icons.support_agent,
                           size: 14,
-                          color: cs.primary,
+                          color: Colors.white,
                         )
                       : Text(
                           senderInitials,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: cs.primary,
+                            color: Colors.white,
                           ),
                         ))
                   : null,

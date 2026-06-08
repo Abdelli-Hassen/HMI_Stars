@@ -55,6 +55,24 @@ class _PointagePageState extends State<PointagePage> {
             actions: [
               IconButton(
                 icon: Icon(
+                  Icons.calendar_month_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                tooltip: 'Choisir mois/année',
+                onPressed: () async {
+                  final appState = context.read<AppState>();
+                  final picked = await _showMonthYearPicker(context, _focusedDay);
+                  if (picked != null) {
+                    setState(() {
+                      _focusedDay = picked;
+                      _selectedDay = picked;
+                    });
+                    appState.loadPointagesForMonth(picked, force: true);
+                  }
+                },
+              ),
+              IconButton(
+                icon: Icon(
                   Icons.beach_access_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
@@ -139,9 +157,6 @@ class _PointagePageState extends State<PointagePage> {
                       ? _buildBlockCalendar(appState)
                       : _buildListCalendar(appState),
                   const SizedBox(height: 20),
-
-                  // Leaves Management Shortcut Card
-                  _buildLeavesShortcutCard(appState),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -221,8 +236,9 @@ class _PointagePageState extends State<PointagePage> {
   }
 
   Widget _buildBlockCalendar(AppState appState) {
+    final startYear = appState.parametres?.dateCreation?.year ?? 2025;
     return TableCalendar(
-      firstDay: DateTime.utc(2026, 1, 1),
+      firstDay: DateTime.utc(startYear, 1, 1),
       lastDay: DateTime.now().add(const Duration(days: 365)),
       focusedDay: _focusedDay,
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
@@ -385,59 +401,66 @@ class _PointagePageState extends State<PointagePage> {
         return GestureDetector(
           onTap: () => _showDayDetails(context, day, appState),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(12),
-              border: Border(
-                left: BorderSide(color: color, width: 4),
-                top: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                  width: 1,
-                ),
-                right: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                  width: 1,
-                ),
-                bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                  width: 1,
-                ),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 1,
               ),
               boxShadow: [
                 BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8),
               ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _formatDay(day),
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
                     ),
-                    Text(
-                      _statutLabel(statut),
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _formatDay(day),
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _statutLabel(statut),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: Theme.of(context).colorScheme.outline,
+                          size: 20,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: Theme.of(context).colorScheme.outline,
-                  size: 20,
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -445,74 +468,6 @@ class _PointagePageState extends State<PointagePage> {
     );
   }
 
-  Widget _buildLeavesShortcutCard(AppState appState) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => context.go('/conges'),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Icon wrapper
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.beach_access_outlined,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Title and details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Absences & Congés',
-                        style: GoogleFonts.manrope(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Consigner et suivre les périodes d\'absence',
-                        style: GoogleFonts.inter(
-                          fontSize: 12.5,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showDayDetails(BuildContext context, DateTime day, AppState appState) {
     showModalBottomSheet(
@@ -551,5 +506,122 @@ class _PointagePageState extends State<PointagePage> {
       case StatutJour.absent:
         return 'Aucun pointage';
     }
+  }
+
+  Future<DateTime?> _showMonthYearPicker(BuildContext context, DateTime initialDate) async {
+    int selectedYear = initialDate.year;
+    int selectedMonth = initialDate.month;
+    
+    final appState = context.read<AppState>();
+    final int startYear = appState.parametres?.dateCreation?.year ?? 2025;
+    final int currentYear = DateTime.now().year;
+    final int endYear = currentYear;
+    final int range = (endYear - startYear + 1).clamp(1, 50);
+    
+    final List<int> years = List.generate(range, (index) => startYear + index);
+    final List<String> months = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ];
+
+    return showDialog<DateTime>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            final cs = Theme.of(context).colorScheme;
+            return AlertDialog(
+              title: const Text('Sélectionner mois / année'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Year Selection dropdown
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Année :', style: TextStyle(fontWeight: FontWeight.bold)),
+                      DropdownButton<int>(
+                        value: selectedYear,
+                        dropdownColor: cs.surfaceContainerHighest,
+                        items: years.map((y) => DropdownMenuItem(
+                          value: y,
+                          child: Text(y.toString()),
+                        )).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setStateDialog(() => selectedYear = val);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  // Month selection grid
+                  SizedBox(
+                    width: 320,
+                    height: 200,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        childAspectRatio: 2.2,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemCount: 12,
+                      itemBuilder: (context, index) {
+                        final monthNum = index + 1;
+                        final isSelected = selectedMonth == monthNum;
+                        return InkWell(
+                          onTap: () {
+                            setStateDialog(() => selectedMonth = monthNum);
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected ? cs.primary : cs.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected ? cs.primary : cs.outlineVariant,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              months[index],
+                              style: TextStyle(
+                                color: isSelected ? cs.onPrimary : cs.onSurface,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(DateTime(selectedYear, selectedMonth, 1));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
+                  ),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

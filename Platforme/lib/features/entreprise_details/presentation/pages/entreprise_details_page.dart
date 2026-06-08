@@ -387,9 +387,9 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               _readField(context.tr('Nom complet de l\'entreprise', 'Company full name'), entreprise.nom),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: _readField(context.tr('Date de création', 'Creation Date'), "${entreprise.dateCreation.day}/${entreprise.dateCreation.month}/${entreprise.dateCreation.year}")),
+                Expanded(child: _readField(context.tr('Date de création (Système)', 'Creation Date (System)'), "${entreprise.dateCreation.day}/${entreprise.dateCreation.month}/${entreprise.dateCreation.year}")),
                 const SizedBox(width: 16),
-                Expanded(child: _readField(context.tr('N° d\'effectif', 'Employee count'), entreprise.effectif == 0 ? 'Non défini' : '${entreprise.effectif}')),
+                Expanded(child: _readField(context.tr('N° d\'effectif', 'Employee count'), '${entreprise.effectif}')),
               ]),
               const SizedBox(height: 16),
               Row(children: [
@@ -436,12 +436,23 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
               ]),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: _readField(context.tr('N° TVA Intracommunautaire', 'VAT Number'), entreprise.nTva.isEmpty ? 'Non défini' : entreprise.nTva)),
+                Expanded(child: _readField(context.tr('N° de TVA', 'VAT Number'), entreprise.nTva.isEmpty ? 'Non défini' : entreprise.nTva)),
                 const SizedBox(width: 16),
                 Expanded(child: _readField(context.tr('N° RCS', 'RCS Number'), entreprise.nRcs.isEmpty ? 'Non défini' : entreprise.nRcs)),
               ]),
               const SizedBox(height: 16),
-              _readField(context.tr('Code APE / NAF', 'APE / NAF Code'), entreprise.codeApe.isEmpty ? 'Non défini' : entreprise.codeApe),
+              Row(children: [
+                Expanded(child: _readField(context.tr('Code APE / NAF', 'APE / NAF Code'), entreprise.codeApe.isEmpty ? 'Non défini' : entreprise.codeApe)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _readField(
+                    context.tr('Date de création d\'entreprise', 'Company Creation Date'),
+                    entreprise.dateCreationReelle != null
+                        ? "${entreprise.dateCreationReelle!.day.toString().padLeft(2, '0')}/${entreprise.dateCreationReelle!.month.toString().padLeft(2, '0')}/${entreprise.dateCreationReelle!.year}"
+                        : context.tr('Non défini', 'Not defined'),
+                  ),
+                ),
+              ]),
             ]),
           ),
         ),
@@ -538,8 +549,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                           ),
                           child: ClipOval(
                             child: (salarie.avatarUrl != null &&
-                                    salarie.avatarUrl!.isNotEmpty &&
-                                    !salarie.avatarUrl!.contains('dicebear.com'))
+                                    salarie.avatarUrl!.isNotEmpty)
                                 ? WebImage(url: salarie.avatarUrl!, fit: BoxFit.cover)
                                 : Center(
                                     child: Text(
@@ -666,13 +676,11 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                     CircleAvatar(
                       backgroundColor: cs.surfaceContainerLow,
                       backgroundImage: (s.avatarUrl != null &&
-                              s.avatarUrl!.isNotEmpty &&
-                              !s.avatarUrl!.contains('dicebear.com'))
+                              s.avatarUrl!.isNotEmpty)
                           ? NetworkImage(s.avatarUrl!)
                           : null,
                       child: (s.avatarUrl == null ||
-                              s.avatarUrl!.isEmpty ||
-                              s.avatarUrl!.contains('dicebear.com'))
+                              s.avatarUrl!.isEmpty)
                           ? Center(
                               child: Text(
                                 s.prenom.isNotEmpty
@@ -1092,7 +1100,6 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
   late TextEditingController _emailController;
   late TextEditingController _mdpController;
   late TextEditingController _adresseController;
-  late TextEditingController _effectifController;
   late TextEditingController _sirenController;
   late TextEditingController _siretController;
   late TextEditingController _formeController;
@@ -1102,6 +1109,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
   late TextEditingController _telephoneController;
   late TextEditingController _codeApeController;
 
+  DateTime? _dateCreationReelle;
   String? _logoUrl;
   bool _isUploadingLogo = false;
 
@@ -1114,7 +1122,6 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     _emailController = TextEditingController(text: widget.entreprise.email);
     _mdpController = TextEditingController(text: widget.entreprise.motDePasse);
     _adresseController = TextEditingController(text: widget.entreprise.adressePhysique);
-    _effectifController = TextEditingController(text: widget.entreprise.effectif.toString());
     _sirenController = TextEditingController(text: widget.entreprise.nSiren);
     _siretController = TextEditingController(text: widget.entreprise.nSiret);
     _formeController = TextEditingController(text: widget.entreprise.formeJuridique);
@@ -1124,6 +1131,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     _telephoneController = TextEditingController(text: widget.entreprise.telephone);
     _codeApeController = TextEditingController(text: widget.entreprise.codeApe);
     _logoUrl = widget.entreprise.logoUrl;
+    _dateCreationReelle = widget.entreprise.dateCreationReelle;
   }
 
   Future<void> _changeLogo() async {
@@ -1181,7 +1189,6 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     if (_nomController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _gerantController.text.isEmpty ||
-        _effectifController.text.isEmpty ||
         _telephoneController.text.isEmpty ||
         _sirenController.text.isEmpty ||
         _siretController.text.isEmpty ||
@@ -1189,7 +1196,8 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
         _capitalController.text.isEmpty ||
         _tvaController.text.isEmpty ||
         _rcsController.text.isEmpty ||
-        _codeApeController.text.isEmpty) {
+        _codeApeController.text.isEmpty ||
+        _dateCreationReelle == null) {
       ToastUtils.show(
         context,
         context.trStatic('Veuillez remplir tous les champs obligatoires.', 'Please fill in all required fields.'),
@@ -1205,7 +1213,6 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
       email: _emailController.text,
       motDePasse: _mdpController.text,
       adressePhysique: _adresseController.text,
-      effectif: int.tryParse(_effectifController.text) ?? 0,
       nSiren: _sirenController.text,
       nSiret: _siretController.text,
       formeJuridique: _formeController.text,
@@ -1215,6 +1222,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
       telephone: _telephoneController.text,
       codeApe: _codeApeController.text,
       logoUrl: _logoUrl,
+      dateCreationReelle: _dateCreationReelle,
     );
 
     Provider.of<EntrepriseProvider>(context, listen: false).updateEntreprise(entrepriseAjournee);
@@ -1234,7 +1242,6 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
     _emailController.dispose();
     _mdpController.dispose();
     _adresseController.dispose();
-    _effectifController.dispose();
     _sirenController.dispose();
     _siretController.dispose();
     _formeController.dispose();
@@ -1327,13 +1334,7 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildField(context.tr('Nom du dirigeant/gérant', 'Manager/director name'), _gerantController)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildField(context.tr('Nombre d\'effectif', 'Employee count'), _effectifController, keyboardType: TextInputType.number)),
-                      ],
-                    ),
+                    _buildField(context.tr('Nom du dirigeant/gérant', 'Manager/director name'), _gerantController),
                     const SizedBox(height: 16),
                     Row(
                       children: [
@@ -1371,7 +1372,19 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildField(context.tr('Code APE / NAF', 'APE / NAF Code'), _codeApeController),
+                    Row(
+                      children: [
+                        Expanded(child: _buildField(context.tr('Code APE / NAF', 'APE / NAF Code'), _codeApeController)),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildDatePickerField(
+                            context.tr('Date de création d\'entreprise', 'Company Creation Date'),
+                            _dateCreationReelle,
+                            (date) => setState(() => _dateCreationReelle = date),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -1434,6 +1447,73 @@ class _EditEntrepriseDialogState extends State<_EditEntrepriseDialog> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePickerField(String label, DateTime? selectedDate, Function(DateTime) onDateSelected, {bool required = true}) {
+    final cs = Theme.of(context).colorScheme;
+    final dateStr = selectedDate != null
+        ? "${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}"
+        : "";
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RichText(
+          text: TextSpan(
+            style: AppTextStyles.labelMedium.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600),
+            children: [
+              if (required)
+                const TextSpan(
+                  text: '* ',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+              TextSpan(text: label),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: selectedDate ?? DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: cs,
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null) {
+              onDateSelected(picked);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: cs.outline.withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  dateStr.isEmpty ? context.tr('Sélectionner une date', 'Select a date') : dateStr,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: dateStr.isEmpty ? cs.outline : cs.onSurface,
+                  ),
+                ),
+                Icon(Icons.calendar_today, size: 16, color: cs.outline),
+              ],
+            ),
           ),
         ),
       ],
@@ -2312,8 +2392,7 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                             child: _avatarBytes != null
                                 ? Image.memory(_avatarBytes!, fit: BoxFit.cover)
                                 : (widget.salarie.avatarUrl != null &&
-                                        widget.salarie.avatarUrl!.isNotEmpty &&
-                                        !widget.salarie.avatarUrl!.contains('dicebear.com'))
+                                        widget.salarie.avatarUrl!.isNotEmpty)
                                     ? WebImage(url: widget.salarie.avatarUrl!, fit: BoxFit.cover)
                                     : Center(
                                         child: Text(

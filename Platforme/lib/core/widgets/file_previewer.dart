@@ -19,7 +19,6 @@ class FilePreviewer {
         url.toLowerCase().contains('.gif') ||
         url.toLowerCase().contains('.webp') ||
         url.toLowerCase().contains('.svg') ||
-        url.toLowerCase().contains('dicebear.com') ||
         url.toLowerCase().contains('/svg');
 
     final isPdf = fileName.toLowerCase().endsWith('.pdf') || url.toLowerCase().contains('.pdf');

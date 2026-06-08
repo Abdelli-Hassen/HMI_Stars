@@ -159,13 +159,11 @@ class AppTopBar extends StatelessWidget {
                     radius: 16,
                     backgroundColor: cs.surfaceContainerHigh,
                     backgroundImage: auth.userAvatarUrl != null &&
-                            auth.userAvatarUrl!.isNotEmpty &&
-                            !auth.userAvatarUrl!.contains('dicebear.com')
+                            auth.userAvatarUrl!.isNotEmpty
                         ? NetworkImage(auth.userAvatarUrl!)
                         : null,
                     child: (auth.userAvatarUrl == null ||
-                            auth.userAvatarUrl!.isEmpty ||
-                            auth.userAvatarUrl!.contains('dicebear.com'))
+                            auth.userAvatarUrl!.isEmpty)
                         ? Center(
                             child: Text(
                               auth.userName.isNotEmpty

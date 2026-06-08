@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 Widget createWebImage(String url, {BoxFit fit = BoxFit.contain}) {
   final isSvg = url.toLowerCase().contains('.svg') ||
-      url.toLowerCase().contains('dicebear.com') ||
       url.toLowerCase().contains('/svg');
   if (isSvg) {
     return SvgPicture.network(

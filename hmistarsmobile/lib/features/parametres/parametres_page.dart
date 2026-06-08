@@ -32,6 +32,7 @@ class _ParametresPageState extends State<ParametresPage> {
   final _sirenController = TextEditingController();
   final _rcsController = TextEditingController();
   bool _loaded = false;
+  DateTime? _dateCreation;
 
   // Local image file picked from device
   File? _localLogoFile;
@@ -55,6 +56,7 @@ class _ParametresPageState extends State<ParametresPage> {
       _descriptionController.text = p.description ?? '';
       _sirenController.text = p.nSiren ?? '';
       _rcsController.text = p.nRcs ?? '';
+      _dateCreation = p.dateCreation;
       if (p.logoUrl != null &&
           p.logoUrl!.isNotEmpty &&
           !p.logoUrl!.startsWith('http')) {
@@ -365,6 +367,7 @@ class _ParametresPageState extends State<ParametresPage> {
               ? null
               : _rcsController.text.trim(),
           logoUrl: logoUrlToSave,
+          dateCreation: _dateCreation,
         ),
       );
       if (mounted) {
@@ -743,96 +746,139 @@ class _ParametresPageState extends State<ParametresPage> {
   }
 
   Widget _buildEditSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildField(
-            _raisonSocialeController,
-            'Raison Sociale',
-            Icons.business_outlined,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Informations Générales
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
           ),
-          _buildField(
-            _nomGerantController,
-            'Nom du Gérant',
-            Icons.person_outline,
-          ),
-          _buildField(
-            _descriptionController,
-            'Activité / Description',
-            Icons.description_outlined,
-          ),
-          _buildField(
-            _siretController,
-            'SIRET',
-            Icons.numbers,
-            keyboardType: TextInputType.number,
-          ),
-          _buildField(
-            _sirenController,
-            'SIREN',
-            Icons.pin_outlined,
-            keyboardType: TextInputType.number,
-          ),
-          _buildField(
-            _rcsController,
-            'RCS',
-            Icons.receipt_long_outlined,
-          ),
-          _buildField(
-            _telephoneController,
-            'Téléphone',
-            Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-          ),
-          _buildField(
-            _emailController,
-            'Email',
-            Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          _buildField(
-            _adresseController,
-            'Adresse',
-            Icons.location_on_outlined,
-          ),
-          _buildField(
-            _tvaController,
-            'TVA Intracommunautaire',
-            Icons.account_balance_outlined,
-          ),
-          _buildField(
-            _formeJuridiqueController,
-            'Forme Juridique',
-            Icons.gavel_outlined,
-          ),
-          _buildField(
-            _capitalSocialController,
-            'Capital Social (€)',
-            Icons.monetization_on_outlined,
-            keyboardType: TextInputType.number,
-          ),
-          _buildField(_codeAPEController, 'Code APE', Icons.category_outlined),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _save,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSubSectionHeader('Informations Générales'),
+              const SizedBox(height: 16),
+              _buildField(
+                _raisonSocialeController,
+                'Raison Sociale',
+                Icons.business_outlined,
               ),
-              child: Text(
-                'Enregistrer les modifications',
-                style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+              _buildDatePickerField(
+                'Date de création d\'entreprise',
+                Icons.calendar_today_outlined,
+                _dateCreation,
+                (date) => setState(() => _dateCreation = date),
               ),
+              _buildField(
+                _nomGerantController,
+                'Nom du Gérant',
+                Icons.person_outline,
+              ),
+              _buildField(
+                _descriptionController,
+                'Activité / Description',
+                Icons.description_outlined,
+              ),
+              _buildField(
+                _telephoneController,
+                'Téléphone',
+                Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+              ),
+              _buildField(
+                _emailController,
+                'Email',
+                Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              _buildField(
+                _adresseController,
+                'Adresse',
+                Icons.location_on_outlined,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        // 2. Informations Juridiques
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSubSectionHeader('Informations Juridiques'),
+              const SizedBox(height: 16),
+              _buildField(
+                _sirenController,
+                'SIREN',
+                Icons.pin_outlined,
+                keyboardType: TextInputType.number,
+              ),
+              _buildField(
+                _siretController,
+                'SIRET',
+                Icons.numbers,
+                keyboardType: TextInputType.number,
+              ),
+              _buildField(
+                _formeJuridiqueController,
+                'Forme Juridique',
+                Icons.gavel_outlined,
+              ),
+              _buildField(
+                _capitalSocialController,
+                'Capital Social (€)',
+                Icons.monetization_on_outlined,
+                keyboardType: TextInputType.number,
+              ),
+              _buildField(
+                _tvaController,
+                'TVA Intracommunautaire',
+                Icons.account_balance_outlined,
+              ),
+              _buildField(
+                _rcsController,
+                'RCS',
+                Icons.receipt_long_outlined,
+              ),
+              _buildField(_codeAPEController, 'Code APE', Icons.category_outlined),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        // 3. Save Button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _save,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: Text(
+              'Enregistrer les modifications',
+              style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
             ),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubSectionHeader(String title) {
+    return Text(
+      title.toUpperCase(),
+      style: GoogleFonts.manrope(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: Theme.of(context).colorScheme.secondary,
+        letterSpacing: 1.0,
       ),
     );
   }
@@ -858,6 +904,57 @@ class _ParametresPageState extends State<ParametresPage> {
           labelStyle: GoogleFonts.inter(
             fontSize: 13,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePickerField(
+    String label,
+    IconData icon,
+    DateTime? selectedDate,
+    Function(DateTime) onDateSelected,
+  ) {
+    final dateStr = selectedDate != null
+        ? "${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}"
+        : "";
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: InkWell(
+        onTap: () async {
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: selectedDate ?? DateTime.now(),
+            firstDate: DateTime(1900),
+            lastDate: DateTime.now(),
+          );
+          if (picked != null) {
+            onDateSelected(picked);
+          }
+        },
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+            labelStyle: GoogleFonts.inter(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          child: Text(
+            dateStr.isEmpty ? 'Sélectionner une date' : dateStr,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: dateStr.isEmpty
+                  ? Theme.of(context).colorScheme.outline
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
           ),
         ),
       ),

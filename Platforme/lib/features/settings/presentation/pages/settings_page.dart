@@ -184,13 +184,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 radius: 32,
                 backgroundColor: cs.surfaceContainerHigh,
                 backgroundImage: avatarUrl != null &&
-                        avatarUrl.isNotEmpty &&
-                        !avatarUrl.contains('dicebear.com')
+                        avatarUrl.isNotEmpty
                     ? NetworkImage(avatarUrl)
                     : null,
                 child: avatarUrl == null ||
-                        avatarUrl.isEmpty ||
-                        avatarUrl.contains('dicebear.com')
+                        avatarUrl.isEmpty
                     ? Center(
                         child: Text(
                           auth.userName.isNotEmpty

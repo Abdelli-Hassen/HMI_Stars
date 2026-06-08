@@ -506,6 +506,7 @@ class ClientParametres {
   final String? description;
   final String? nSiren;
   final String? nRcs;
+  final DateTime? dateCreation;
 
   const ClientParametres({
     required this.id,
@@ -523,6 +524,7 @@ class ClientParametres {
     this.description,
     this.nSiren,
     this.nRcs,
+    this.dateCreation,
   });
 
   factory ClientParametres.fromJson(Map<String, dynamic> json) {
@@ -548,6 +550,9 @@ class ClientParametres {
       description: json['description'] as String?,
       nSiren: json['n_siren'] as String?,
       nRcs: json['n_rcs'] as String?,
+      dateCreation: json['date_creation'] != null
+          ? DateTime.tryParse(json['date_creation'] as String)
+          : null,
     );
   }
 
@@ -567,6 +572,7 @@ class ClientParametres {
       'description': description,
       'n_siren': nSiren,
       'n_rcs': nRcs,
+      'date_creation': dateCreation?.toIso8601String().split('T').first,
     };
     map.remove('name');
     return map;
@@ -587,6 +593,7 @@ class ClientParametres {
     String? description,
     String? nSiren,
     String? nRcs,
+    DateTime? dateCreation,
   }) {
     return ClientParametres(
       id: id,
@@ -605,6 +612,7 @@ class ClientParametres {
       description: description ?? this.description,
       nSiren: nSiren ?? this.nSiren,
       nRcs: nRcs ?? this.nRcs,
+      dateCreation: dateCreation ?? this.dateCreation,
     );
   }
 }

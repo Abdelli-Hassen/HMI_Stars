@@ -23,6 +23,8 @@ class Entreprise {
   final String capitaleSocial;
   final String codeApe;
 
+  final DateTime? dateCreationReelle;
+
   Entreprise({
     required this.id,
     required this.nom,
@@ -44,6 +46,7 @@ class Entreprise {
     this.nRcs = '',
     this.capitaleSocial = '',
     this.codeApe = '',
+    this.dateCreationReelle,
   });
 
   /// Construction à partir d'une ligne Supabase `entreprises`.
@@ -73,6 +76,9 @@ class Entreprise {
       nRcs: json['n_rcs'] as String? ?? '',
       capitaleSocial: json['capital_social'] as String? ?? '',
       codeApe: json['code_ape'] as String? ?? '',
+      dateCreationReelle: json['date_creation'] != null
+          ? DateTime.tryParse(json['date_creation'] as String)
+          : null,
     );
   }
 
@@ -93,6 +99,7 @@ class Entreprise {
         'n_rcs': nRcs,
         'capital_social': capitaleSocial,
         'code_ape': codeApe,
+        'date_creation': dateCreationReelle?.toIso8601String().split('T').first,
       };
 
   Entreprise copyWith({
@@ -116,6 +123,7 @@ class Entreprise {
     String? nRcs,
     String? capitaleSocial,
     String? codeApe,
+    DateTime? dateCreationReelle,
   }) {
     return Entreprise(
       id: id ?? this.id,
@@ -138,6 +146,7 @@ class Entreprise {
       nRcs: nRcs ?? this.nRcs,
       capitaleSocial: capitaleSocial ?? this.capitaleSocial,
       codeApe: codeApe ?? this.codeApe,
+      dateCreationReelle: dateCreationReelle ?? this.dateCreationReelle,
     );
   }
 }

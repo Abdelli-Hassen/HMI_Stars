@@ -488,7 +488,7 @@ class MessagerieProvider extends ChangeNotifier {
 
   Future<void> _executeLoadFavoris() async {
     try {
-      final res = await _supabase
+      final res = await SupabaseConfig.client
           .from('preferences')
           .select('entreprise')
           .eq('favori', true);
@@ -519,7 +519,7 @@ class MessagerieProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _supabase.from('preferences').upsert({
+      await SupabaseConfig.client.from('preferences').upsert({
         'entreprise': id,
         'favori': !isFav,
       }, onConflict: 'entreprise');

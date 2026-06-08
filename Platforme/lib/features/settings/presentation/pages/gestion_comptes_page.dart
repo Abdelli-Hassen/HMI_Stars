@@ -213,7 +213,10 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                 children: [
                   CircleAvatar(
                     backgroundColor: cs.primaryContainer,
-                    child: Text(user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?', style: TextStyle(color: cs.onPrimaryContainer)),
+                    child: Text(
+                      user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?',
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(

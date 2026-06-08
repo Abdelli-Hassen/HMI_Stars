@@ -46,6 +46,7 @@ class MainShell extends StatelessWidget {
 
   int _getCurrentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/conges')) return 1; // Map Conges to Pointage tab
     for (int i = 0; i < _navItems.length; i++) {
       if (location.startsWith(_navItems[i].route)) return i;
     }

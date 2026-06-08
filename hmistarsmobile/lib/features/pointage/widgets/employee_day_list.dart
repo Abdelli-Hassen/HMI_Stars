@@ -19,6 +19,8 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final salaries = appState.getSalariesForDay(widget.day);
+    final pointableSalaries = salaries.where((s) => !appState.isSalarieEnConge(s.id, widget.day)).toList();
+    final allPointed = pointableSalaries.isNotEmpty && pointableSalaries.every((s) => appState.getPointageStatus(widget.day, s.id));
 
     final sorted = [...salaries];
     if (_sortBy == 'alphabetical') {
@@ -69,122 +71,181 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
               // Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Liste des Salariés',
-                          style: GoogleFonts.manrope(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        Text(
-                          dateStr,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
                     Row(
-                        children: [
-                          PopupMenuButton<String>(
-                            icon: Icon(
-                              _sortBy == 'alphabetical' ? Icons.sort_by_alpha : Icons.sort,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20,
-                            ),
-                            tooltip: 'Trier les salariés',
-                            onSelected: (value) {
-                              setState(() {
-                                _sortBy = value;
-                              });
-                            },
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'default',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.playlist_add_check, size: 18, color: Theme.of(context).colorScheme.primary),
-                                    const SizedBox(width: 8),
-                                    Text('Non pointés en premier', style: GoogleFonts.inter(fontSize: 13)),
-                                  ],
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Liste des Salariés',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
-                              PopupMenuItem(
-                                value: 'alphabetical',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.sort_by_alpha, size: 18, color: Theme.of(context).colorScheme.primary),
-                                    const SizedBox(width: 8),
-                                    Text('Ordre alphabétique', style: GoogleFonts.inter(fontSize: 13)),
-                                  ],
+                              Text(
+                                dateStr,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(width: 4),
-                           if (!isFuture && hasActiveEmployees)
-                            TextButton.icon(
-                              onPressed: () {
-                                for (var s in salaries) {
-                                  final isEnConge = appState.isSalarieEnConge(s.id, widget.day);
-                                  if (!isEnConge && !appState.getPointageStatus(widget.day, s.id)) {
-                                    appState.setPointage(widget.day, s.id, true);
-                                  }
-                                }
-                              },
-                              icon: Icon(Icons.done_all, size: 16, color: Theme.of(context).colorScheme.primary),
-                              label: Text(
-                                'Tout cocher',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PopupMenuButton<String>(
+                              icon: Icon(
+                                _sortBy == 'alphabetical' ? Icons.sort_by_alpha : Icons.sort,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 20,
                               ),
-                            ),
-                          if (!isFuture && hasActiveEmployees) const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.sort,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.primary,
+                              tooltip: 'Trier les salariés',
+                              onSelected: (value) {
+                                setState(() {
+                                  _sortBy = value;
+                                });
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'default',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.playlist_add_check, size: 18, color: Theme.of(context).colorScheme.primary),
+                                      const SizedBox(width: 8),
+                                      Text('Non pointés en premier', style: GoogleFonts.inter(fontSize: 13)),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Non-vérifiés',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).colorScheme.primary,
+                                PopupMenuItem(
+                                  value: 'alphabetical',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.sort_by_alpha, size: 18, color: Theme.of(context).colorScheme.primary),
+                                      const SizedBox(width: 8),
+                                      Text('Ordre alphabétique', style: GoogleFonts.inter(fontSize: 13)),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
+                            if (!isFuture && hasActiveEmployees) ...[
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: Icon(
+                                  allPointed ? Icons.remove_done : Icons.done_all,
+                                  color: allPointed 
+                                      ? Colors.red 
+                                      : Theme.of(context).colorScheme.primary,
+                                  size: 20,
+                                ),
+                                tooltip: allPointed ? 'Tout décocher' : 'Tout cocher',
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      backgroundColor: Theme.of(context).colorScheme.surface,
+                                      title: Text(
+                                        allPointed ? 'Tout décocher ?' : 'Tout cocher ?',
+                                        style: GoogleFonts.manrope(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 18,
+                                          color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                      content: Text(
+                                        allPointed
+                                            ? 'Voulez-vous décocher la présence de tous les salariés actifs pour ce jour ?'
+                                            : 'Voulez-vous cocher la présence de tous les salariés actifs pour ce jour ?',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: Text(
+                                            'Annuler',
+                                            style: GoogleFonts.inter(
+                                              color: Theme.of(context).colorScheme.outline,
+                                            ),
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.pop(ctx);
+                                            for (var s in salaries) {
+                                              final isConge = appState.isSalarieEnConge(s.id, widget.day);
+                                              if (!isConge) {
+                                                appState.setPointage(widget.day, s.id, !allPointed);
+                                              }
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: allPointed 
+                                                ? Colors.red 
+                                                : Theme.of(context).colorScheme.primary,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          child: Text(
+                                            'Confirmer',
+                                            style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _sortBy == 'alphabetical' ? Icons.sort_by_alpha : Icons.sort,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _sortBy == 'alphabetical' ? 'Triage: Ordre alphabétique' : 'Triage: Non pointés en premier',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ],
                       ),
+                    ),
                   ],
                 ),
               ),
