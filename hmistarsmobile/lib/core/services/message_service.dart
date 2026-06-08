@@ -143,15 +143,7 @@ class MessageService {
         cancelOnError: false,
       );
       
-      // Hook cancel to clean up timer and controller
-      final originalCancel = sub.cancel;
-      sub.cancel = () async {
-        timer.cancel();
-        await controller.close();
-        await originalCancel();
-      };
-      
-      return sub;
+      return WebSubscriptionWrapper(sub, timer, controller);
     } else {
       return _client
           .from('messages')
@@ -192,5 +184,53 @@ class MessageService {
         .eq('entreprise_id', entrepriseId)
         .order('cree_le', ascending: false);
     return (data as List).map((e) => Fichier.fromJson(e)).toList();
+  }
+}
+
+class WebSubscriptionWrapper implements StreamSubscription<List<Map<String, dynamic>>> {
+  final StreamSubscription<List<Map<String, dynamic>>> _sub;
+  final Timer _timer;
+  final StreamController<List<Map<String, dynamic>>> _controller;
+
+  WebSubscriptionWrapper(this._sub, this._timer, this._controller);
+
+  @override
+  Future<void> cancel() async {
+    _timer.cancel();
+    await _sub.cancel();
+    await _controller.close();
+  }
+
+  @override
+  void onData(void Function(List<Map<String, dynamic>> data)? handleData) {
+    _sub.onData(handleData);
+  }
+
+  @override
+  void onError(Function? handleError) {
+    _sub.onError(handleError);
+  }
+
+  @override
+  void onDone(void Function()? handleDone) {
+    _sub.onDone(handleDone);
+  }
+
+  @override
+  void pause([Future<void>? resumeSignal]) {
+    _sub.pause(resumeSignal);
+  }
+
+  @override
+  void resume() {
+    _sub.resume();
+  }
+
+  @override
+  bool get isPaused => _sub.isPaused;
+
+  @override
+  Future<E> asFuture<E>([E? futureValue]) {
+    return _sub.asFuture<E>(futureValue);
   }
 }

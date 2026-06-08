@@ -547,29 +547,94 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
 
     final isSeparatedView = conge != null || parsedTypeLabel != null;
 
+    // Define accent colors and icons based on leave type to create clear visual identity
+    Color accentColor = Theme.of(context).colorScheme.primary;
+    Color containerBg = Theme.of(context).colorScheme.primary.withOpacity(0.04);
+    Color borderColor = Theme.of(context).colorScheme.primary.withOpacity(0.15);
+    IconData typeIcon = Icons.event_note_rounded;
+
+    if (parsedTypeLabel != null) {
+      final label = parsedTypeLabel.toLowerCase();
+      if (label.contains('payé')) {
+        accentColor = const Color(0xFF1E88E5); // Modern Blue
+        containerBg = const Color(0xFFE3F2FD); // Light Blue tint
+        borderColor = const Color(0xFF90CAF9);
+        typeIcon = Icons.beach_access_rounded;
+      } else if (label.contains('maladie') || label.contains('arrêt') || label.contains('malad')) {
+        accentColor = const Color(0xFFE53935); // Modern Red
+        containerBg = const Color(0xFFFFEBEE); // Light Red tint
+        borderColor = const Color(0xFFEF9A9A);
+        typeIcon = Icons.healing_rounded;
+      } else if (label.contains('rtt')) {
+        accentColor = const Color(0xFF8E24AA); // Modern Purple
+        containerBg = const Color(0xFFF3E5F5); // Light Purple tint
+        borderColor = const Color(0xFFCE93D8);
+        typeIcon = Icons.timelapse_rounded;
+      } else if (label.contains('exceptionnel')) {
+        accentColor = const Color(0xFFD81B60); // Pink/Magenta
+        containerBg = const Color(0xFFFCE4EC); // Light Pink tint
+        borderColor = const Color(0xFFF48FB1);
+        typeIcon = Icons.star_rounded;
+      } else {
+        accentColor = const Color(0xFF455A64); // Slate/Grey-Blue
+        containerBg = const Color(0xFFECEFF1); // Light Slate tint
+        borderColor = const Color(0xFFB0BEC5);
+        typeIcon = Icons.event_busy_rounded;
+      }
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         backgroundColor: Theme.of(context).colorScheme.surface,
+        surfaceTintColor: Colors.transparent, // Prevents Material 3 tinting overlay
+        elevation: 16,
         title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              salarie.nomComplet,
-              style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w800,
-                fontSize: 18,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isSeparatedView ? typeIcon : Icons.edit_note_rounded,
+                    color: accentColor,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        salarie.nomComplet,
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatDate(widget.day),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            Text(
-              _formatDate(widget.day),
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+            const SizedBox(height: 16),
+            Divider(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.4), height: 1),
           ],
         ),
         content: Column(
@@ -581,54 +646,107 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                 'TYPE DE CONGÉ / ABSENCE',
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
                   letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  parsedTypeLabel ?? '',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
+                  color: containerBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: borderColor,
+                    width: 1.2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withOpacity(0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      typeIcon,
+                      size: 20,
+                      color: accentColor,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        parsedTypeLabel ?? '',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: accentColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Text(
                 'MOTIF / COMMENTAIRE',
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
                   letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                constraints: const BoxConstraints(minHeight: 120),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  parsedMotif ?? '',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: (parsedMotif != null && parsedMotif != 'Aucun commentaire')
-                        ? Theme.of(context).colorScheme.onSurface 
-                        : Theme.of(context).colorScheme.outline,
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.8),
+                    width: 1.2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        parsedMotif ?? '',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 1.5,
+                          fontWeight: FontWeight.w500,
+                          color: (parsedMotif != null && parsedMotif != 'Aucun commentaire')
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ] else ...[
@@ -636,53 +754,139 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                 'NOTE / COMMENTAIRE',
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
                   letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: noteController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  hintText: 'Écrire une note pour ce salarié...',
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.outlineVariant,
+              Container(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: noteController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    hintText: 'Écrire une note pour ce salarié...',
+                    hintStyle: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        width: 1.2,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.8),
+                        width: 1.2,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 1.5,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
                   ),
                 ),
               ),
             ]
           ],
         ),
+        actionsPadding: const EdgeInsets.only(bottom: 20, right: 20, left: 20),
         actions: [
           if (isSeparatedView) ...[
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'Fermer',
-                style: GoogleFonts.inter(
-                  color: Theme.of(context).colorScheme.outline,
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: accentColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 2,
+                  shadowColor: accentColor.withOpacity(0.3),
+                ),
+                child: Text(
+                  'Fermer',
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
           ] else ...[
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'Annuler',
-                style: GoogleFonts.inter(
-                  color: Theme.of(context).colorScheme.outline,
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      'Annuler',
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                appState.setNote(widget.day, salarie.id, noteController.text);
-                Navigator.pop(ctx);
-              },
-              child: const Text('Enregistrer'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      appState.setNote(widget.day, salarie.id, noteController.text);
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 2,
+                      shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    ),
+                    child: Text(
+                      'Enregistrer',
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
