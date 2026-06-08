@@ -6,6 +6,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/salarie_avatar.dart';
+import '../../core/utils/translation_extension.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -50,9 +51,13 @@ class DashboardPage extends StatelessWidget {
     final templatesDisponibles = appState.templates.length;
 
     // Day of week greeting
-    final weekdays = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-    final months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    final isEn = appState.langue == 'English (EN)';
+    final weekdays = isEn 
+        ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        : ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+    final months = isEn
+        ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        : ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
     final dateStr = '${weekdays[today.weekday - 1]} ${today.day} ${months[today.month - 1]}';
 
     return Scaffold(
@@ -79,7 +84,7 @@ class DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Bonjour, ${params?.nomGerant ?? 'Admin'} !',
+                    context.tr('Bonjour, ${params?.nomGerant ?? 'Admin'} !', 'Hello, ${params?.nomGerant ?? 'Admin'}!'),
                     style: GoogleFonts.manrope(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -131,9 +136,9 @@ class DashboardPage extends StatelessWidget {
         Expanded(
           child: _kpiCard(
             context,
-            title: 'Effectif',
+            title: context.tr('Effectif', 'Staff'),
             value: '$totalSalaries',
-            subtitle: 'Salariés actifs',
+            subtitle: context.tr('Salariés actifs', 'Active employees'),
             icon: Icons.group_rounded,
             accentColor: cs.tertiary,
             onTap: () => context.go('/salaries'),
@@ -143,9 +148,11 @@ class DashboardPage extends StatelessWidget {
         Expanded(
           child: _kpiCard(
             context,
-            title: 'Non pointés',
+            title: context.tr('Non pointés', 'Unpointed'),
             value: '$nonPointes',
-            subtitle: nonPointes == 0 ? 'Tout le monde pointé ✓' : 'À pointer aujourd\'hui',
+            subtitle: nonPointes == 0 
+                ? context.tr('Tout le monde pointé ✓', 'Everyone pointed ✓') 
+                : context.tr('À pointer aujourd\'hui', 'To point today'),
             icon: Icons.edit_note_rounded,
             accentColor: nonPointes == 0 ? cs.tertiary : cs.error,
             onTap: () => context.go('/pointage'),
@@ -247,13 +254,16 @@ class DashboardPage extends StatelessWidget {
         icon: Icons.edit_note_rounded,
         iconBg: nonPointes == 0 ? cs.tertiaryContainer : cs.errorContainer,
         iconColor: nonPointes == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
-        title: 'Pointage du jour',
+        title: context.tr('Pointage du jour', 'Daily Attendance'),
         badge: nonPointes == 0 ? '✓' : '$nonPointes',
         badgeBg: nonPointes == 0 ? cs.tertiaryContainer : cs.errorContainer,
         badgeColor: nonPointes == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
         desc: nonPointes == 0
-            ? 'Pointage complet — aucune action requise.'
-            : 'Effectuez le pointage maintenant ! $nonPointes salarié${nonPointes > 1 ? 's' : ''} n\'${nonPointes > 1 ? 'ont' : 'a'} pas encore été pointé${nonPointes > 1 ? 's' : ''}.',
+            ? context.tr('Pointage complet — aucune action requise.', 'Attendance complete — no action required.')
+            : context.tr(
+                'Effectuez le pointage maintenant ! $nonPointes salarié${nonPointes > 1 ? 's' : ''} n\'${nonPointes > 1 ? 'ont' : 'a'} pas encore été pointé${nonPointes > 1 ? 's' : ''}.',
+                'Perform the attendance check now! $nonPointes employee${nonPointes > 1 ? 's' : ''} ${nonPointes > 1 ? 'have' : 'has'} not been pointed yet.',
+              ),
         route: '/pointage',
       ),
       // 2. Undefined absences
@@ -261,13 +271,16 @@ class DashboardPage extends StatelessWidget {
         icon: Icons.help_center_outlined,
         iconBg: absencesIndefinies == 0 ? cs.tertiaryContainer : cs.errorContainer,
         iconColor: absencesIndefinies == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
-        title: 'Absences indéfinies',
+        title: context.tr('Absences indéfinies', 'Undefined Absences'),
         badge: '$absencesIndefinies',
         badgeBg: absencesIndefinies == 0 ? cs.tertiaryContainer : cs.errorContainer,
         badgeColor: absencesIndefinies == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
         desc: absencesIndefinies == 0
-            ? 'Toutes les absences sont classées — rien à faire.'
-            : 'Classifiez les absences maintenant ! $absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} de type « Autre » doivent être précisées au plus vite.',
+            ? context.tr('Toutes les absences sont classées — rien à faire.', 'All absences are classified — nothing to do.')
+            : context.tr(
+                'Classifiez les absences maintenant ! $absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} de type « Autre » doivent être précisées au plus vite.',
+                'Classify the absences now! $absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} of type "Other" must be specified as soon as possible.',
+              ),
         route: '/conges',
       ),
       // 3. Warnings
@@ -275,13 +288,16 @@ class DashboardPage extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         iconBg: cs.tertiaryContainer,
         iconColor: cs.onTertiaryContainer,
-        title: 'Avertissements',
+        title: context.tr('Avertissements', 'Warnings'),
         badge: '$templatesDisponibles',
         badgeBg: cs.tertiaryContainer,
         badgeColor: cs.onTertiaryContainer,
         desc: templatesDisponibles == 0
-            ? 'Aucun modèle d\'avertissement disponible.'
-            : 'N\'oubliez pas d\'envoyer les avertissements ! $templatesDisponibles modèle${templatesDisponibles > 1 ? 's' : ''} ${templatesDisponibles > 1 ? 'sont prêts' : 'est prêt'} à être envoyé${templatesDisponibles > 1 ? 's' : ''}.',
+            ? context.tr('Aucun modèle d\'avertissement disponible.', 'No warning templates available.')
+            : context.tr(
+                'N\'oubliez pas d\'envoyer les avertissements ! $templatesDisponibles modèle${templatesDisponibles > 1 ? 's' : ''} ${templatesDisponibles > 1 ? 'sont prêts' : 'est prêt'} à être envoyé${templatesDisponibles > 1 ? 's' : ''}.',
+                'Don\'t forget to send warnings! $templatesDisponibles template${templatesDisponibles > 1 ? 's are' : ' is'} ready to be sent.',
+              ),
         route: '/avertissements',
       ),
     ];
@@ -290,7 +306,7 @@ class DashboardPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'RAPPELS',
+          context.tr('RAPPELS', 'REMINDERS'),
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -383,8 +399,6 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // ─── (Removed old conditional reminder methods) ──────────────────────────
-
   // ─── Pending Leave Requests ───────────────────────────────────────────────
 
   Widget _buildPendingLeaveSection(
@@ -401,7 +415,7 @@ class DashboardPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'DEMANDES EN ATTENTE',
+              context.tr('DEMANDES EN ATTENTE', 'PENDING REQUESTS'),
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -412,7 +426,7 @@ class DashboardPage extends StatelessWidget {
             GestureDetector(
               onTap: () => context.go('/conges'),
               child: Text(
-                'Voir tout',
+                context.tr('Voir tout', 'See all'),
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -460,20 +474,20 @@ class DashboardPage extends StatelessWidget {
     final salarie = appState.salaries.firstWhere(
       (s) => s.id == conge.salarieId,
       orElse: () => Salarie(
-        id: '', entrepriseId: '', nom: 'Inconnu', prenom: '',
+        id: '', entrepriseId: '', nom: context.trStatic('Inconnu', 'Unknown'), prenom: '',
         nomDeNaissance: '', typeContrat: 'CDI',
       ),
     );
 
     // Type label
     final typeLabels = {
-      'conge_paye': 'Congé Payé',
-      'maladie': 'Arrêt Maladie',
-      'rtt': 'RTT',
-      'exceptionnel': 'Congé Exceptionnel',
-      'autre': 'Autre Absence',
+      'conge_paye': context.tr('Congé Payé', 'Paid Leave'),
+      'maladie': context.tr('Arrêt Maladie', 'Sick Leave'),
+      'rtt': context.tr('RTT', 'RTT'),
+      'exceptionnel': context.tr('Congé Exceptionnel', 'Special Leave'),
+      'autre': context.tr('Autre Absence', 'Other Absence'),
     };
-    final typeLabel = typeLabels[conge.typeConge] ?? 'Absence';
+    final typeLabel = typeLabels[conge.typeConge] ?? context.tr('Absence', 'Absence');
 
     return InkWell(
       onTap: () => context.go('/conges'),
@@ -504,7 +518,10 @@ class DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$typeLabel · Du ${conge.dateDebut.day}/${conge.dateDebut.month} au ${conge.dateFin.day}/${conge.dateFin.month}',
+                    context.tr(
+                      '$typeLabel · Du ${conge.dateDebut.day}/${conge.dateDebut.month} au ${conge.dateFin.day}/${conge.dateFin.month}',
+                      '$typeLabel · From ${conge.dateDebut.day}/${conge.dateDebut.month} to ${conge.dateFin.day}/${conge.dateFin.month}',
+                    ),
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       color: cs.onSurfaceVariant,
@@ -520,7 +537,7 @@ class DashboardPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'En attente',
+                context.tr('En attente', 'Pending'),
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -558,3 +575,4 @@ class _ActionItem {
     required this.route,
   });
 }
+
