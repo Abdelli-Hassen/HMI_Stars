@@ -4,6 +4,7 @@ import '../../domain/models/entreprise.dart';
 import '../../domain/models/salarie.dart';
 import '../../domain/models/document_entreprise.dart';
 import '../../domain/models/note_entreprise.dart';
+import '../../domain/models/template_avertissement.dart';
 import '../../../../core/services/platform_data_service.dart';
 
 enum LoadStatus { initial, loading, loaded, error }
@@ -17,6 +18,7 @@ class EntrepriseProvider extends ChangeNotifier {
   final Map<String, List<DocumentEntreprise>> _documentsCache = {};
   final Map<String, List<NoteEntreprise>> _notesCache = {};
   List<NoteEntreprise> _allNotes = [];
+  final Map<String, List<ModeleAvertissement>> _modelesCache = {};
 
   LoadStatus _status = LoadStatus.initial;
   String? _error;
@@ -242,6 +244,48 @@ class EntrepriseProvider extends ChangeNotifier {
     await _dataService.deleteNote(id);
     _notesCache[entrepriseId]?.removeWhere((n) => n.id == id);
     _allNotes.removeWhere((n) => n.id == id);
+    notifyListeners();
+  }
+
+  // ─── Avertissements (Modèles) ──────────────────────────────────────────────
+
+  List<ModeleAvertissement> modelesPourEntreprise(String entrepriseId) =>
+      _modelesCache[entrepriseId] ?? [];
+
+  Future<void> fetchModelesForEntreprise(String entrepriseId, {bool force = false}) async {
+    if (!force && _modelesCache.containsKey(entrepriseId)) return;
+    try {
+      final list = await _dataService.fetchModelesForEntreprise(entrepriseId);
+      _modelesCache[entrepriseId] = list;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<ModeleAvertissement> ajouterModele(ModeleAvertissement modele) async {
+    final created = await _dataService.createModele(modele);
+    final list = _modelesCache[modele.entrepriseId ?? ''] ?? [];
+    _modelesCache[modele.entrepriseId ?? ''] = [created, ...list];
+    notifyListeners();
+    return created;
+  }
+
+  Future<ModeleAvertissement> modifierModele(ModeleAvertissement modele) async {
+    final updated = await _dataService.updateModele(modele);
+    final list = _modelesCache[modele.entrepriseId ?? ''] ?? [];
+    final idx = list.indexWhere((m) => m.id == modele.id);
+    if (idx != -1) {
+      list[idx] = updated;
+      _modelesCache[modele.entrepriseId ?? ''] = [...list];
+    } else {
+      await fetchModelesForEntreprise(modele.entrepriseId ?? '', force: true);
+    }
+    notifyListeners();
+    return updated;
+  }
+
+  Future<void> supprimerModele(String id, String entrepriseId) async {
+    await _dataService.supprimerModele(id);
+    _modelesCache[entrepriseId]?.removeWhere((m) => m.id == id);
     notifyListeners();
   }
 

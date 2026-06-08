@@ -24,6 +24,8 @@ import '../../../../core/utils/toast_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/widgets/file_previewer.dart';
 import '../../../../core/widgets/web_image.dart';
+import '../../../entreprises/domain/models/template_avertissement.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 class EntrepriseDetailsPage extends StatefulWidget {
   const EntrepriseDetailsPage({super.key});
@@ -61,6 +63,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
     provider.fetchSalariesForEntreprise(entrepriseId, force: true);
     provider.fetchNotesForEntreprise(entrepriseId, force: true);
     provider.fetchDocumentsForEntreprise(entrepriseId, force: true);
+    provider.fetchModelesForEntreprise(entrepriseId, force: true);
   }
 
   Future<void> _exportSalariePdf(Salarie s) async {
@@ -314,6 +317,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                   _tabButton('Informations', context.tr('Informations', 'Information')),
                   _tabButton('Salariés', context.tr('Salariés', 'Employees')),
                   _tabButton('Archives des employés', context.tr('Archives des employés', 'Employee Archives')),
+                  _tabButton('Avertissements', context.tr('Avertissements', 'Warnings')),
                   _tabButton('Notes & Rappels', context.tr('Notes & Rappels', 'Notes & Reminders')),
                 ]),
               ),
@@ -324,6 +328,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             if (_activeTab == 'Informations') _buildInformationsTab(entreprise),
             if (_activeTab == 'Salariés') _buildSalariesTab(context, provider.salariesPourEntreprise(entreprise.id), entreprise.id),
             if (_activeTab == 'Archives des employés') _buildArchivesTab(provider.archivesPourEntreprise(entreprise.id)),
+            if (_activeTab == 'Avertissements') _buildAvertissementsTab(context, provider.modelesPourEntreprise(entreprise.id), provider.salariesPourEntreprise(entreprise.id), entreprise.id),
             if (_activeTab == 'Notes & Rappels') _buildNotesTab(context, provider.notesPourEntreprise(entreprise.id), entreprise.id),
           ],
         ),
@@ -754,6 +759,421 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  // ─── Avertissements Tab ─────────────────────────────────────────────────────
+
+  Widget _buildAvertissementsTab(
+    BuildContext context,
+    List<ModeleAvertissement> modeles,
+    List<Salarie> salaries,
+    String entrepriseId,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final categories = <_AvertCat>[
+      _AvertCat('ficheAvertissement', context.tr('Avertissements', 'Warnings'), Icons.warning_amber_outlined, const Color(0xFFE65100)),
+      _AvertCat('convocation', context.tr('Convocations', 'Summons'), Icons.event_note_outlined, cs.primary),
+      _AvertCat('information', context.tr('Informations', 'Information'), Icons.info_outline, const Color(0xFF0277BD)),
+    ];
+    String? selectedCat;
+
+    return StatefulBuilder(
+      builder: (context, setS) {
+        final filtered = selectedCat != null
+            ? modeles.where((m) => m.type == selectedCat).toList()
+            : <ModeleAvertissement>[];
+
+        if (selectedCat == null) {
+          // ─ Category grid view ─
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr('Avertissements', 'Warnings'),
+                        style: AppTextStyles.headlineMedium.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.tr('Modèles de lettres prédéfinis, catégorisés et envoyables aux salariés.', 'Predefined letter templates, categorised and sendable to employees.'),
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Category cards
+              Row(
+                children: categories.map((cat) {
+                  final count = modeles.where((m) => m.type == cat.type).length;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () => setS(() => selectedCat = cat.type),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainerLowest,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                              boxShadow: [BoxShadow(color: cs.onSurface.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: cat.color.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Icon(cat.icon, color: cat.color, size: 26),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(cat.label, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface)),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        context.tr('$count modèle${count > 1 ? "s" : ""}', '$count template${count > 1 ? "s" : ""}'),
+                                        style: AppTextStyles.bodySmall.copyWith(color: cat.color, fontWeight: FontWeight.w600),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right_rounded, color: cs.outline),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          );
+        }
+
+        // ─ Template list view ─
+        final cat = categories.firstWhere((c) => c.type == selectedCat);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Back button + title
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => setS(() => selectedCat = null),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: cs.primary),
+                        const SizedBox(width: 8),
+                        Text(context.tr('Catégories', 'Categories'), style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
+                      ],
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: cat.color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                      child: Icon(cat.icon, color: cat.color, size: 18),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(cat.label, style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface)),
+                    const SizedBox(width: 16),
+                    // Add button
+                    InkWell(
+                      onTap: () => showDialog(
+                        context: context,
+                        builder: (_) => _AvertModeleDialog(
+                          entrepriseId: entrepriseId,
+                          type: selectedCat!,
+                          onSave: (titre, contenu) async {
+                            final provider = Provider.of<EntrepriseProvider>(context, listen: false);
+                            await provider.ajouterModele(ModeleAvertissement(
+                              id: '',
+                              entrepriseId: entrepriseId,
+                              titre: titre,
+                              contenu: contenu,
+                              type: selectedCat!,
+                            ));
+                            if (context.mounted) {
+                              ToastUtils.show(context, context.tr('Modèle créé avec succès.', 'Template created successfully.'), isError: false);
+                            }
+                          },
+                        ),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.add, size: 16, color: Colors.white),
+                            const SizedBox(width: 6),
+                            Text(context.tr('Nouveau modèle', 'New template'), style: AppTextStyles.labelMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            if (filtered.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(cat.icon, size: 48, color: cs.outline),
+                      const SizedBox(height: 12),
+                      Text(
+                        context.tr('Aucun modèle dans cette catégorie.', 'No templates in this category.'),
+                        style: AppTextStyles.bodyMedium.copyWith(color: cs.outline),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.tr('Cliquez sur "Nouveau modèle" pour en créer un.', 'Click "New template" to create one.'),
+                        style: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filtered.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final m = filtered[index];
+                  final cs2 = Theme.of(context).colorScheme;
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: cs2.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: cs2.outlineVariant.withValues(alpha: 0.4)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: cat.color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(cat.label.toUpperCase(), style: AppTextStyles.labelSmall.copyWith(fontSize: 9, letterSpacing: 1.0, fontWeight: FontWeight.w800, color: cat.color)),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(m.titre, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700, color: cs2.onSurface), overflow: TextOverflow.ellipsis),
+                            ),
+                            // Edit
+                            InkWell(
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (_) => _AvertModeleDialog(
+                                  entrepriseId: entrepriseId,
+                                  type: m.type,
+                                  initialTitre: m.titre,
+                                  initialContenu: m.contenu,
+                                  onSave: (titre, contenu) async {
+                                    final provider = Provider.of<EntrepriseProvider>(context, listen: false);
+                                    await provider.modifierModele(m.copyWith(titre: titre, contenu: contenu));
+                                    if (context.mounted) {
+                                      ToastUtils.show(context, context.tr('Modèle mis à jour.', 'Template updated.'), isError: false);
+                                    }
+                                  },
+                                ),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Icon(Icons.edit_outlined, size: 18, color: cs2.primary),
+                              ),
+                            ),
+                            // Send by email
+                            InkWell(
+                              onTap: () => _showAvertSendDialog(context, m, salaries),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Icon(Icons.send_outlined, size: 18, color: cs2.primary),
+                              ),
+                            ),
+                            // Delete
+                            InkWell(
+                              onTap: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    backgroundColor: cs2.surfaceContainerLowest,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    title: Text(context.tr('Confirmer la suppression', 'Confirm deletion'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+                                    content: Text(context.tr('Supprimer le modèle "${m.titre}" ?', 'Delete template "${m.titre}"?'), style: AppTextStyles.bodyMedium),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler', 'Cancel'))),
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                        child: Text(context.tr('Supprimer', 'Delete')),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true && context.mounted) {
+                                  await Provider.of<EntrepriseProvider>(context, listen: false).supprimerModele(m.id, entrepriseId);
+                                  if (context.mounted) {
+                                    ToastUtils.show(context, context.tr('Modèle supprimé.', 'Template deleted.'), isError: false);
+                                  }
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.error),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          m.contenu,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodySmall.copyWith(color: cs2.onSurfaceVariant, height: 1.55),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          context.tr('Créé le ${m.dateCreation.day}/${m.dateCreation.month}/${m.dateCreation.year}', 'Created ${m.dateCreation.day}/${m.dateCreation.month}/${m.dateCreation.year}'),
+                          style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: cs2.outline),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAvertSendDialog(BuildContext context, ModeleAvertissement modele, List<Salarie> salaries) {
+    final selected = <String>{};
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) {
+          final cs = Theme.of(ctx).colorScheme;
+          return AlertDialog(
+            backgroundColor: cs.surfaceContainerLowest,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(context.tr('Envoyer: ${modele.titre}', 'Send: ${modele.titre}'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700, color: cs.primary)),
+                const SizedBox(height: 4),
+                Text(context.tr('Sélectionnez les destinataires', 'Select recipients'), style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+              ],
+            ),
+            content: SizedBox(
+              width: 400,
+              height: 320,
+              child: salaries.isEmpty
+                  ? Center(child: Text(context.tr('Aucun salarié actif pour cette entreprise.', 'No active employees for this company.'), style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)))
+                  : ListView.builder(
+                      itemCount: salaries.length,
+                      itemBuilder: (_, i) {
+                        final s = salaries[i];
+                        return CheckboxListTile(
+                          value: selected.contains(s.id),
+                          onChanged: (v) => setS(() {
+                            if (v ?? false) selected.add(s.id); else selected.remove(s.id);
+                          }),
+                          activeColor: cs.primary,
+                          title: Text('${s.nom} ${s.prenom}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600)),
+                          subtitle: Text(s.emploiPoste ?? '', style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
+                          controlAffinity: ListTileControlAffinity.leading,
+                          dense: true,
+                        );
+                      },
+                    ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.tr('Annuler', 'Cancel'), style: TextStyle(color: cs.outline))),
+              ElevatedButton(
+                onPressed: selected.isEmpty ? null : () async {
+                  final emails = salaries
+                      .where((s) => selected.contains(s.id) && s.email.isNotEmpty)
+                      .map((s) => s.email)
+                      .join(',');
+                  Navigator.pop(ctx);
+                  if (emails.isEmpty) {
+                    ToastUtils.show(context, context.tr('Aucun email trouvé pour les salariés sélectionnés.', 'No email found for selected employees.'), isError: true);
+                    return;
+                  }
+                  
+                  final encodedTo = Uri.encodeComponent(emails);
+                  final encodedSubject = Uri.encodeComponent(modele.titre);
+                  final encodedBody = Uri.encodeComponent(modele.contenu);
+                  final gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=$encodedTo&su=$encodedSubject&body=$encodedBody';
+                  final uri = Uri.parse(gmailUrl);
+
+                  try {
+                    await url_launcher.launchUrl(uri, mode: url_launcher.LaunchMode.externalApplication);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ToastUtils.show(context, context.tr('Impossible d\'ouvrir Gmail.', 'Could not open Gmail.'), isError: true);
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
+                child: Text(context.tr('Envoyer (${selected.length})', 'Send (${selected.length})')),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -3347,5 +3767,163 @@ class _SalarieDetailsDialogState extends State<_SalarieDetailsDialog> {
   }
 }
 
+class _AvertCat {
+  final String type;
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _AvertCat(this.type, this.label, this.icon, this.color);
+}
 
+class _AvertModeleDialog extends StatefulWidget {
+  final String entrepriseId;
+  final String type;
+  final String? initialTitre;
+  final String? initialContenu;
+  final Future<void> Function(String titre, String contenu) onSave;
 
+  const _AvertModeleDialog({
+    required this.entrepriseId,
+    required this.type,
+    this.initialTitre,
+    this.initialContenu,
+    required this.onSave,
+  });
+
+  @override
+  State<_AvertModeleDialog> createState() => _AvertModeleDialogState();
+}
+
+class _AvertModeleDialogState extends State<_AvertModeleDialog> {
+  final _titreController = TextEditingController();
+  final _contenuController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titreController.text = widget.initialTitre ?? '';
+    _contenuController.text = widget.initialContenu ?? '';
+  }
+
+  @override
+  void dispose() {
+    _titreController.dispose();
+    _contenuController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    try {
+      await widget.onSave(_titreController.text.trim(), _contenuController.text.trim());
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ToastUtils.show(
+          context,
+          context.tr('Erreur : ', 'Error: ') + e.toString(),
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isEdit = widget.initialTitre != null;
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: cs.surfaceContainerLowest,
+      child: Container(
+        width: 600,
+        padding: const EdgeInsets.all(32),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isEdit 
+                  ? context.tr('Modifier le Modèle', 'Edit Template')
+                  : context.tr('Ajouter un Modèle', 'Add Template'),
+                style: AppTextStyles.headlineSmall.copyWith(color: cs.onSurface),
+              ),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _titreController,
+                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                decoration: InputDecoration(
+                  labelText: context.tr('Titre du modèle', 'Template Title'),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                  isDense: true,
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return context.tr('Veuillez saisir un titre', 'Please enter a title');
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _contenuController,
+                maxLines: 8,
+                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+                decoration: InputDecoration(
+                  labelText: context.tr('Contenu du modèle', 'Template Content'),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.35))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return context.tr('Veuillez saisir le contenu', 'Please enter the content');
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        context.tr('Annuler', 'Cancel'),
+                        style: const TextStyle(color: AppColors.error),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        isEdit ? context.tr('Modifier', 'Save') : context.tr('Ajouter', 'Add'),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
