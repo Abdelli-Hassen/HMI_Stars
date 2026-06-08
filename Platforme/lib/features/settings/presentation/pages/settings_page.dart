@@ -183,11 +183,26 @@ class _SettingsPageState extends State<SettingsPage> {
                 key: ValueKey(avatarUrl),
                 radius: 32,
                 backgroundColor: cs.surfaceContainerHigh,
-                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                backgroundImage: avatarUrl != null &&
+                        avatarUrl.isNotEmpty &&
+                        !avatarUrl.contains('dicebear.com')
                     ? NetworkImage(avatarUrl)
                     : null,
-                child: avatarUrl == null || avatarUrl.isEmpty
-                    ? Icon(Icons.person, size: 32, color: cs.onSurfaceVariant)
+                child: avatarUrl == null ||
+                        avatarUrl.isEmpty ||
+                        avatarUrl.contains('dicebear.com')
+                    ? Center(
+                        child: Text(
+                          auth.userName.isNotEmpty
+                              ? auth.userName[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            color: cs.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      )
                     : null,
               ),
               if (_uploadingAvatar)

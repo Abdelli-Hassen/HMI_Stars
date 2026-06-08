@@ -450,10 +450,14 @@ class _MessageriePageState extends State<MessageriePage> {
               CircleAvatar(
                 radius: 20,
                 backgroundColor: cs.primaryContainer,
-                backgroundImage: (liveEntreprise.logoUrl != null && liveEntreprise.logoUrl!.isNotEmpty)
+                backgroundImage: (liveEntreprise.logoUrl != null &&
+                        liveEntreprise.logoUrl!.isNotEmpty &&
+                        !liveEntreprise.logoUrl!.contains('dicebear.com'))
                     ? NetworkImage(liveEntreprise.logoUrl!)
                     : null,
-                child: (liveEntreprise.logoUrl == null || liveEntreprise.logoUrl!.isEmpty)
+                child: (liveEntreprise.logoUrl == null ||
+                        liveEntreprise.logoUrl!.isEmpty ||
+                        liveEntreprise.logoUrl!.contains('dicebear.com'))
                     ? Text(
                         liveEntreprise.nom.isNotEmpty
                             ? liveEntreprise.nom[0].toUpperCase()
@@ -715,10 +719,14 @@ class _MessageriePageState extends State<MessageriePage> {
             CircleAvatar(
               radius: 32,
               backgroundColor: cs.primaryContainer,
-              backgroundImage: (liveEntreprise.logoUrl != null && liveEntreprise.logoUrl!.isNotEmpty)
+              backgroundImage: (liveEntreprise.logoUrl != null &&
+                      liveEntreprise.logoUrl!.isNotEmpty &&
+                      !liveEntreprise.logoUrl!.contains('dicebear.com'))
                   ? NetworkImage(liveEntreprise.logoUrl!)
                   : null,
-              child: (liveEntreprise.logoUrl == null || liveEntreprise.logoUrl!.isEmpty)
+              child: (liveEntreprise.logoUrl == null ||
+                      liveEntreprise.logoUrl!.isEmpty ||
+                      liveEntreprise.logoUrl!.contains('dicebear.com'))
                   ? Text(
                       liveEntreprise.nom.isNotEmpty
                           ? liveEntreprise.nom[0].toUpperCase()
@@ -1025,10 +1033,14 @@ class _EntrepriseContactItem extends StatelessWidget {
               backgroundColor: selected
                   ? cs.primary
                   : cs.surfaceContainerHighest,
-              backgroundImage: (logoUrl != null && logoUrl!.isNotEmpty)
+              backgroundImage: (logoUrl != null &&
+                      logoUrl!.isNotEmpty &&
+                      !logoUrl!.contains('dicebear.com'))
                   ? NetworkImage(logoUrl!)
                   : null,
-              child: (logoUrl == null || logoUrl!.isEmpty)
+              child: (logoUrl == null ||
+                      logoUrl!.isEmpty ||
+                      logoUrl!.contains('dicebear.com'))
                   ? Text(
                       raisonSociale.isNotEmpty
                           ? raisonSociale[0].toUpperCase()
@@ -1161,10 +1173,14 @@ class _BubbleMessage extends StatelessWidget {
             CircleAvatar(
               radius: 14,
               backgroundColor: cs.surfaceContainer,
-              backgroundImage: (entrepriseLogoUrl != null && entrepriseLogoUrl!.isNotEmpty)
+              backgroundImage: (entrepriseLogoUrl != null &&
+                      entrepriseLogoUrl!.isNotEmpty &&
+                      !entrepriseLogoUrl!.contains('dicebear.com'))
                   ? NetworkImage(entrepriseLogoUrl!)
                   : null,
-              child: (entrepriseLogoUrl == null || entrepriseLogoUrl!.isEmpty)
+              child: (entrepriseLogoUrl == null ||
+                      entrepriseLogoUrl!.isEmpty ||
+                      entrepriseLogoUrl!.contains('dicebear.com'))
                   ? Icon(
                       Icons.business,
                       size: 14,

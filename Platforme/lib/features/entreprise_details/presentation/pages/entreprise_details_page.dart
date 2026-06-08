@@ -537,9 +537,24 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                             shape: BoxShape.circle,
                           ),
                           child: ClipOval(
-                            child: (salarie.avatarUrl != null && salarie.avatarUrl!.isNotEmpty)
+                            child: (salarie.avatarUrl != null &&
+                                    salarie.avatarUrl!.isNotEmpty &&
+                                    !salarie.avatarUrl!.contains('dicebear.com'))
                                 ? WebImage(url: salarie.avatarUrl!, fit: BoxFit.cover)
-                                : Icon(Icons.person, color: cs.onSurfaceVariant),
+                                : Center(
+                                    child: Text(
+                                      salarie.prenom.isNotEmpty
+                                          ? salarie.prenom[0].toUpperCase()
+                                          : (salarie.nom.isNotEmpty
+                                              ? salarie.nom[0].toUpperCase()
+                                              : '?'),
+                                      style: TextStyle(
+                                        color: cs.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
@@ -650,11 +665,26 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                   children: [
                     CircleAvatar(
                       backgroundColor: cs.surfaceContainerLow,
-                      backgroundImage: (s.avatarUrl != null && s.avatarUrl!.isNotEmpty)
+                      backgroundImage: (s.avatarUrl != null &&
+                              s.avatarUrl!.isNotEmpty &&
+                              !s.avatarUrl!.contains('dicebear.com'))
                           ? NetworkImage(s.avatarUrl!)
                           : null,
-                      child: (s.avatarUrl == null || s.avatarUrl!.isEmpty)
-                          ? Icon(Icons.person_off, color: cs.onSurfaceVariant)
+                      child: (s.avatarUrl == null ||
+                              s.avatarUrl!.isEmpty ||
+                              s.avatarUrl!.contains('dicebear.com'))
+                          ? Center(
+                              child: Text(
+                                s.prenom.isNotEmpty
+                                    ? s.prenom[0].toUpperCase()
+                                    : (s.nom.isNotEmpty ? s.nom[0].toUpperCase() : '?'),
+                                style: TextStyle(
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            )
                           : null,
                     ),
                     const SizedBox(width: 16),
@@ -2281,9 +2311,24 @@ class _EditSalarieDialogState extends State<_EditSalarieDialog> {
                           child: ClipOval(
                             child: _avatarBytes != null
                                 ? Image.memory(_avatarBytes!, fit: BoxFit.cover)
-                                : (widget.salarie.avatarUrl != null && widget.salarie.avatarUrl!.isNotEmpty
+                                : (widget.salarie.avatarUrl != null &&
+                                        widget.salarie.avatarUrl!.isNotEmpty &&
+                                        !widget.salarie.avatarUrl!.contains('dicebear.com'))
                                     ? WebImage(url: widget.salarie.avatarUrl!, fit: BoxFit.cover)
-                                    : Icon(Icons.person, size: 50, color: cs.onSurfaceVariant)),
+                                    : Center(
+                                        child: Text(
+                                          widget.salarie.prenom.isNotEmpty
+                                              ? widget.salarie.prenom[0].toUpperCase()
+                                              : (widget.salarie.nom.isNotEmpty
+                                                  ? widget.salarie.nom[0].toUpperCase()
+                                                  : '?'),
+                                          style: TextStyle(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 24,
+                                          ),
+                                        ),
+                                      ),
                           ),
                         ),
                       ),

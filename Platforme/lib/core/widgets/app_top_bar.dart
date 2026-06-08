@@ -158,9 +158,26 @@ class AppTopBar extends StatelessWidget {
                     key: ValueKey(auth.userAvatarUrl),
                     radius: 16,
                     backgroundColor: cs.surfaceContainerHigh,
-                    backgroundImage: auth.userAvatarUrl != null && auth.userAvatarUrl!.isNotEmpty ? NetworkImage(auth.userAvatarUrl!) : null,
-                    child: (auth.userAvatarUrl == null || auth.userAvatarUrl!.isEmpty) 
-                        ? Icon(Icons.person, size: 18, color: cs.onSurfaceVariant) 
+                    backgroundImage: auth.userAvatarUrl != null &&
+                            auth.userAvatarUrl!.isNotEmpty &&
+                            !auth.userAvatarUrl!.contains('dicebear.com')
+                        ? NetworkImage(auth.userAvatarUrl!)
+                        : null,
+                    child: (auth.userAvatarUrl == null ||
+                            auth.userAvatarUrl!.isEmpty ||
+                            auth.userAvatarUrl!.contains('dicebear.com'))
+                        ? Center(
+                            child: Text(
+                              auth.userName.isNotEmpty
+                                  ? auth.userName[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                color: cs.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          )
                         : null,
                   ),
                 ],
