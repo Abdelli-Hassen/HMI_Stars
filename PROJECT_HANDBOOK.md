@@ -358,12 +358,25 @@ All tables have RLS enabled. Clients are restricted to row selections containing
   * The check-in loader queries both the `pointages` list and active approved leaves in the `conges` table.
   * If a match occurs in the date span, the UI automatically disables pointage checkboxes and renders a leave warning tag (e.g. `RTT`, `Maladie`).
 
-### 2. Disciplinary Warnings Creator
-* **Placeholders Replacer**: Company managers can choose warnings templates (`modeles_avertissements`), select a target employee (`salaries`), and fill placeholders.
-* **Compilation**: The app extracts the placeholder fields (such as `[Nom du Salarié]`, `[Date]`, `[Entreprise]`), performs string replacements, and generates the draft text document.
-* **Exporting**: Once validated, the document is registered in the `messages` thread as a file and sent directly to the HMI Stars Consulting team for signing and printing.
+### 2. Disciplinary Warnings Creator & Categories Engine
+* **Hierarchical UI & Navigation**:
+  * Instead of inline list overlays or bottom sheets, the warning management feature implements a clean, multi-layered full-screen navigation structure.
+  * **Layer 1 (Category Selection)**: Users choose from three core legal document categories: *Fiche d'Avertissement*, *Convocation*, and *Lettre d'Information*.
+  * **Layer 2 (Template List)**: Displays a list of template cards specific to the selected category. Corporate managers can view template titles, see preview descriptions, and initiate template deletion.
+  * **Layer 3 (Detailed Viewer)**: Clicking a template opens it in a dedicated full-screen viewer (`TemplateDetailPage`) displaying the full template text and action buttons.
+  * **Layer 4 (Editor / Creator)**: Users can create custom templates from scratch or edit existing ones using a dedicated full-screen editor (`TemplateEditCreatePage`).
+* **Supabase Template Database Integration**:
+  * Warnings templates are loaded directly from the PostgreSQL `public.modeles_avertissements` table, allowing dynamic remote updates without client-side recompilation.
+  * The DB is seeded with a minimum of 12 standard templates (4 templates per category) mapped via the `type` enum.
+* **Recipients & Email Dispatcher**:
+  * When executing a warning template, a recipient picker dialog fetches the list of active employees (`salaries`).
+  * The manager can select multiple employees, and the application compiles their email addresses, launching the default system mail client pre-filled with the warning text.
 
-### 3. Real-Time Chat & Document Uploads Pipeline
+### 3. Real-Time Chat & Document Uploads Pipeline (Support HMI Stars)
+* **Enterprise Isolation**:
+  * Communication channels are strictly restricted to **Platform-to-Enterprise** or **Enterprise-to-Platform** exchanges.
+  * To preserve security and confidentiality, client companies are completely isolated and cannot see, lookup, or contact other client companies.
+  * The chat view title is updated to **Support HMI Stars** to clarify that the user is interacting directly with the consulting firm.
 * **Optimistic Messages**: Submitting a message creates a temporary message object inside the local memory list and repaints the screen immediately.
 * **File Upload Loops**: If the message contains files:
   1. The files are uploaded to the Supabase Storage Bucket `/documents/[company_id]/[file_name]`.
@@ -510,6 +523,12 @@ Under Supabase's secure email change configuration, changing the account email r
 * **Sizing Compatibility**: To ensure consistency across form rows, the email text input and its corresponding "Modifier" button are locked to a height of `42px` via vertical padding and explicit bounds.
 * **Mock Data Suppression**: During data synchronization, the main dashboard's client companies and active employee counts display a loading state (`...`) instead of displaying cached mock data (such as the default `366` count).
 
+### 8. Global Avatar Fallback & Initials Engine
+* **Dicebear Placeholder Suppression**: To prevent generic placeholder profile pictures from rendering, all profile image display components across the mobile application (Employees list, Settings page, Company selector, recent leaves list, and Chat bubbles) filter out URLs pointing to `dicebear.com`.
+* **Dynamic Initials Fallback**:
+  * If an avatar URL is null, empty, or contains `dicebear.com`, the application falls back to rendering the user's or company's initials (e.g., first letters of their name/prenom) using custom styling or standard icon fallbacks.
+  * Driven centrally by `SalarieAvatar` widget configurations to guarantee consistency across all list tiles, chat rows, and settings headers.
+
 ---
 
 ## 10. Web Client Deployment (Vercel Integration)
@@ -552,5 +571,4 @@ The default Flutter application icon branding was removed and replaced with cust
   - `web/icons/Icon-maskable-512.png` (512x512)
 
 ---
-
 
