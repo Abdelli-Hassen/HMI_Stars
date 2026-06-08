@@ -125,6 +125,7 @@ class DashboardPage extends StatelessWidget {
     required int totalSalaries,
     required int nonPointes,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
@@ -134,7 +135,7 @@ class DashboardPage extends StatelessWidget {
             value: '$totalSalaries',
             subtitle: 'Salariés actifs',
             icon: Icons.group_rounded,
-            accentColor: const Color(0xFF1E88E5),
+            accentColor: cs.tertiary,
             onTap: () => context.go('/salaries'),
           ),
         ),
@@ -146,11 +147,7 @@ class DashboardPage extends StatelessWidget {
             value: '$nonPointes',
             subtitle: nonPointes == 0 ? 'Tout le monde pointé ✓' : 'À pointer aujourd\'hui',
             icon: Icons.edit_note_rounded,
-            accentColor: nonPointes == 0
-                ? const Color(0xFF43A047)
-                : nonPointes == 1
-                    ? const Color(0xFFFB8C00)
-                    : const Color(0xFFE53935),
+            accentColor: nonPointes == 0 ? cs.tertiary : cs.error,
             onTap: () => context.go('/pointage'),
           ),
         ),
@@ -243,24 +240,9 @@ class DashboardPage extends StatelessWidget {
     required int templatesDisponibles,
   }) {
     final cs = Theme.of(context).colorScheme;
-    final totalSalaries = appState.salaries.length;
 
     final items = [
-      // 1. Employees overview
-      _ActionItem(
-        icon: Icons.group_outlined,
-        iconBg: cs.primaryContainer,
-        iconColor: cs.onPrimaryContainer,
-        title: 'Effectif total',
-        badge: '$totalSalaries',
-        badgeBg: cs.primaryContainer,
-        badgeColor: cs.onPrimaryContainer,
-        desc: totalSalaries == 0
-            ? 'Aucun salarié enregistré'
-            : '$totalSalaries salarié${totalSalaries > 1 ? 's' : ''} actif${totalSalaries > 1 ? 's' : ''}',
-        route: '/salaries',
-      ),
-      // 2. Attendance
+      // 1. Attendance
       _ActionItem(
         icon: Icons.edit_note_rounded,
         iconBg: nonPointes == 0 ? cs.tertiaryContainer : cs.errorContainer,
@@ -270,36 +252,36 @@ class DashboardPage extends StatelessWidget {
         badgeBg: nonPointes == 0 ? cs.tertiaryContainer : cs.errorContainer,
         badgeColor: nonPointes == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
         desc: nonPointes == 0
-            ? 'Tout le monde est pointé'
-            : '$nonPointes salarié${nonPointes > 1 ? 's' : ''} non pointé${nonPointes > 1 ? 's' : ''}',
+            ? 'Pointage complet — aucune action requise.'
+            : 'Effectuez le pointage maintenant ! $nonPointes salarié${nonPointes > 1 ? 's' : ''} n\'${nonPointes > 1 ? 'ont' : 'a'} pas encore été pointé${nonPointes > 1 ? 's' : ''}.',
         route: '/pointage',
       ),
-      // 3. Undefined absences
+      // 2. Undefined absences
       _ActionItem(
         icon: Icons.help_center_outlined,
-        iconBg: absencesIndefinies == 0 ? cs.surfaceContainerHighest : cs.errorContainer,
-        iconColor: absencesIndefinies == 0 ? cs.onSurfaceVariant : cs.onErrorContainer,
+        iconBg: absencesIndefinies == 0 ? cs.tertiaryContainer : cs.errorContainer,
+        iconColor: absencesIndefinies == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
         title: 'Absences indéfinies',
         badge: '$absencesIndefinies',
-        badgeBg: absencesIndefinies == 0 ? cs.surfaceContainerHighest : cs.errorContainer,
-        badgeColor: absencesIndefinies == 0 ? cs.onSurfaceVariant : cs.onErrorContainer,
+        badgeBg: absencesIndefinies == 0 ? cs.tertiaryContainer : cs.errorContainer,
+        badgeColor: absencesIndefinies == 0 ? cs.onTertiaryContainer : cs.onErrorContainer,
         desc: absencesIndefinies == 0
-            ? 'Aucune absence à clarifier'
-            : '$absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} de type "Autre" à préciser',
+            ? 'Toutes les absences sont classées — rien à faire.'
+            : 'Classifiez les absences maintenant ! $absencesIndefinies absence${absencesIndefinies > 1 ? 's' : ''} de type « Autre » doivent être précisées au plus vite.',
         route: '/conges',
       ),
-      // 4. Warnings
+      // 3. Warnings
       _ActionItem(
         icon: Icons.warning_amber_rounded,
-        iconBg: cs.secondaryContainer,
-        iconColor: cs.onSecondaryContainer,
+        iconBg: cs.tertiaryContainer,
+        iconColor: cs.onTertiaryContainer,
         title: 'Avertissements',
         badge: '$templatesDisponibles',
-        badgeBg: cs.secondaryContainer,
-        badgeColor: cs.onSecondaryContainer,
+        badgeBg: cs.tertiaryContainer,
+        badgeColor: cs.onTertiaryContainer,
         desc: templatesDisponibles == 0
-            ? 'Aucun modèle disponible'
-            : '$templatesDisponibles modèle${templatesDisponibles > 1 ? 's' : ''} prêt${templatesDisponibles > 1 ? 's' : ''} à envoyer',
+            ? 'Aucun modèle d\'avertissement disponible.'
+            : 'N\'oubliez pas d\'envoyer les avertissements ! $templatesDisponibles modèle${templatesDisponibles > 1 ? 's' : ''} ${templatesDisponibles > 1 ? 'sont prêts' : 'est prêt'} à être envoyé${templatesDisponibles > 1 ? 's' : ''}.',
         route: '/avertissements',
       ),
     ];
@@ -312,8 +294,8 @@ class DashboardPage extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.w800,
-            color: cs.onSurfaceVariant,
-            letterSpacing: 1.2,
+            color: cs.tertiary,
+            letterSpacing: 1.4,
           ),
         ),
         const SizedBox(height: 12),
@@ -321,7 +303,7 @@ class DashboardPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: cs.outlineVariant, width: 1),
+            border: Border.all(color: cs.tertiaryContainer, width: 1.5),
           ),
           child: Column(
             children: [
