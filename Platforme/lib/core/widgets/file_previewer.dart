@@ -145,6 +145,7 @@ class FilePreviewer {
                             canDebug: false,
                             canChangePageFormat: false,
                             canChangeOrientation: false,
+                            useActions: false,
                           );
                         } else {
                           return Column(
