@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 import '../services/auth_service.dart';
 import '../services/salarie_service.dart';
@@ -26,6 +27,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   StreamSubscription<List<Map<String, dynamic>>>? _abonnementMessages;
 
   AppState() {
+    _loadLanguagePreference();
     ServiceNotification().initialiser();
     
     final client = Supabase.instance.client;
@@ -233,9 +235,30 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   String _langue = 'Français (FR)';
   String get langue => _langue;
 
-  void setLangue(String val) {
+  Future<void> _loadLanguagePreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('language_pref');
+      debugPrint('[AppState] Loaded language preference: $saved');
+      if (saved != null) {
+        _langue = saved;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[AppState] Error loading language preference: $e');
+    }
+  }
+
+  void setLangue(String val) async {
     _langue = val;
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final success = await prefs.setString('language_pref', val);
+      debugPrint('[AppState] Saved language preference: $val, success: $success');
+    } catch (e) {
+      debugPrint('[AppState] Error saving language preference: $e');
+    }
   }
 
   // ─── Enterprise ──────────────────────────────────────────────────────────

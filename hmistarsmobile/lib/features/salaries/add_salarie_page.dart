@@ -14,6 +14,7 @@ import '../../core/models/models.dart';
 import '../../core/widgets/mobile_file_previewer.dart';
 import '../../core/widgets/top_notification_banner.dart';
 import '../../core/widgets/salarie_avatar.dart';
+import '../../core/utils/translation_extension.dart';
 
 class AddSalariePage extends StatefulWidget {
   final Salarie? salarie;
@@ -302,7 +303,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
 
     TopNotificationBanner.show(
       context,
-      '${newSalarie.nomComplet} enregistré avec succès',
+      context.tr('${newSalarie.nomComplet} enregistré avec succès', '${newSalarie.nomComplet} saved successfully'),
       isError: false,
     );
     context.pop();
@@ -314,7 +315,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Erreur Initialisation',
+            context.tr('Erreur Initialisation', 'Initialization Error'),
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w800,
               color: Colors.red,
@@ -331,12 +332,12 @@ class _AddSalariePageState extends State<AddSalariePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Une erreur est survenue lors de l\'initialisation des données.',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16),
+                Text(
+                  context.tr('Une erreur est survenue lors de l\'initialisation des données.', 'An error occurred during data initialization.'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
-                Text('Erreur : $_initError', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(context.tr('Erreur : $_initError', 'Error: $_initError'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text('Stacktrace :\n$_initStackTrace', style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
               ],
@@ -350,7 +351,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(
-            widget.readOnly ? 'Profil Salarié' : 'Chargement...',
+            widget.readOnly ? context.tr('Profil Salarié', 'Employee Profile') : context.tr('Chargement...', 'Loading...'),
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w800,
               color: Theme.of(context).colorScheme.primary,
@@ -372,8 +373,10 @@ class _AddSalariePageState extends State<AddSalariePage> {
         appBar: AppBar(
           title: Text(
             widget.readOnly
-                ? 'Profil Salarié'
-                : ((widget.salarie != null || widget.salarieId != null) ? 'Modifier Salarié' : 'Nouveau Salarié'),
+                ? context.tr('Profil Salarié', 'Employee Profile')
+                : ((widget.salarie != null || widget.salarieId != null) 
+                    ? context.tr('Modifier Salarié', 'Edit Employee') 
+                    : context.tr('Nouveau Salarié', 'New Employee')),
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w800,
               color: Theme.of(context).colorScheme.primary,
@@ -391,9 +394,9 @@ class _AddSalariePageState extends State<AddSalariePage> {
             children: [
               _buildAvatarHeader(),
               const SizedBox(height: 24),
-              _buildSection('Informations Personnelles', [
+              _buildSection(context.tr('Informations Personnelles', 'Personal Information'), [
                 // Genre
-                _buildLabel('Genre'),
+                _buildLabel(context.tr('Genre', 'Gender')),
                 const SizedBox(height: 8),
                 Row(
                   children: ['M', 'F'].map((g) {
@@ -410,10 +413,8 @@ class _AddSalariePageState extends State<AddSalariePage> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerLow,
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
@@ -422,7 +423,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
                             ),
                           ),
                           child: Text(
-                            g == 'M' ? 'Masculin' : 'Féminin',
+                            g == 'M' ? context.tr('Masculin', 'Male') : context.tr('Féminin', 'Female'),
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -437,46 +438,46 @@ class _AddSalariePageState extends State<AddSalariePage> {
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-                _buildTextField(_nomController, 'Nom *', required: true),
-                _buildTextField(_prenomController, 'Prénom *', required: true),
-                _buildTextField(_nomNaissanceController, 'Nom de Naissance'),
+                _buildTextField(_nomController, context.tr('Nom *', 'Last Name *'), required: true),
+                _buildTextField(_prenomController, context.tr('Prénom *', 'First Name *'), required: true),
+                _buildTextField(_nomNaissanceController, context.tr('Nom de Naissance', 'Birth Name')),
                 _buildTextField(
                   _nsecuController,
-                  'Numéro de Sécurité Sociale',
+                  context.tr('Numéro de Sécurité Sociale', 'Social Security Number'),
                   keyboardType: TextInputType.number,
                 ),
                 _buildDateField(
-                  'Date de Naissance',
+                  context.tr('Date de Naissance', 'Date of Birth'),
                   _dateNaissance,
                   (d) => setState(() => _dateNaissance = d),
                 ),
-                _buildTextField(_lieuNaissanceController, 'Lieu de Naissance'),
-                _buildTextField(_nationaliteController, 'Nationalité'),
-                _buildTextField(_cinController, 'CIN (Carte d\'Identité)'),
+                _buildTextField(_lieuNaissanceController, context.tr('Lieu de Naissance', 'Place of Birth')),
+                _buildTextField(_nationaliteController, context.tr('Nationalité', 'Nationality')),
+                _buildTextField(_cinController, context.tr('CIN (Carte d\'Identité)', 'ID Number')),
               ]),
               const SizedBox(height: 20),
-              _buildSection('Coordonnées', [
-                _buildTextField(_adresseController, 'Adresse Postale'),
+              _buildSection(context.tr('Coordonnées', 'Contact Details'), [
+                _buildTextField(_adresseController, context.tr('Adresse Postale', 'Postal Address')),
                 _buildTextField(
                   _telephoneController,
-                  'Téléphone',
+                  context.tr('Téléphone', 'Phone'),
                   keyboardType: TextInputType.phone,
                 ),
                 _buildTextField(
                   _emailController,
-                  'Email',
+                  context.tr('Email', 'Email'),
                   keyboardType: TextInputType.emailAddress,
                 ),
               ]),
               const SizedBox(height: 20),
-              _buildSection('Informations Contractuelles', [
+              _buildSection(context.tr('Informations Contractuelles', 'Contractual Details'), [
                 _buildDateField(
-                  'Date d\'Embauche',
+                  context.tr('Date d\'Embauche', 'Hire Date'),
                   _dateEmbauche,
                   (d) => setState(() => _dateEmbauche = d),
                 ),
                 const SizedBox(height: 8),
-                _buildLabel('Type de Contrat'),
+                _buildLabel(context.tr('Type de Contrat', 'Contract Type')),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -497,7 +498,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          type,
+                          _getContractTypeLabel(context, type),
                           style: GoogleFonts.inter(
                             fontWeight: FontWeight.w700,
                             color: isSelected
@@ -512,21 +513,21 @@ class _AddSalariePageState extends State<AddSalariePage> {
                 if (_typeContrat == 'CDD' || _typeContrat == 'Apprentissage' || _typeContrat == 'Stage') ...[
                   const SizedBox(height: 16),
                   _buildDateField(
-                    'Date de Fin de Contrat',
+                    context.tr('Date de Fin de Contrat', 'Contract End Date'),
                     _dateFinContrat,
                     (d) => setState(() => _dateFinContrat = d),
                   ),
                 ],
                 const SizedBox(height: 8),
-                _buildTextField(_posteController, 'Emploi / Poste'),
+                _buildTextField(_posteController, context.tr('Emploi / Poste', 'Job Title / Position')),
                 _buildTextField(
                   _descriptionController,
-                  'Notes / Description',
+                  context.tr('Notes / Description', 'Notes / Description'),
                   maxLines: 3,
                 ),
               ]),
               const SizedBox(height: 20),
-              _buildSection('Pièces Jointes', [
+              _buildSection(context.tr('Pièces Jointes', 'Attachments'), [
                 if (_loadingFiles) ...[
                   const Padding(
                     padding: EdgeInsets.only(bottom: 12),
@@ -534,25 +535,25 @@ class _AddSalariePageState extends State<AddSalariePage> {
                   ),
                 ],
                 _buildFileUpload(
-                  'Pièce d\'identité',
+                  context.tr('Pièce d\'identité', 'ID Document'),
                   _hasPieceIdentite,
                   'piece_identite',
                   (v) => setState(() => _hasPieceIdentite = v),
                 ),
                 _buildFileUpload(
-                  'Carte Vitale',
+                  context.tr('Carte Vitale', 'Health Card'),
                   _hasCarteVitale,
                   'carte_vitale',
                   (v) => setState(() => _hasCarteVitale = v),
                 ),
                 _buildFileUpload(
-                  'Justificatif de Domicile',
+                  context.tr('Justificatif de Domicile', 'Proof of Address'),
                   _hasJustificatifDomicile,
                   'justificatif_domicile',
                   (v) => setState(() => _hasJustificatifDomicile = v),
                 ),
                 _buildFileUpload(
-                  'Contrat Signé',
+                  context.tr('Contrat Signé', 'Signed Contract'),
                   _hasContratSigne,
                   'contrat_signe',
                   (v) => setState(() => _hasContratSigne = v),
@@ -570,8 +571,8 @@ class _AddSalariePageState extends State<AddSalariePage> {
                   ),
                   child: Text(
                     (widget.salarie != null || widget.salarieId != null)
-                        ? 'Mettre à jour le Salarié'
-                        : 'Enregistrer le Salarié',
+                        ? context.tr('Mettre à jour le Salarié', 'Update Employee')
+                        : context.tr('Enregistrer le Salarié', 'Save Employee'),
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
@@ -590,7 +591,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Erreur Rendu',
+            context.tr('Erreur Rendu', 'Rendering Error'),
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w800,
               color: Colors.red,
@@ -607,12 +608,12 @@ class _AddSalariePageState extends State<AddSalariePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Une erreur est survenue lors du rendu de la page.',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16),
+                Text(
+                  context.tr('Une erreur est survenue lors du rendu de la page.', 'An error occurred while rendering the page.'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
-                Text('Erreur : $e', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(context.tr('Erreur : $e', 'Error: $e'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text('Stacktrace :\n$stack', style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
               ],
@@ -668,7 +669,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
             maxLines: maxLines,
             readOnly: widget.readOnly,
             validator: required && !widget.readOnly
-                ? (v) => v == null || v.isEmpty ? 'Champ requis' : null
+                ? (v) => v == null || v.isEmpty ? context.tr('Champ requis', 'Required field') : null
                 : null,
             decoration: InputDecoration(hintText: label),
           ),
@@ -719,7 +720,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
                   Text(
                     value != null
                         ? DateFormat('dd/MM/yyyy').format(value)
-                        : 'JJ/MM/AAAA',
+                        : context.tr('JJ/MM/AAAA', 'DD/MM/YYYY'),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: value != null
@@ -740,7 +741,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
     if (url == null || url.isEmpty) {
       TopNotificationBanner.show(
         context,
-        'Aucun lien disponible pour ce fichier.',
+        context.tr('Aucun lien disponible pour ce fichier.', 'No link available for this file.'),
         isError: true,
       );
       return;
@@ -756,7 +757,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       final file = result.files.first;
       final localPath = file.path;
       if (localPath == null) return;
- 
+      
       if (!mounted) return;
       showDialog(
         context: context,
@@ -765,7 +766,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
           child: CircularProgressIndicator(),
         ),
       );
- 
+      
       final appState = context.read<AppState>();
       final entrepriseId = appState.entrepriseId ?? '';
       final client = Supabase.instance.client;
@@ -773,19 +774,19 @@ class _AddSalariePageState extends State<AddSalariePage> {
       
       final fileName = '$docType.$ext';
       final storagePath = 'salaries/$_salarieId/$fileName';
- 
+
       final fileObject = io.File(localPath);
       await client.storage.from('documents').upload(
         storagePath,
         fileObject,
         fileOptions: const FileOptions(upsert: true),
       );
- 
+
       final publicUrl = client.storage.from('documents').getPublicUrl(storagePath);
- 
+
       // Save to 'public.fichiers' table
       final salarieNom = '${_prenomController.text.trim()} ${_nomController.text.trim()}';
- 
+
       await client.from('fichiers').insert({
         'entreprise_id': entrepriseId,
         'nom': '$label - ${salarieNom.trim().isEmpty ? 'Nouveau Salarié' : salarieNom.trim()}',
@@ -793,16 +794,16 @@ class _AddSalariePageState extends State<AddSalariePage> {
         'est_envoye_par_user': true,
         'type_document': 'autre',
       });
- 
+
       if (!mounted) return;
       Navigator.pop(context); // Dismiss loading dialog
- 
+
       TopNotificationBanner.show(
         context,
-        'Fichier "$fileName" téléversé avec succès',
+        context.tr('Fichier "$fileName" téléversé avec succès', 'File "$fileName" uploaded successfully'),
         isError: false,
       );
- 
+
       setState(() {
         _fileUrls[docType] = publicUrl;
       });
@@ -814,12 +815,12 @@ class _AddSalariePageState extends State<AddSalariePage> {
       Navigator.pop(context); // Dismiss loading dialog
       TopNotificationBanner.show(
         context,
-        'Erreur lors du téléversement : $e',
+        context.tr('Erreur lors du téléversement : $e', 'Error uploading: $e'),
         isError: true,
       );
     }
   }
- 
+
   Widget _buildFileUpload(String label, bool value, String docType, Function(bool) onChanged) {
     final fileUrl = _fileUrls[docType];
     return Padding(
@@ -852,8 +853,8 @@ class _AddSalariePageState extends State<AddSalariePage> {
             ),
             label: Text(
               widget.readOnly
-                  ? (value ? 'Visualiser' : 'Non fourni')
-                  : (value ? 'Modifié' : 'Charger'),
+                  ? (value ? context.tr('Visualiser', 'View') : context.tr('Non fourni', 'Not provided'))
+                  : (value ? context.tr('Modifié', 'Modified') : context.tr('Charger', 'Upload')),
               style: GoogleFonts.inter(
                 color: value
                     ? Colors.green
@@ -883,7 +884,6 @@ class _AddSalariePageState extends State<AddSalariePage> {
     final prenom = _prenomController.text.trim();
     final nom = _nomController.text.trim();
     final initials = '${prenom.isNotEmpty ? prenom[0] : ''}${nom.isNotEmpty ? nom[0] : ''}'.toUpperCase();
-    final hasInitials = initials.isNotEmpty;
     final hasAvatar = _avatarUrl != null && _avatarUrl!.isNotEmpty;
     
     VoidCallback? handleTap;
@@ -891,7 +891,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       handleTap = null;
     } else if (hasAvatar) {
       handleTap = () {
-        MobileFilePreviewer.show(context, _avatarUrl!, "Photo de profil");
+        MobileFilePreviewer.show(context, _avatarUrl!, context.tr("Photo de profil", "Profile picture"));
       };
     } else {
       handleTap = widget.readOnly ? null : _pickAndUploadAvatar;
@@ -974,7 +974,6 @@ class _AddSalariePageState extends State<AddSalariePage> {
   Future<void> _pickAndUploadAvatar() async {
     final appState = context.read<AppState>();
     final theme = Theme.of(context);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -990,7 +989,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
-                  'Modifier la photo de profil',
+                  context.tr('Modifier la photo de profil', 'Edit profile picture'),
                   style: GoogleFonts.manrope(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1000,12 +999,12 @@ class _AddSalariePageState extends State<AddSalariePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: Text('Choisir dans la galerie', style: GoogleFonts.inter()),
+                title: Text(context.tr('Choisir dans la galerie', 'Choose from gallery'), style: GoogleFonts.inter()),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: Text('Prendre une photo', style: GoogleFonts.inter()),
+                title: Text(context.tr('Prendre une photo', 'Take a photo'), style: GoogleFonts.inter()),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
               const SizedBox(height: 8),
@@ -1045,7 +1044,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
         if (mounted) {
           TopNotificationBanner.show(
             context,
-            'Photo de profil mise à jour avec succès',
+            context.tr('Photo de profil mise à jour avec succès', 'Profile picture updated successfully'),
             isError: false,
           );
         }
@@ -1053,7 +1052,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
         if (mounted) {
           TopNotificationBanner.show(
             context,
-            'Erreur lors de la mise à jour de la photo de profil',
+            context.tr('Erreur lors de la mise à jour de la photo de profil', 'Error updating profile picture'),
             isError: true,
           );
         }
@@ -1063,7 +1062,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
       if (mounted) {
         TopNotificationBanner.show(
           context,
-          'Erreur : $e',
+          context.tr('Erreur : $e', 'Error: $e'),
           isError: true,
         );
       }
@@ -1071,6 +1070,21 @@ class _AddSalariePageState extends State<AddSalariePage> {
       if (mounted) {
         setState(() => _isUploadingAvatar = false);
       }
+    }
+  }
+
+  String _getContractTypeLabel(BuildContext context, String type) {
+    switch (type) {
+      case 'CDI':
+        return 'CDI';
+      case 'CDD':
+        return 'CDD';
+      case 'Apprentissage':
+        return context.trStatic('Apprentissage', 'Apprenticeship');
+      case 'Stage':
+        return context.trStatic('Stage', 'Internship');
+      default:
+        return type;
     }
   }
 

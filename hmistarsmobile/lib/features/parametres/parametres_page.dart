@@ -9,6 +9,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/top_notification_banner.dart';
+import '../../core/utils/translation_extension.dart';
 
 
 class ParametresPage extends StatefulWidget {
@@ -109,13 +110,21 @@ class _ParametresPageState extends State<ParametresPage> {
               _localLogoFile = null;
               _loaded = false;
             });
-            TopNotificationBanner.show(context, 'Logo mis à jour avec succès !', isError: false);
+            TopNotificationBanner.show(
+              context,
+              context.trStatic('Logo mis à jour avec succès !', 'Logo updated successfully!'),
+              isError: false,
+            );
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        TopNotificationBanner.show(context, 'Erreur: ${e.toString()}', isError: true);
+        TopNotificationBanner.show(
+          context,
+          '${context.trStatic('Erreur', 'Error')}: ${e.toString()}',
+          isError: true,
+        );
       }
     }
   }
@@ -142,82 +151,146 @@ class _ParametresPageState extends State<ParametresPage> {
     final rcsVal = _rcsController.text.trim();
 
     if (raisonSocialeVal.isEmpty) {
-      TopNotificationBanner.show(context, 'La Raison Sociale est requise', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('La Raison Sociale est requise', 'Company Name is required'),
+        isError: true,
+      );
       return;
     }
 
     if (nomGerantVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le nom du gérant est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le nom du gérant est requis', 'Manager name is required'),
+        isError: true,
+      );
       return;
     }
 
     if (emailVal.isEmpty) {
-      TopNotificationBanner.show(context, 'L\'adresse email est requise', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('L\'adresse email est requise', 'Email address is required'),
+        isError: true,
+      );
       return;
     }
 
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailVal)) {
-      TopNotificationBanner.show(context, 'Veuillez saisir une adresse e-mail valide.', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Veuillez saisir une adresse e-mail valide.', 'Please enter a valid email address.'),
+        isError: true,
+      );
       return;
     }
 
     if (telephoneVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le numéro de téléphone est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro de téléphone est requis', 'Phone number is required'),
+        isError: true,
+      );
       return;
     }
 
     if (!RegExp(r'^[+0-9\s-]{9,15}$').hasMatch(telephoneVal)) {
-      TopNotificationBanner.show(context, 'Le numéro de téléphone saisi est invalide.', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro de téléphone saisi est invalide.', 'The phone number entered is invalid.'),
+        isError: true,
+      );
       return;
     }
 
     if (siretVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le numéro SIRET est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro SIRET est requis', 'SIRET number is required'),
+        isError: true,
+      );
       return;
     }
 
     if (!RegExp(r'^\d{14}$').hasMatch(siretVal)) {
-      TopNotificationBanner.show(context, 'Le numéro SIRET doit comporter exactement 14 chiffres.', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro SIRET doit comporter exactement 14 chiffres.', 'The SIRET number must be exactly 14 digits.'),
+        isError: true,
+      );
       return;
     }
 
     if (sirenVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le numéro SIREN est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro SIREN est requis', 'SIREN number is required'),
+        isError: true,
+      );
       return;
     }
 
     if (!RegExp(r'^\d{9}$').hasMatch(sirenVal)) {
-      TopNotificationBanner.show(context, 'Le numéro SIREN doit comporter exactement 9 chiffres.', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro SIREN doit comporter exactement 9 chiffres.', 'The SIREN number must be exactly 9 digits.'),
+        isError: true,
+      );
       return;
     }
 
     if (adresseVal.isEmpty) {
-      TopNotificationBanner.show(context, 'L\'adresse est requise', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('L\'adresse est requise', 'Address is required'),
+        isError: true,
+      );
       return;
     }
 
     if (tvaVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le numéro de TVA est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro de TVA est requis', 'VAT number is required'),
+        isError: true,
+      );
       return;
     }
 
     if (formeJuridiqueVal.isEmpty) {
-      TopNotificationBanner.show(context, 'La forme juridique est requise', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('La forme juridique est requise', 'Legal form is required'),
+        isError: true,
+      );
       return;
     }
 
     if (capitalSocialVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le capital social est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le capital social est requis', 'Share capital is required'),
+        isError: true,
+      );
       return;
     }
 
     if (codeApeVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le code APE est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le code APE est requis', 'APE code is required'),
+        isError: true,
+      );
       return;
     }
 
     if (rcsVal.isEmpty) {
-      TopNotificationBanner.show(context, 'Le numéro RCS est requis', isError: true);
+      TopNotificationBanner.show(
+        context,
+        context.trStatic('Le numéro RCS est requis', 'RCS number is required'),
+        isError: true,
+      );
       return;
     }
 
@@ -265,11 +338,19 @@ class _ParametresPageState extends State<ParametresPage> {
           _localLogoFile = null;
           _loaded = false;
         });
-        TopNotificationBanner.show(context, 'Paramètres enregistrés', isError: false);
+        TopNotificationBanner.show(
+          context,
+          context.trStatic('Paramètres enregistrés', 'Settings saved'),
+          isError: false,
+        );
       }
     } catch (e) {
       if (mounted) {
-        TopNotificationBanner.show(context, 'Erreur: ${e.toString()}', isError: true);
+        TopNotificationBanner.show(
+          context,
+          '${context.trStatic('Erreur', 'Error')}: ${e.toString()}',
+          isError: true,
+        );
       }
     }
   }
@@ -294,7 +375,7 @@ class _ParametresPageState extends State<ParametresPage> {
                       const Icon(Icons.warning_amber_rounded, size: 60, color: Colors.orange),
                       const SizedBox(height: 16),
                       Text(
-                        'Aucune entreprise associée',
+                        context.tr('Aucune entreprise associée', 'No associated company'),
                         style: GoogleFonts.manrope(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -302,7 +383,10 @@ class _ParametresPageState extends State<ParametresPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Votre compte (${Supabase.instance.client.auth.currentUser?.email}) n\'est rattaché à aucune entreprise active dans la base de données.',
+                        context.tr(
+                          'Votre compte (${Supabase.instance.client.auth.currentUser?.email}) n\'est rattaché à aucune entreprise active dans la base de données.',
+                          'Your account (${Supabase.instance.client.auth.currentUser?.email}) is not linked to any active company in the database.',
+                        ),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           fontSize: 14,
@@ -313,7 +397,7 @@ class _ParametresPageState extends State<ParametresPage> {
                       ElevatedButton.icon(
                         onPressed: () => appState.logout(),
                         icon: const Icon(Icons.logout),
-                        label: const Text('Se déconnecter'),
+                        label: Text(context.tr('Se déconnecter', 'Log out')),
                       ),
                     ],
                   ),
@@ -333,7 +417,7 @@ class _ParametresPageState extends State<ParametresPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Paramètres',
+                    context.tr('Paramètres', 'Settings'),
                     style: GoogleFonts.manrope(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -342,13 +426,13 @@ class _ParametresPageState extends State<ParametresPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildSectionHeader('Profil de l\'entreprise'),
+                  _buildSectionHeader(context.tr('Profil de l\'entreprise', 'Company Profile')),
                   _buildCompanyHeader(p),
                   const SizedBox(height: 24),
-                  _buildSectionHeader('Apparence'),
+                  _buildSectionHeader(context.tr('Apparence', 'Appearance')),
                   _buildAppearanceSection(context, appState, isDark),
                   const SizedBox(height: 24),
-                  _buildSectionHeader('Modifier les informations'),
+                  _buildSectionHeader(context.tr('Modifier les informations', 'Edit Information')),
                   _buildEditSection(),
                   const SizedBox(height: 24),
                   _buildDangerZone(context, appState),
@@ -463,7 +547,7 @@ class _ParametresPageState extends State<ParametresPage> {
                   ),
                 ),
                 Text(
-                  'Client HMI Stars',
+                  context.tr('Client HMI Stars', 'HMI Stars Client'),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -473,7 +557,7 @@ class _ParametresPageState extends State<ParametresPage> {
                 GestureDetector(
                   onTap: _pickLogoFromDevice,
                   child: Text(
-                    'Changer le logo',
+                    context.tr('Changer le logo', 'Change logo'),
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.tertiary,
@@ -530,7 +614,7 @@ class _ParametresPageState extends State<ParametresPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isDark ? 'Mode Sombre' : 'Mode Clair',
+                      isDark ? context.tr('Mode Sombre', 'Dark Mode') : context.tr('Mode Clair', 'Light Mode'),
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -539,8 +623,8 @@ class _ParametresPageState extends State<ParametresPage> {
                     ),
                     Text(
                       isDark
-                          ? 'Interface en thème sombre'
-                          : 'Interface en thème clair',
+                          ? context.tr('Interface en thème sombre', 'Dark theme interface')
+                          : context.tr('Interface en thème clair', 'Light theme interface'),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -589,7 +673,7 @@ class _ParametresPageState extends State<ParametresPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Langue',
+                      context.tr('Langue', 'Language'),
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -597,7 +681,7 @@ class _ParametresPageState extends State<ParametresPage> {
                       ),
                     ),
                     Text(
-                      'Sélectionner la langue de l\'application',
+                      context.tr('Sélectionner la langue de l\'application', 'Select app language'),
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -639,44 +723,44 @@ class _ParametresPageState extends State<ParametresPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSubSectionHeader('Informations Générales'),
+              _buildSubSectionHeader(context.tr('Informations Générales', 'General Information')),
               const SizedBox(height: 16),
               _buildField(
                 _raisonSocialeController,
-                'Raison Sociale',
+                context.tr('Raison Sociale', 'Company Name'),
                 Icons.business_outlined,
               ),
               _buildDatePickerField(
-                'Date de création d\'entreprise',
+                context.tr('Date de création d\'entreprise', 'Company Creation Date'),
                 Icons.calendar_today_outlined,
                 _dateCreation,
                 (date) => setState(() => _dateCreation = date),
               ),
               _buildField(
                 _nomGerantController,
-                'Nom du Gérant',
+                context.tr('Nom du Gérant', 'Manager Name'),
                 Icons.person_outline,
               ),
               _buildField(
                 _descriptionController,
-                'Activité / Description',
+                context.tr('Activité / Description', 'Activity / Description'),
                 Icons.description_outlined,
               ),
               _buildField(
                 _telephoneController,
-                'Téléphone',
+                context.tr('Téléphone', 'Phone'),
                 Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
               ),
               _buildField(
                 _emailController,
-                'Email',
+                context.tr('Email', 'Email'),
                 Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
               ),
               _buildField(
                 _adresseController,
-                'Adresse',
+                context.tr('Adresse', 'Address'),
                 Icons.location_on_outlined,
               ),
             ],
@@ -693,42 +777,46 @@ class _ParametresPageState extends State<ParametresPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSubSectionHeader('Informations Juridiques'),
+              _buildSubSectionHeader(context.tr('Informations Juridiques', 'Legal Information')),
               const SizedBox(height: 16),
               _buildField(
                 _sirenController,
-                'SIREN',
+                context.tr('SIREN', 'SIREN'),
                 Icons.pin_outlined,
                 keyboardType: TextInputType.number,
               ),
               _buildField(
                 _siretController,
-                'SIRET',
+                context.tr('SIRET', 'SIRET'),
                 Icons.numbers,
                 keyboardType: TextInputType.number,
               ),
               _buildField(
                 _formeJuridiqueController,
-                'Forme Juridique',
+                context.tr('Forme Juridique', 'Legal Form'),
                 Icons.gavel_outlined,
               ),
               _buildField(
                 _capitalSocialController,
-                'Capital Social (€)',
+                context.tr('Capital Social (€)', 'Share Capital (€)'),
                 Icons.monetization_on_outlined,
                 keyboardType: TextInputType.number,
               ),
               _buildField(
                 _tvaController,
-                'TVA Intracommunautaire',
+                context.tr('TVA Intracommunautaire', 'Intracommunity VAT'),
                 Icons.account_balance_outlined,
               ),
               _buildField(
                 _rcsController,
-                'RCS',
+                context.tr('RCS', 'RCS'),
                 Icons.receipt_long_outlined,
               ),
-              _buildField(_codeAPEController, 'Code APE', Icons.category_outlined),
+              _buildField(
+                _codeAPEController,
+                context.tr('Code APE', 'APE Code'),
+                Icons.category_outlined,
+              ),
             ],
           ),
         ),
@@ -742,7 +830,7 @@ class _ParametresPageState extends State<ParametresPage> {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
             child: Text(
-              'Enregistrer les modifications',
+              context.tr('Enregistrer les modifications', 'Save changes'),
               style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
             ),
           ),
@@ -828,7 +916,7 @@ class _ParametresPageState extends State<ParametresPage> {
             ),
           ),
           child: Text(
-            dateStr.isEmpty ? 'Sélectionner une date' : dateStr,
+            dateStr.isEmpty ? context.tr('Sélectionner une date', 'Select a date') : dateStr,
             style: GoogleFonts.inter(
               fontSize: 15,
               color: dateStr.isEmpty
@@ -854,7 +942,7 @@ class _ParametresPageState extends State<ParametresPage> {
           color: Theme.of(context).colorScheme.error,
         ),
         label: Text(
-          'Se déconnecter',
+          context.tr('Se déconnecter', 'Log out'),
           style: GoogleFonts.inter(
             color: Theme.of(context).colorScheme.error,
             fontWeight: FontWeight.w600,

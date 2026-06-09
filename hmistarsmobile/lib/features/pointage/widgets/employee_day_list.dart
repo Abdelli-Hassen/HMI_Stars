@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/providers/app_state.dart';
 import '../../../core/models/models.dart';
+import '../../../core/utils/translation_extension.dart';
 
 class EmployeeDayList extends StatefulWidget {
   final DateTime day;
@@ -37,7 +38,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
       });
     }
 
-    final dateStr = _formatDate(widget.day);
+    final dateStr = _formatDate(context, widget.day);
     final isFuture = widget.day.isAfter(DateTime.now()) &&
         !(widget.day.year == DateTime.now().year &&
             widget.day.month == DateTime.now().month &&
@@ -82,7 +83,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Liste des Salariés',
+                                context.tr('Liste des Salariés', 'Employee List'),
                                 style: GoogleFonts.manrope(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
@@ -108,7 +109,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                 color: Theme.of(context).colorScheme.primary,
                                 size: 20,
                               ),
-                              tooltip: 'Trier les salariés',
+                              tooltip: context.tr('Trier les salariés', 'Sort employees'),
                               onSelected: (value) {
                                 setState(() {
                                   _sortBy = value;
@@ -121,7 +122,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                     children: [
                                       Icon(Icons.playlist_add_check, size: 18, color: Theme.of(context).colorScheme.primary),
                                       const SizedBox(width: 8),
-                                      Text('Non pointés en premier', style: GoogleFonts.inter(fontSize: 13)),
+                                      Text(context.tr('Non pointés en premier', 'Not pointed first'), style: GoogleFonts.inter(fontSize: 13)),
                                     ],
                                   ),
                                 ),
@@ -131,7 +132,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                     children: [
                                       Icon(Icons.sort_by_alpha, size: 18, color: Theme.of(context).colorScheme.primary),
                                       const SizedBox(width: 8),
-                                      Text('Ordre alphabétique', style: GoogleFonts.inter(fontSize: 13)),
+                                      Text(context.tr('Ordre alphabétique', 'Alphabetical order'), style: GoogleFonts.inter(fontSize: 13)),
                                     ],
                                   ),
                                 ),
@@ -147,7 +148,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                       : Theme.of(context).colorScheme.primary,
                                   size: 20,
                                 ),
-                                tooltip: allPointed ? 'Tout décocher' : 'Tout cocher',
+                                tooltip: allPointed ? context.tr('Tout décocher', 'Uncheck all') : context.tr('Tout cocher', 'Check all'),
                                 onPressed: () {
                                   showDialog(
                                     context: context,
@@ -157,7 +158,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                       ),
                                       backgroundColor: Theme.of(context).colorScheme.surface,
                                       title: Text(
-                                        allPointed ? 'Tout décocher ?' : 'Tout cocher ?',
+                                        allPointed ? context.tr('Tout décocher ?', 'Uncheck all?') : context.tr('Tout cocher ?', 'Check all?'),
                                         style: GoogleFonts.manrope(
                                           fontWeight: FontWeight.w800,
                                           fontSize: 18,
@@ -166,8 +167,8 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                       ),
                                       content: Text(
                                         allPointed
-                                            ? 'Voulez-vous décocher la présence de tous les salariés actifs pour ce jour ?'
-                                            : 'Voulez-vous cocher la présence de tous les salariés actifs pour ce jour ?',
+                                            ? context.tr('Voulez-vous décocher la présence de tous les salariés actifs pour ce jour ?', 'Do you want to uncheck attendance for all active employees for this day?')
+                                            : context.tr('Voulez-vous cocher la présence de tous les salariés actifs pour ce jour ?', 'Do you want to check attendance for all active employees for this day?'),
                                         style: GoogleFonts.inter(
                                           fontSize: 14,
                                           color: Theme.of(context).colorScheme.onSurface,
@@ -177,7 +178,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                         TextButton(
                                           onPressed: () => Navigator.pop(ctx),
                                           child: Text(
-                                            'Annuler',
+                                            context.tr('Annuler', 'Cancel'),
                                             style: GoogleFonts.inter(
                                               color: Theme.of(context).colorScheme.outline,
                                             ),
@@ -200,7 +201,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                                             foregroundColor: Colors.white,
                                           ),
                                           child: Text(
-                                            'Confirmer',
+                                            context.tr('Confirmer', 'Confirm'),
                                             style: GoogleFonts.inter(
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -236,7 +237,9 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            _sortBy == 'alphabetical' ? 'Triage: Ordre alphabétique' : 'Triage: Non pointés en premier',
+                            _sortBy == 'alphabetical' 
+                                ? context.tr('Triage: Ordre alphabétique', 'Sorting: Alphabetical') 
+                                : context.tr('Triage: Non pointés en premier', 'Sorting: Unpointed first'),
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -361,11 +364,11 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                 if (isPointed)
                   Row(
                     children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 13),
+                      const Icon(Icons.check_circle, color: Colors.green, size: 13),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          'Présence Validée',
+                          context.tr('Présence Validée', 'Attendance Validated'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.inter(
@@ -380,11 +383,11 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                 else if (hasConge)
                   Row(
                     children: [
-                      Icon(Icons.beach_access, color: Colors.blue, size: 13),
+                      const Icon(Icons.beach_access, color: Colors.blue, size: 13),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          'En Congé ($congeLabel)',
+                          context.tr('En Congé ($congeLabel)', 'On Leave ($congeLabel)'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.inter(
@@ -408,7 +411,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Attente Vérification',
+                      context.tr('Attente Vérification', 'Awaiting Verification'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
@@ -447,7 +450,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Note',
+                        context.tr('Note', 'Note'),
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -506,9 +509,9 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
 
     if (conge != null) {
       parsedTypeLabel = conge.estDemiJournee 
-          ? '${_getCongeTypeLabel(conge.typeConge)} (Demi-journée)' 
-          : _getCongeTypeLabel(conge.typeConge);
-      parsedMotif = conge.commentaire.isNotEmpty ? conge.commentaire : 'Aucun commentaire';
+          ? '${_getCongeTypeLabel(context, conge.typeConge)} ${context.trStatic('(Demi-journée)', '(Half-day)')}' 
+          : _getCongeTypeLabel(context, conge.typeConge);
+      parsedMotif = conge.commentaire.isNotEmpty ? conge.commentaire : context.trStatic('Aucun commentaire', 'No comment');
     } else if (rawNote.isNotEmpty) {
       final prefixes = [
         'Congé Payé (Demi-journée)',
@@ -538,7 +541,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
             parsedMotif = remaining;
           }
           if (parsedMotif.isEmpty) {
-            parsedMotif = 'Aucun commentaire';
+            parsedMotif = context.trStatic('Aucun commentaire', 'No comment');
           }
           break;
         }
@@ -621,7 +624,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _formatDate(widget.day),
+                        _formatDate(context, widget.day),
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -643,7 +646,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
           children: [
             if (isSeparatedView) ...[
               Text(
-                'TYPE DE CONGÉ / ABSENCE',
+                context.tr('TYPE DE CONGÉ / ABSENCE', 'LEAVE TYPE / ABSENCE'),
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -693,7 +696,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
               ),
               const SizedBox(height: 20),
               Text(
-                'MOTIF / COMMENTAIRE',
+                context.tr('MOTIF / COMMENTAIRE', 'REASON / COMMENT'),
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -740,7 +743,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                           fontSize: 13,
                           height: 1.5,
                           fontWeight: FontWeight.w500,
-                          color: (parsedMotif != null && parsedMotif != 'Aucun commentaire')
+                          color: (parsedMotif != null && parsedMotif != context.trStatic('Aucun commentaire', 'No comment'))
                               ? Theme.of(context).colorScheme.onSurface
                               : Theme.of(context).colorScheme.outline,
                         ),
@@ -751,7 +754,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
               ),
             ] else ...[
               Text(
-                'NOTE / COMMENTAIRE',
+                context.tr('NOTE / COMMENTAIRE', 'NOTE / COMMENT'),
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -774,7 +777,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                   controller: noteController,
                   maxLines: 8,
                   decoration: InputDecoration(
-                    hintText: 'Écrire une note pour ce salarié...',
+                    hintText: context.tr('Écrire une note pour ce salarié...', 'Write a note for this employee...'),
                     hintStyle: GoogleFonts.inter(
                       fontSize: 13,
                       color: Theme.of(context).colorScheme.outline,
@@ -827,7 +830,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                   shadowColor: accentColor.withOpacity(0.3),
                 ),
                 child: Text(
-                  'Fermer',
+                  context.tr('Fermer', 'Close'),
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
@@ -851,7 +854,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                       ),
                     ),
                     child: Text(
-                      'Annuler',
+                      context.tr('Annuler', 'Cancel'),
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
@@ -878,7 +881,7 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
                       shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                     ),
                     child: Text(
-                      'Enregistrer',
+                      context.tr('Enregistrer', 'Save'),
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
@@ -894,45 +897,72 @@ class _EmployeeDayListState extends State<EmployeeDayList> {
     );
   }
 
-  String _getCongeTypeLabel(String type) {
+  String _getCongeTypeLabel(BuildContext context, String type) {
     switch (type) {
       case 'conge_paye':
-        return 'Congé Payé';
+        return context.trStatic('Congé Payé', 'Paid Leave');
       case 'maladie':
-        return 'Arrêt Maladie';
+        return context.trStatic('Arrêt Maladie', 'Sick Leave');
       case 'rtt':
-        return 'RTT';
+        return context.trStatic('RTT', 'RTT');
       case 'exceptionnel':
-        return 'Congé Exceptionnel';
+        return context.trStatic('Congé Exceptionnel', 'Special Leave');
       default:
-        return 'Autre Absence';
+        return context.trStatic('Autre Absence', 'Other Absence');
     }
   }
 
-  String _formatDate(DateTime day) {
-    const months = [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre',
-    ];
-    const weekdays = [
-      'Lundi',
-      'Mardi',
-      'Mercredi',
-      'Jeudi',
-      'Vendredi',
-      'Samedi',
-      'Dimanche',
-    ];
+  String _formatDate(BuildContext context, DateTime day) {
+    final state = Provider.of<AppState>(context, listen: false);
+    final isEn = state.langue == 'English (EN)';
+    final months = isEn
+        ? [
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
+          ]
+        : [
+            'Janvier',
+            'Février',
+            'Mars',
+            'Avril',
+            'Mai',
+            'Juin',
+            'Juillet',
+            'Août',
+            'Septembre',
+            'Octobre',
+            'Novembre',
+            'Décembre',
+          ];
+    final weekdays = isEn
+        ? [
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+            'Sunday',
+          ]
+        : [
+            'Lundi',
+            'Mardi',
+            'Mercredi',
+            'Jeudi',
+            'Vendredi',
+            'Samedi',
+            'Dimanche',
+          ];
     return '${weekdays[day.weekday - 1]}, ${day.day} ${months[day.month - 1]} ${day.year}';
   }
 }

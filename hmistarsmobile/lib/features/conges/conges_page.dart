@@ -6,6 +6,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/top_notification_banner.dart';
+import '../../core/utils/translation_extension.dart';
 
 class CongesPage extends StatefulWidget {
   const CongesPage({super.key});
@@ -38,7 +39,7 @@ class _CongesPageState extends State<CongesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'GESTION DU PERSONNEL',
+                      context.tr('GESTION DU PERSONNEL', 'STAFF MANAGEMENT'),
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -47,7 +48,7 @@ class _CongesPageState extends State<CongesPage> {
                       ),
                     ),
                     Text(
-                      'Congés & Absences',
+                      context.tr('Congés & Absences', 'Leaves & Absences'),
                       style: GoogleFonts.manrope(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -57,7 +58,7 @@ class _CongesPageState extends State<CongesPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Enregistrez et gérez les congés et absences de vos salariés.',
+                      context.tr('Enregistrez et gérez les congés et absences de vos salariés.', 'Record and manage leaves and absences for your employees.'),
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -82,7 +83,7 @@ class _CongesPageState extends State<CongesPage> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Aucune demande trouvée',
+                        context.tr('Aucune demande trouvée', 'No requests found'),
                         style: GoogleFonts.manrope(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -91,7 +92,7 @@ class _CongesPageState extends State<CongesPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Les demandes s\'afficheront ici.',
+                        context.tr('Les demandes s\'afficheront ici.', 'Requests will appear here.'),
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -113,9 +114,9 @@ class _CongesPageState extends State<CongesPage> {
                         orElse: () => Salarie(
                           id: conge.salarieId,
                           entrepriseId: conge.entrepriseId,
-                          nom: 'Inconnu',
+                          nom: context.trStatic('Inconnu', 'Unknown'),
                           prenom: '',
-                          nomDeNaissance: 'Inconnu',
+                          nomDeNaissance: context.trStatic('Inconnu', 'Unknown'),
                           typeContrat: 'CDI',
                           email: '',
                         ),
@@ -135,18 +136,22 @@ class _CongesPageState extends State<CongesPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddCongeSheet(context, salaries, appState),
         icon: const Icon(Icons.add),
-        label: const Text('Enregistrer absence'),
+        label: Text(context.tr('Enregistrer absence', 'Record absence')),
       ),
     );
   }
 
   Widget _buildCongeCard(BuildContext context, Conge conge, Salarie salarie, AppState appState) {
-    final (typeLabel, typeIcon, typeColor) = _getTypeStyle(conge.typeConge);
+    final (typeLabel, typeIcon, typeColor) = _getTypeStyle(context, conge.typeConge);
 
     final duration = conge.dateFin.difference(conge.dateDebut).inDays + 1;
+    final isEn = appState.langue == 'English (EN)';
+    final locale = isEn ? 'en' : 'fr';
     final dateRangeStr = conge.estDemiJournee
-        ? '${DateFormat('dd MMM yyyy', 'fr').format(conge.dateDebut)} (Demi-journée)'
-        : 'Du ${DateFormat('dd MMM yyyy', 'fr').format(conge.dateDebut)} au ${DateFormat('dd MMM yyyy', 'fr').format(conge.dateFin)} ($duration jours)';
+        ? '${DateFormat('dd MMM yyyy', locale).format(conge.dateDebut)} ${context.tr('(Demi-journée)', '(Half-day)')}'
+        : isEn
+            ? 'From ${DateFormat('dd MMM yyyy', locale).format(conge.dateDebut)} to ${DateFormat('dd MMM yyyy', locale).format(conge.dateFin)} ($duration days)'
+            : 'Du ${DateFormat('dd MMM yyyy', locale).format(conge.dateDebut)} au ${DateFormat('dd MMM yyyy', locale).format(conge.dateFin)} ($duration jours)';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -196,7 +201,7 @@ class _CongesPageState extends State<CongesPage> {
                         ),
                       ),
                       Text(
-                        salarie.emploiPoste ?? 'Salarié',
+                        salarie.emploiPoste ?? context.tr('Salarié', 'Employee'),
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -285,14 +290,14 @@ class _CongesPageState extends State<CongesPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          'Supprimer l\'absence',
+          context.tr('Supprimer l\'absence', 'Delete absence'),
           style: GoogleFonts.manrope(fontWeight: FontWeight.bold),
         ),
-        content: const Text('Êtes-vous sûr de vouloir supprimer cette absence ? Cela supprimera également les pointages générés correspondants.'),
+        content: Text(context.tr('Êtes-vous sûr de vouloir supprimer cette absence ? Cela supprimera également les pointages générés correspondants.', 'Are you sure you want to delete this absence? This will also delete the corresponding generated attendance records.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(context.tr('Annuler', 'Cancel')),
           ),
           FilledButton(
             onPressed: () async {
@@ -302,7 +307,7 @@ class _CongesPageState extends State<CongesPage> {
                 if (context.mounted) {
                   TopNotificationBanner.show(
                     context,
-                    'Absence supprimée avec succès.',
+                    context.tr('Absence supprimée avec succès.', 'Absence deleted successfully.'),
                     isError: false,
                   );
                 }
@@ -310,7 +315,7 @@ class _CongesPageState extends State<CongesPage> {
                 if (context.mounted) {
                   TopNotificationBanner.show(
                     context,
-                    'Erreur lors de la suppression: $e',
+                    context.tr('Erreur lors de la suppression: $e', 'Error deleting: $e'),
                     isError: true,
                   );
                 }
@@ -319,7 +324,7 @@ class _CongesPageState extends State<CongesPage> {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Supprimer'),
+            child: Text(context.tr('Supprimer', 'Delete')),
           ),
         ],
       ),
@@ -330,7 +335,7 @@ class _CongesPageState extends State<CongesPage> {
     if (salaries.isEmpty) {
       TopNotificationBanner.show(
         context,
-        'Veuillez ajouter des salariés avant d\'enregistrer une absence.',
+        context.tr('Veuillez ajouter des salariés avant d\'enregistrer une absence.', 'Please add employees before recording an absence.'),
         isError: true,
       );
       return;
@@ -373,7 +378,7 @@ class _CongesPageState extends State<CongesPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Enregistrer une absence / congé',
+                    context.tr('Enregistrer une absence / congé', 'Record an absence / leave'),
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w800,
                       fontSize: 20,
@@ -383,7 +388,7 @@ class _CongesPageState extends State<CongesPage> {
                   const SizedBox(height: 20),
                   // Salarie selection
                   Text(
-                    'Salarié',
+                    context.tr('Salarié', 'Employee'),
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
@@ -407,18 +412,18 @@ class _CongesPageState extends State<CongesPage> {
                   const SizedBox(height: 16),
                   // Type de conge selection
                   Text(
-                    'Type de congé / absence',
+                    context.tr('Type de congé / absence', 'Leave type / absence'),
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
                     value: selectedType,
-                    items: const [
-                      DropdownMenuItem(value: 'conge_paye', child: Text('Congé Payé')),
-                      DropdownMenuItem(value: 'maladie', child: Text('Arrêt Maladie')),
-                      DropdownMenuItem(value: 'rtt', child: Text('RTT')),
-                      DropdownMenuItem(value: 'exceptionnel', child: Text('Congé Exceptionnel')),
-                      DropdownMenuItem(value: 'autre', child: Text('Autre Absence')),
+                    items: [
+                      DropdownMenuItem(value: 'conge_paye', child: Text(context.tr('Congé Payé', 'Paid Leave'))),
+                      DropdownMenuItem(value: 'maladie', child: Text(context.tr('Arrêt Maladie', 'Sick Leave'))),
+                      DropdownMenuItem(value: 'rtt', child: Text(context.tr('RTT', 'RTT'))),
+                      DropdownMenuItem(value: 'exceptionnel', child: Text(context.tr('Congé Exceptionnel', 'Special Leave'))),
+                      DropdownMenuItem(value: 'autre', child: Text(context.tr('Autre Absence', 'Other Absence'))),
                     ],
                     onChanged: (val) {
                       setS(() {
@@ -438,7 +443,7 @@ class _CongesPageState extends State<CongesPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Date Début',
+                              context.tr('Date Début', 'Start Date'),
                               style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 6),
@@ -484,7 +489,7 @@ class _CongesPageState extends State<CongesPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Date Fin',
+                                context.tr('Date Fin', 'End Date'),
                                 style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 6),
@@ -534,7 +539,7 @@ class _CongesPageState extends State<CongesPage> {
                         }
                       });
                     },
-                    title: const Text('Demi-journée uniquement'),
+                    title: Text(context.tr('Demi-journée uniquement', 'Half-day only')),
                     contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.trailing,
                     activeColor: Theme.of(context).colorScheme.primary,
@@ -542,15 +547,15 @@ class _CongesPageState extends State<CongesPage> {
                   const SizedBox(height: 16),
                   // Comment
                   Text(
-                    'Commentaire / Motif',
+                    context.tr('Commentaire / Motif', 'Comment / Reason'),
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: commentController,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      hintText: 'Ex: Maladie avec certificat, congés annuels...',
+                    decoration: InputDecoration(
+                      hintText: context.tr('Ex: Maladie avec certificat, congés annuels...', 'e.g. Sick with certificate, annual leave...'),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -577,7 +582,7 @@ class _CongesPageState extends State<CongesPage> {
                             Navigator.pop(context);
                             TopNotificationBanner.show(
                               context,
-                              'Absence enregistrée avec succès',
+                              context.tr('Absence enregistrée avec succès', 'Absence recorded successfully'),
                               isError: false,
                             );
                           }
@@ -585,7 +590,7 @@ class _CongesPageState extends State<CongesPage> {
                           if (context.mounted) {
                             TopNotificationBanner.show(
                               context,
-                              'Erreur: $e',
+                              context.tr('Erreur: $e', 'Error: $e'),
                               isError: true,
                             );
                           }
@@ -597,7 +602,7 @@ class _CongesPageState extends State<CongesPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Enregistrer'),
+                      child: Text(context.tr('Enregistrer', 'Record')),
                     ),
                   ),
                 ],
@@ -647,7 +652,7 @@ class _CongesPageState extends State<CongesPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Modifier l\'absence / congé',
+                    context.tr('Modifier l\'absence / congé', 'Edit absence / leave'),
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w800,
                       fontSize: 20,
@@ -657,7 +662,7 @@ class _CongesPageState extends State<CongesPage> {
                   const SizedBox(height: 20),
                   // Salarie selection
                   Text(
-                    'Salarié',
+                    context.tr('Salarié', 'Employee'),
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
@@ -681,18 +686,18 @@ class _CongesPageState extends State<CongesPage> {
                   const SizedBox(height: 16),
                   // Type de conge selection
                   Text(
-                    'Type de congé / absence',
+                    context.tr('Type de congé / absence', 'Leave type / absence'),
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
                     value: selectedType,
-                    items: const [
-                      DropdownMenuItem(value: 'conge_paye', child: Text('Congé Payé')),
-                      DropdownMenuItem(value: 'maladie', child: Text('Arrêt Maladie')),
-                      DropdownMenuItem(value: 'rtt', child: Text('RTT')),
-                      DropdownMenuItem(value: 'exceptionnel', child: Text('Congé Exceptionnel')),
-                      DropdownMenuItem(value: 'autre', child: Text('Autre Absence')),
+                    items: [
+                      DropdownMenuItem(value: 'conge_paye', child: Text(context.tr('Congé Payé', 'Paid Leave'))),
+                      DropdownMenuItem(value: 'maladie', child: Text(context.tr('Arrêt Maladie', 'Sick Leave'))),
+                      DropdownMenuItem(value: 'rtt', child: Text(context.tr('RTT', 'RTT'))),
+                      DropdownMenuItem(value: 'exceptionnel', child: Text(context.tr('Congé Exceptionnel', 'Special Leave'))),
+                      DropdownMenuItem(value: 'autre', child: Text(context.tr('Autre Absence', 'Other Absence'))),
                     ],
                     onChanged: (val) {
                       setS(() {
@@ -712,7 +717,7 @@ class _CongesPageState extends State<CongesPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Date Début',
+                              context.tr('Date Début', 'Start Date'),
                               style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 6),
@@ -758,7 +763,7 @@ class _CongesPageState extends State<CongesPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Date Fin',
+                                context.tr('Date Fin', 'End Date'),
                                 style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 6),
@@ -808,7 +813,7 @@ class _CongesPageState extends State<CongesPage> {
                         }
                       });
                     },
-                    title: const Text('Demi-journée uniquement'),
+                    title: Text(context.tr('Demi-journée uniquement', 'Half-day only')),
                     contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.trailing,
                     activeColor: Theme.of(context).colorScheme.primary,
@@ -816,15 +821,15 @@ class _CongesPageState extends State<CongesPage> {
                   const SizedBox(height: 16),
                   // Comment
                   Text(
-                    'Commentaire / Motif',
+                    context.tr('Commentaire / Motif', 'Comment / Reason'),
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: commentController,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      hintText: 'Ex: Maladie avec certificat, congés annuels...',
+                    decoration: InputDecoration(
+                      hintText: context.tr('Ex: Maladie avec certificat, congés annuels...', 'e.g. Sick with certificate, annual leave...'),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -849,7 +854,7 @@ class _CongesPageState extends State<CongesPage> {
                             Navigator.pop(context);
                             TopNotificationBanner.show(
                               context,
-                              'Absence modifiée avec succès',
+                              context.tr('Absence modifiée avec succès', 'Absence modified successfully'),
                               isError: false,
                             );
                           }
@@ -857,7 +862,7 @@ class _CongesPageState extends State<CongesPage> {
                           if (context.mounted) {
                             TopNotificationBanner.show(
                               context,
-                              'Erreur: $e',
+                              context.tr('Erreur: $e', 'Error: $e'),
                               isError: true,
                             );
                           }
@@ -869,7 +874,7 @@ class _CongesPageState extends State<CongesPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Enregistrer les modifications'),
+                      child: Text(context.tr('Enregistrer les modifications', 'Save modifications')),
                     ),
                   ),
                 ],
@@ -881,18 +886,18 @@ class _CongesPageState extends State<CongesPage> {
     );
   }
 
-  (String, IconData, Color) _getTypeStyle(String type) {
+  (String, IconData, Color) _getTypeStyle(BuildContext context, String type) {
     switch (type) {
       case 'conge_paye':
-        return ('Congé Payé', Icons.beach_access_outlined, Colors.blue);
+        return (context.trStatic('Congé Payé', 'Paid Leave'), Icons.beach_access_outlined, Colors.blue);
       case 'maladie':
-        return ('Arrêt Maladie', Icons.healing_outlined, Colors.redAccent);
+        return (context.trStatic('Arrêt Maladie', 'Sick Leave'), Icons.healing_outlined, Colors.redAccent);
       case 'rtt':
-        return ('RTT', Icons.timer_outlined, Colors.teal);
+        return (context.trStatic('RTT', 'RTT'), Icons.timer_outlined, Colors.teal);
       case 'exceptionnel':
-        return ('Congé Exceptionnel', Icons.star_outline_rounded, Colors.orange);
+        return (context.trStatic('Congé Exceptionnel', 'Special Leave'), Icons.star_outline_rounded, Colors.orange);
       default:
-        return ('Autre Absence', Icons.more_horiz, Colors.blueGrey);
+        return (context.trStatic('Autre Absence', 'Other Absence'), Icons.more_horiz, Colors.blueGrey);
     }
   }
 }

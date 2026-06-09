@@ -6,6 +6,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/salarie_avatar.dart';
+import '../../core/utils/translation_extension.dart';
 
 class SalariesPage extends StatefulWidget {
   const SalariesPage({super.key});
@@ -60,7 +61,7 @@ class _SalariesPageState extends State<SalariesPage>
                   Icons.refresh_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                tooltip: 'Actualiser',
+                tooltip: context.tr('Actualiser', 'Refresh'),
                 onPressed: () => context.read<AppState>().loadSalaries(),
               ),
             ],
@@ -74,8 +75,8 @@ class _SalariesPageState extends State<SalariesPage>
               unselectedLabelColor: Theme.of(context).colorScheme.outline,
               indicatorColor: Theme.of(context).colorScheme.tertiary,
               tabs: [
-                Tab(text: 'Actifs (${appState.salaries.length})'),
-                Tab(text: 'Archivés (${archives.length})'),
+                Tab(text: context.tr('Actifs (${appState.salaries.length})', 'Active (${appState.salaries.length})')),
+                Tab(text: context.tr('Archivés (${archives.length})', 'Archived (${archives.length})')),
               ],
             ),
           ),
@@ -93,9 +94,8 @@ class _SalariesPageState extends State<SalariesPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-
                             Text(
-                              'Les Salariés',
+                              context.tr('Les Salariés', 'Employees'),
                               style: GoogleFonts.manrope(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
@@ -116,10 +116,10 @@ class _SalariesPageState extends State<SalariesPage>
                         ),
                         child: Row(
                           children: [
-                            _buildViewToggle(Icons.grid_view, 'Block', true),
+                            _buildViewToggle(Icons.grid_view, context.tr('Block', 'Grid'), true),
                             _buildViewToggle(
                               Icons.format_list_bulleted,
-                              'Liste',
+                              context.tr('Liste', 'List'),
                               false,
                             ),
                           ],
@@ -138,7 +138,7 @@ class _SalariesPageState extends State<SalariesPage>
                         color: Theme.of(context).colorScheme.outline,
                         size: 20,
                       ),
-                      hintText: 'Rechercher par nom, poste...',
+                      hintText: context.tr('Rechercher par nom, poste...', 'Search by name, position...'),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
                               icon: Icon(
@@ -178,9 +178,9 @@ class _SalariesPageState extends State<SalariesPage>
         onPressed: () => context.push('/salaries/ajouter'),
         backgroundColor: Theme.of(context).colorScheme.tertiary,
         foregroundColor: Colors.white,
-        icon: Icon(Icons.person_add),
+        icon: const Icon(Icons.person_add),
         label: Text(
-          'Ajouter',
+          context.tr('Ajouter', 'Add'),
           style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
         ),
       ),
@@ -204,7 +204,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Aucun salarié trouvé',
+              context.tr('Aucun salarié trouvé', 'No employee found'),
               style: GoogleFonts.manrope(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -283,7 +283,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 4),
             Text(
-              salarie.emploiPoste ?? 'Salarié',
+              salarie.emploiPoste ?? context.tr('Salarié', 'Employee'),
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -295,7 +295,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 4),
             Text(
-              salarie.description.isNotEmpty ? salarie.description : 'Aucune description',
+              salarie.description.isNotEmpty ? salarie.description : context.tr('Aucune description', 'No description'),
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w400,
@@ -336,7 +336,7 @@ class _SalariesPageState extends State<SalariesPage>
                       color: Colors.orange.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.archive_outlined,
                       size: 16,
                       color: Colors.orange,
@@ -384,7 +384,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Aucun salarié archivé',
+              context.tr('Aucun salarié archivé', 'No archived employees'),
               style: GoogleFonts.manrope(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -463,7 +463,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 4),
             Text(
-              salarie.emploiPoste ?? 'Salarié Archivé',
+              salarie.emploiPoste ?? context.tr('Salarié Archivé', 'Archived Employee'),
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -475,7 +475,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 4),
             Text(
-              salarie.description.isNotEmpty ? salarie.description : 'Aucune description',
+              salarie.description.isNotEmpty ? salarie.description : context.tr('Aucune description', 'No description'),
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w400,
@@ -564,7 +564,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Aucun salarié archivé',
+              context.tr('Aucun salarié archivé', 'No archived employees'),
               style: GoogleFonts.manrope(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -649,7 +649,7 @@ class _SalariesPageState extends State<SalariesPage>
                     '/salaries/modifier/${s.id}?readOnly=false',
                     extra: s,
                   ),
-                  tooltip: 'Modifier',
+                  tooltip: context.tr('Modifier', 'Edit'),
                 ),
                 IconButton(
                   icon: Icon(
@@ -657,7 +657,7 @@ class _SalariesPageState extends State<SalariesPage>
                     color: Theme.of(context).colorScheme.tertiary,
                   ),
                   onPressed: () => appState.desarchiverSalarie(s.id),
-                  tooltip: 'Désarchiver',
+                  tooltip: context.tr('Désarchiver', 'Restore'),
                 ),
                 IconButton(
                   icon: Icon(
@@ -665,7 +665,7 @@ class _SalariesPageState extends State<SalariesPage>
                     color: Theme.of(context).colorScheme.error,
                   ),
                   onPressed: () => _confirmDelete(context, s, appState),
-                  tooltip: 'Supprimer',
+                  tooltip: context.tr('Supprimer', 'Delete'),
                 ),
                 const SizedBox(width: 4),
                 Container(
@@ -680,7 +680,7 @@ class _SalariesPageState extends State<SalariesPage>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Archivé',
+                    context.tr('Archivé', 'Archived'),
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -713,7 +713,7 @@ class _SalariesPageState extends State<SalariesPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Aucun salarié trouvé',
+              context.tr('Aucun salarié trouvé', 'No employee found'),
               style: GoogleFonts.manrope(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -803,7 +803,7 @@ class _SalariesPageState extends State<SalariesPage>
                 ),
                 const SizedBox(width: 12),
                 IconButton(
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.archive_outlined,
                     size: 20,
                     color: Colors.orange,
@@ -888,14 +888,14 @@ class _SalariesPageState extends State<SalariesPage>
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Archiver ${salarie.nomComplet}?',
+          context.tr('Archiver ${salarie.nomComplet}?', 'Archive ${salarie.nomComplet}?'),
           style: GoogleFonts.manrope(
             fontWeight: FontWeight.w700,
             color: Theme.of(context).colorScheme.primary,
           ),
         ),
         content: Text(
-          'Ce salarié sera déplacé dans les archives.',
+          context.tr('Ce salarié sera déplacé dans les archives.', 'This employee will be moved to the archives.'),
           style: GoogleFonts.inter(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -904,7 +904,7 @@ class _SalariesPageState extends State<SalariesPage>
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Annuler',
+              context.tr('Annuler', 'Cancel'),
               style: GoogleFonts.inter(
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -918,7 +918,7 @@ class _SalariesPageState extends State<SalariesPage>
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Archiver'),
+            child: Text(context.tr('Archiver', 'Archive')),
           ),
         ],
       ),
@@ -935,14 +935,14 @@ class _SalariesPageState extends State<SalariesPage>
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Supprimer définitivement ${salarie.nomComplet}?',
+          context.tr('Supprimer définitivement ${salarie.nomComplet}?', 'Permanently delete ${salarie.nomComplet}?'),
           style: GoogleFonts.manrope(
             fontWeight: FontWeight.w700,
             color: Theme.of(context).colorScheme.error,
           ),
         ),
         content: Text(
-          'Cette action est irréversible. Le salarié sera définitivement effacé du système.',
+          context.tr('Cette action est irréversible. Le salarié sera définitivement effacé du système.', 'This action is irreversible. The employee will be permanently deleted from the system.'),
           style: GoogleFonts.inter(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -951,7 +951,7 @@ class _SalariesPageState extends State<SalariesPage>
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Annuler',
+              context.tr('Annuler', 'Cancel'),
               style: GoogleFonts.inter(
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -965,7 +965,7 @@ class _SalariesPageState extends State<SalariesPage>
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+            child: Text(context.tr('Supprimer', 'Delete'), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

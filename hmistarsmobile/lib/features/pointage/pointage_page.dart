@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
+import '../../core/utils/translation_extension.dart';
 import 'widgets/employee_day_list.dart';
 
 class PointagePage extends StatefulWidget {
@@ -58,7 +59,7 @@ class _PointagePageState extends State<PointagePage> {
                   Icons.calendar_month_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                tooltip: 'Choisir mois/année',
+                tooltip: context.tr('Choisir mois/année', 'Choose month/year'),
                 onPressed: () async {
                   final appState = context.read<AppState>();
                   final picked = await _showMonthYearPicker(context, _focusedDay);
@@ -76,7 +77,7 @@ class _PointagePageState extends State<PointagePage> {
                   Icons.beach_access_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                tooltip: 'Gestion des congés',
+                tooltip: context.tr('Gestion des congés', 'Leave management'),
                 onPressed: () => context.go('/conges'),
               ),
               const SizedBox(width: 8),
@@ -98,7 +99,7 @@ class _PointagePageState extends State<PointagePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Pointage',
+                              context.tr('Pointage', 'Attendance'),
                               style: GoogleFonts.manrope(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w800,
@@ -107,7 +108,7 @@ class _PointagePageState extends State<PointagePage> {
                               ),
                             ),
                             Text(
-                              'Gestion des présences journalières',
+                              context.tr('Gestion des présences journalières', 'Daily attendance management'),
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 color: Theme.of(
@@ -129,10 +130,10 @@ class _PointagePageState extends State<PointagePage> {
                         ),
                         child: Row(
                           children: [
-                            _buildViewToggle(Icons.grid_view, 'Block', true),
+                            _buildViewToggle(Icons.grid_view, context.tr('Block', 'Grid'), true),
                             _buildViewToggle(
                               Icons.format_list_bulleted,
-                              'Liste',
+                              context.tr('Liste', 'List'),
                               false,
                             ),
                           ],
@@ -144,11 +145,11 @@ class _PointagePageState extends State<PointagePage> {
                   // Legend
                   Row(
                     children: [
-                      _buildLegend(Colors.green, 'Complet'),
+                      _buildLegend(Colors.green, context.tr('Complet', 'Complete')),
                       const SizedBox(width: 16),
-                      _buildLegend(Colors.orange, 'Incomplet'),
+                      _buildLegend(Colors.orange, context.tr('Incomplet', 'Incomplete')),
                       const SizedBox(width: 16),
-                      _buildLegend(Colors.red, 'Absent'),
+                      _buildLegend(Colors.red, context.tr('Absent', 'Absent')),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -275,7 +276,7 @@ class _PointagePageState extends State<PointagePage> {
           color: Theme.of(context).colorScheme.tertiary,
           shape: BoxShape.circle,
         ),
-        selectedTextStyle: TextStyle(
+        selectedTextStyle: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w800,
         ),
@@ -377,7 +378,7 @@ class _PointagePageState extends State<PointagePage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Aucun jour à afficher pour ce mois',
+                context.tr('Aucun jour à afficher pour ce mois', 'No days to display for this month'),
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -433,7 +434,7 @@ class _PointagePageState extends State<PointagePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _formatDay(day),
+                              _formatDay(context, day),
                               style: GoogleFonts.inter(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
@@ -442,7 +443,7 @@ class _PointagePageState extends State<PointagePage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _statutLabel(statut),
+                              _statutLabel(context, statut),
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 color: color,
@@ -478,33 +479,26 @@ class _PointagePageState extends State<PointagePage> {
     );
   }
 
-  String _formatDay(DateTime day) {
-    const months = [
-      'Jan',
-      'Fév',
-      'Mar',
-      'Avr',
-      'Mai',
-      'Jun',
-      'Jul',
-      'Aoû',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Déc',
-    ];
-    const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  String _formatDay(BuildContext context, DateTime day) {
+    final state = Provider.of<AppState>(context, listen: false);
+    final isEn = state.langue == 'English (EN)';
+    final months = isEn
+        ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        : ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    final weekdays = isEn
+        ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        : ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
     return '${weekdays[day.weekday - 1]} ${day.day} ${months[day.month - 1]} ${day.year}';
   }
 
-  String _statutLabel(StatutJour statut) {
+  String _statutLabel(BuildContext context, StatutJour statut) {
     switch (statut) {
       case StatutJour.complet:
-        return 'Pointage complet';
+        return context.trStatic('Pointage complet', 'Attendance complete');
       case StatutJour.incomplet:
-        return 'Pointage incomplet';
+        return context.trStatic('Pointage incomplet', 'Attendance incomplete');
       case StatutJour.absent:
-        return 'Aucun pointage';
+        return context.trStatic('Aucun pointage', 'No attendance');
     }
   }
 
@@ -519,10 +513,10 @@ class _PointagePageState extends State<PointagePage> {
     final int range = (endYear - startYear + 1).clamp(1, 50);
     
     final List<int> years = List.generate(range, (index) => startYear + index);
-    final List<String> months = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-    ];
+    final isEn = appState.langue == 'English (EN)';
+    final List<String> months = isEn
+        ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        : ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
     return showDialog<DateTime>(
       context: context,
@@ -531,7 +525,7 @@ class _PointagePageState extends State<PointagePage> {
           builder: (context, setStateDialog) {
             final cs = Theme.of(context).colorScheme;
             return AlertDialog(
-              title: const Text('Sélectionner mois / année'),
+              title: Text(context.tr('Sélectionner mois / année', 'Select Month / Year')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -539,7 +533,7 @@ class _PointagePageState extends State<PointagePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Année :', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(context.tr('Année :', 'Year :'), style: const TextStyle(fontWeight: FontWeight.bold)),
                       DropdownButton<int>(
                         value: selectedYear,
                         dropdownColor: cs.surfaceContainerHighest,
@@ -605,7 +599,7 @@ class _PointagePageState extends State<PointagePage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Annuler'),
+                  child: Text(context.tr('Annuler', 'Cancel')),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -615,7 +609,7 @@ class _PointagePageState extends State<PointagePage> {
                     backgroundColor: cs.primary,
                     foregroundColor: cs.onPrimary,
                   ),
-                  child: const Text('OK'),
+                  child: Text(context.tr('OK', 'OK')),
                 ),
               ],
             );
@@ -625,3 +619,4 @@ class _PointagePageState extends State<PointagePage> {
     );
   }
 }
+
