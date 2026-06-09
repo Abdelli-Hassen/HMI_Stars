@@ -6,6 +6,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/top_notification_banner.dart';
+import '../../core/utils/translation_extension.dart';
 
 /// Global helper to show the recipient selector dialog and launch mail client.
 void showTemplateSendDialog(
@@ -26,7 +27,7 @@ void showTemplateSendDialog(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Envoyer: ${template.titre}',
+              '${context.tr('Envoyer', 'Send')}: ${template.titre}',
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
@@ -34,7 +35,7 @@ void showTemplateSendDialog(
               ),
             ),
             Text(
-              'Sélectionnez les destinataires',
+              context.tr('Sélectionnez les destinataires', 'Select recipients'),
               style: GoogleFonts.inter(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -82,7 +83,7 @@ void showTemplateSendDialog(
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Annuler',
+              context.tr('Annuler', 'Cancel'),
               style: GoogleFonts.inter(
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -101,7 +102,10 @@ void showTemplateSendDialog(
                     if (emails.isEmpty) {
                       TopNotificationBanner.show(
                         context,
-                        'Aucun salarié sélectionné n\'a d\'adresse e-mail.',
+                        context.tr(
+                          'Aucun salarié sélectionné n\'a d\'adresse e-mail.',
+                          'No selected employee has an email address.',
+                        ),
                         isError: true,
                       );
                       return;
@@ -127,12 +131,15 @@ void showTemplateSendDialog(
                     } catch (e) {
                       TopNotificationBanner.show(
                         context,
-                        'Erreur lors de l\'envoi de l\'e-mail : $e',
+                        context.tr(
+                          'Erreur lors de l\'envoi de l\'e-mail : $e',
+                          'Error sending email: $e',
+                        ),
                         isError: true,
                       );
                     }
                   },
-            child: Text('Envoyer (${selected.length})'),
+            child: Text('${context.tr('Envoyer', 'Send')} (${selected.length})'),
           ),
         ],
       ),
@@ -170,7 +177,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Avertissements',
+                          context.tr('Avertissements', 'Warnings'),
                           style: GoogleFonts.manrope(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
@@ -180,7 +187,10 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Lettres prédéfinies modifiables. Sélectionnez les destinataires avant l\'envoi.',
+                          context.tr(
+                            'Lettres prédéfinies modifiables. Sélectionnez les destinataires avant l\'envoi.',
+                            'Predefined editable letters. Select recipients before sending.',
+                          ),
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -190,7 +200,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                         _buildCategoryListItem(
                           context: context,
                           type: TypeAvertissement.ficheAvertissement,
-                          title: 'Avertissements',
+                          title: context.tr('Avertissements', 'Warnings'),
                           icon: Icons.warning_amber_rounded,
                           color: Colors.orange,
                           templatesCount: templates.where((t) => t.type == TypeAvertissement.ficheAvertissement).length,
@@ -198,7 +208,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                         _buildCategoryListItem(
                           context: context,
                           type: TypeAvertissement.convocation,
-                          title: 'Convocations',
+                          title: context.tr('Convocations', 'Convocations'),
                           icon: Icons.event_note_rounded,
                           color: Theme.of(context).colorScheme.primary,
                           templatesCount: templates.where((t) => t.type == TypeAvertissement.convocation).length,
@@ -206,7 +216,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                         _buildCategoryListItem(
                           context: context,
                           type: TypeAvertissement.information,
-                          title: 'Informations',
+                          title: context.tr('Informations', 'Information'),
                           icon: Icons.info_outline_rounded,
                           color: Colors.blue,
                           templatesCount: templates.where((t) => t.type == TypeAvertissement.information).length,
@@ -235,7 +245,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Catégories',
+                                  context.tr('Catégories', 'Categories'),
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -251,7 +261,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              _getCategoryTitle(_activeCategory!),
+                              _getCategoryTitle(context, _activeCategory!),
                               style: GoogleFonts.manrope(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
@@ -295,7 +305,10 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                             ),
                             child: Center(
                               child: Text(
-                                'Aucun modèle disponible dans cette catégorie.',
+                                context.tr(
+                                  'Aucun modèle disponible dans cette catégorie.',
+                                  'No template available in this category.',
+                                ),
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -375,7 +388,14 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '$templatesCount modèle${templatesCount > 1 ? "s" : ""} disponible${templatesCount > 1 ? "s" : ""}',
+                    templatesCount == 0
+                        ? context.tr('Aucun modèle disponible', 'No template available')
+                        : templatesCount == 1
+                            ? context.tr('1 modèle disponible', '1 template available')
+                            : context.tr(
+                                '$templatesCount modèles disponibles',
+                                '$templatesCount templates available',
+                              ),
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -395,14 +415,14 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
     );
   }
 
-  String _getCategoryTitle(TypeAvertissement type) {
+  String _getCategoryTitle(BuildContext context, TypeAvertissement type) {
     switch (type) {
       case TypeAvertissement.ficheAvertissement:
-        return 'Avertissements';
+        return context.tr('Avertissements', 'Warnings');
       case TypeAvertissement.convocation:
-        return 'Convocations';
+        return context.tr('Convocations', 'Convocations');
       case TypeAvertissement.information:
-        return 'Informations';
+        return context.tr('Informations', 'Information');
     }
   }
 
@@ -458,7 +478,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _typeLabel(template.type),
+                    _typeLabel(context, template.type),
                     style: GoogleFonts.inter(
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
@@ -483,17 +503,20 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Confirmer la suppression'),
-                    content: Text('Voulez-vous vraiment supprimer le modèle "${template.titre}" ?'),
+                    title: Text(context.tr('Confirmer la suppression', 'Confirm deletion')),
+                    content: Text(context.tr(
+                      'Voulez-vous vraiment supprimer le modèle "${template.titre}" ?',
+                      'Do you really want to delete the template "${template.titre}"?',
+                    )),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Annuler'),
+                        child: Text(context.tr('Annuler', 'Cancel')),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, true),
                         style: TextButton.styleFrom(foregroundColor: Colors.red),
-                        child: const Text('Supprimer'),
+                        child: Text(context.tr('Supprimer', 'Delete')),
                       ),
                     ],
                   ),
@@ -503,7 +526,7 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
                   if (context.mounted) {
                     TopNotificationBanner.show(
                       context,
-                      'Modèle supprimé avec succès.',
+                      context.tr('Modèle supprimé avec succès.', 'Template deleted successfully.'),
                       isError: false,
                     );
                   }
@@ -539,14 +562,14 @@ class _AvertissementsPageState extends State<AvertissementsPage> {
     }
   }
 
-  String _typeLabel(TypeAvertissement type) {
+  String _typeLabel(BuildContext context, TypeAvertissement type) {
     switch (type) {
       case TypeAvertissement.ficheAvertissement:
-        return 'AVERTISSEMENT';
+        return context.tr('AVERTISSEMENT', 'WARNING');
       case TypeAvertissement.convocation:
-        return 'CONVOCATION';
+        return context.tr('CONVOCATION', 'CONVOCATION');
       case TypeAvertissement.information:
-        return 'INFORMATION';
+        return context.tr('INFORMATION', 'INFORMATION');
     }
   }
 }
@@ -621,7 +644,10 @@ class TemplateDetailPage extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () => showTemplateSendDialog(context, latestTemplate, appState),
                 icon: const Icon(Icons.send),
-                label: const Text('Sélectionner les destinataires & Envoyer'),
+                label: Text(context.tr(
+                  'Sélectionner les destinataires & Envoyer',
+                  'Select recipients & Send',
+                )),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -677,7 +703,9 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isEditing ? 'Modifier le modèle' : 'Nouveau modèle',
+          isEditing
+              ? context.tr('Modifier le modèle', 'Edit template')
+              : context.tr('Nouveau modèle', 'New template'),
           style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
         ),
       ),
@@ -689,10 +717,13 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
             children: [
               TextField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Titre du modèle',
-                  hintText: 'Ex: Avertissement pour insubordination',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.tr('Titre du modèle', 'Template title'),
+                  hintText: context.tr(
+                    'Ex: Avertissement pour insubordination',
+                    'E.g., Warning for insubordination',
+                  ),
+                  border: const OutlineInputBorder(),
                 ),
                 style: GoogleFonts.manrope(fontWeight: FontWeight.w600),
               ),
@@ -703,10 +734,13 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
                   maxLines: null,
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
-                  decoration: const InputDecoration(
-                    labelText: 'Contenu de la lettre',
-                    hintText: 'Saisissez le texte prédéfini ici...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.tr('Contenu de la lettre', 'Letter content'),
+                    hintText: context.tr(
+                      'Saisissez le texte prédéfini ici...',
+                      'Enter the predefined text here...',
+                    ),
+                    border: const OutlineInputBorder(),
                     alignLabelWithHint: true,
                   ),
                   style: GoogleFonts.inter(),
@@ -727,7 +761,7 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('Enregistrer'),
+                    : Text(context.tr('Enregistrer', 'Save')),
               ),
             ],
           ),
@@ -743,7 +777,10 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
     if (title.isEmpty || content.isEmpty) {
       TopNotificationBanner.show(
         context,
-        'Veuillez remplir le titre et le contenu.',
+        context.tr(
+          'Veuillez remplir le titre et le contenu.',
+          'Please fill in the title and content.',
+        ),
         isError: true,
       );
       return;
@@ -774,7 +811,7 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
         Navigator.pop(context);
         TopNotificationBanner.show(
           context,
-          'Modèle enregistré avec succès.',
+          context.tr('Modèle enregistré avec succès.', 'Template saved successfully.'),
           isError: false,
         );
       }
@@ -784,7 +821,10 @@ class _TemplateEditCreatePageState extends State<TemplateEditCreatePage> {
       });
       TopNotificationBanner.show(
         context,
-        'Erreur lors de l\'enregistrement : $e',
+        context.tr(
+          'Erreur lors de l\'enregistrement : $e',
+          'Error saving template: $e',
+        ),
         isError: true,
       );
     }
