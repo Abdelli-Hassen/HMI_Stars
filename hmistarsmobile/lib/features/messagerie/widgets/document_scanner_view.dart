@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
 import 'package:printing/printing.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_document_scanner/flutter_document_scanner.dart';
 import '../../../core/widgets/top_notification_banner.dart';
 import '../../../core/utils/translation_extension.dart';
@@ -31,10 +32,14 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _scannerController.currentPage.listen((AppPages page) {
       if (mounted) {
         setState(() {
           _imageSelected = page != AppPages.takePhoto;
+          if (page == AppPages.cropPhoto || page == AppPages.editDocument) {
+            _isProcessing = false;
+          }
         });
       }
     });
@@ -45,7 +50,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
         if (status == AppStatus.loading) {
           setState(() {
             _isProcessing = true;
-            _processingMessage = 'Détection des contours...';
+            _processingMessage = context.trStatic('Détection des contours...', 'Detecting contours...');
           });
         } else if (status == AppStatus.success || status == AppStatus.failure) {
           setState(() => _isProcessing = false);
@@ -59,7 +64,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
         if (status == AppStatus.loading) {
           setState(() {
             _isProcessing = true;
-            _processingMessage = 'Recadrage en cours...';
+            _processingMessage = context.trStatic('Recadrage en cours...', 'Cropping document...');
           });
         } else if (status == AppStatus.success || status == AppStatus.failure) {
           setState(() => _isProcessing = false);
@@ -73,7 +78,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
         if (status == AppStatus.loading) {
           setState(() {
             _isProcessing = true;
-            _processingMessage = 'Application du filtre...';
+            _processingMessage = context.trStatic('Application du filtre...', 'Applying filter...');
           });
         } else if (status == AppStatus.success || status == AppStatus.failure) {
           setState(() => _isProcessing = false);
@@ -87,7 +92,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
         if (status == AppStatus.loading) {
           setState(() {
             _isProcessing = true;
-            _processingMessage = 'Création du PDF...';
+            _processingMessage = context.trStatic('Création du PDF...', 'Creating PDF...');
           });
         } else if (status == AppStatus.success || status == AppStatus.failure) {
           setState(() => _isProcessing = false);
@@ -98,6 +103,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
 
   @override
   void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _scannerController.dispose();
     super.dispose();
   }
@@ -107,13 +113,15 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: source,
-        imageQuality: 100,
+        maxWidth: 1200,
+        maxHeight: 1600,
+        imageQuality: 85,
       );
 
       if (pickedFile != null) {
         setState(() {
           _isProcessing = true;
-          _processingMessage = 'Détection des contours...';
+          _processingMessage = context.trStatic('Détection des contours...', 'Detecting contours...');
         });
 
         // This fires the bloc event and returns immediately
@@ -139,7 +147,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
   Future<void> _processCroppedImage(Uint8List croppedBytes) async {
     setState(() {
       _isProcessing = true;
-      _processingMessage = 'Amélioration du document...';
+      _processingMessage = context.trStatic('Amélioration du document...', 'Enhancing document...');
     });
 
     try {
@@ -147,7 +155,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       final enhancedBytes = await compute(_enhanceImageIsolate, croppedBytes);
 
       if (!mounted) return;
-      setState(() => _processingMessage = 'Génération du PDF...');
+      setState(() => _processingMessage = context.trStatic('Génération du PDF...', 'Generating PDF...'));
 
       // Build PDF on main thread (pdf.save() is async)
       final pdfBytes = await _buildPdfFromEnhanced(enhancedBytes);
@@ -331,22 +339,22 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        title: Text(context.tr('Scanner un document', 'Scan a document')),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 24),
-          onPressed: () {
-            if (_imageSelected) {
-              _scannerController.changePage(AppPages.takePhoto);
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-      ),
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      appBar: !_imageSelected
+          ? AppBar(
+              title: Text(context.tr('Scanner un document', 'Scan a document')),
+              backgroundColor: Colors.black.withOpacity(0.6),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 24),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            )
+          : null,
       body: Stack(
         children: [
           DocumentScanner(
@@ -405,26 +413,13 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
               ),
             ),
             cropPhotoDocumentStyle: CropPhotoDocumentStyle(
-              textButtonSave: 'Étape suivante',
+              textButtonSave: context.tr('Étape suivante', 'Next step'),
               colorBorderArea: Colors.greenAccent,
               widthBorderArea: 3.5,
               dotSize: 28,
-              // Give the crop area proper insets so the image fills the area
-              // and the scaling factor matches between screen and image coordinates
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              // Use a larger default area so auto-detection covers more of the image
-              defaultAreaInitial: const Area(
-                topLeft: Point(20, 20),
-                topRight: Point(360, 20),
-                bottomLeft: Point(20, 600),
-                bottomRight: Point(360, 600),
-              ),
             ),
-            editPhotoDocumentStyle: const EditPhotoDocumentStyle(
-              textButtonSave: 'Créer le PDF',
+            editPhotoDocumentStyle: EditPhotoDocumentStyle(
+              textButtonSave: context.tr('Créer le PDF', 'Create PDF'),
             ),
             onSave: (Uint8List imageBytes) {
               _processCroppedImage(imageBytes);

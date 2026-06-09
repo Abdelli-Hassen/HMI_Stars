@@ -410,6 +410,12 @@ All tables have RLS enabled. Clients are restricted to row selections containing
 * **Imperative "RAPPELS" Center**: The dashboard utilizes a fixed Action Center emphasizing direct, commanding descriptions that order the user to act (e.g., "Effectuez le pointage maintenant !").
 * **Gold-Brown Brand Theming**: The Action Center is styled heavily with the application's signature gold-brown accent (`tertiary` color token). This ensures critical actions—like resolving undefined absences or sending warning templates—are prominently highlighted while maintaining strict adherence to the brand's premium Material 3 theme.
 
+### 7. Document Scanner View & Native Image Optimizations
+* **Native Downscaling Constraint**: Configured `ImagePicker` to downscale picked image files natively to `maxWidth: 1200`, `maxHeight: 1600`, and `imageQuality: 85`. This prevents high-resolution camera images from causing Application Not Responding (ANR) states and makes the OpenCV contour/border detection process execute in under a second.
+* **Immersive Mode & Crop Alignment**: Configured the scanner view to set `SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)` in `initState`, restoring it to `SystemUiMode.edgeToEdge` in `dispose`. Toggling this hides status and navigation bars, making the Scaffold body size match `MediaQuery.of(context).size` exactly and resolving the y-axis scaling mismatch that cropped off the bottom of documents.
+* **Bilingual Localization & Action Styling**: Translated all action buttons and status loaders (e.g. "Étape suivante" / "Next step", "Créer le PDF" / "Create PDF", "Détection des contours..." / "Detecting contours...") reactively using the `context.tr` and `context.trStatic` extensions.
+* **Synchronized Loading State Manager**: Integrated a responsive loading overlay driven by state streams (`currentPage`, `statusTakePhotoPage`, etc.) that automatically displays specific localized messages and dismisses itself immediately when the page transitions to cropPhoto or editDocument.
+
 ---
 
 ## 9. Security & Notification Architecture (OTP, Settings Reauthentication & Bilingual Emails)
