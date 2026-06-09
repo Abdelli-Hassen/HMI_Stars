@@ -63,6 +63,12 @@ UC-05: Real-time Chat & High & High & Iteration 3 \\
 \hline
 UC-06: Upload Documents & High & Low & Iteration 3 \\
 \hline
+UC-07: Manage Warnings \& Templates & Medium & Medium & Iteration 4 \\
+\hline
+UC-08: Settings \& Personalization & Low & Low & Iteration 4 \\
+\hline
+UC-09: Document Scanner & Medium & High & Iteration 4 \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -115,6 +121,16 @@ Figure \ref{fig:sequence_chat_design} illustrates the instant communication sequ
     \includegraphics[width=1\textwidth]{diagrams/chat_sequence_diagram.png}
     \caption{Sequence Diagram - Real-Time Message Sync Flow}
     \label{fig:sequence_chat_design}
+\end{figure}
+
+\subsubsection{Dual-OTP Email Modification Sequence}
+To secure client manager accounts from unauthorized takeover during email updates, a dual-OTP verification sequence is executed. Figure \ref{fig:sequence_dual_otp} details this flow, showing how both the old and new email addresses must be verified sequentially using native in-app OTP entry.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/otp_sequence_diagram.png}
+    \caption{Sequence Diagram - Dual-OTP Email Modification Flow}
+    \label{fig:sequence_dual_otp}
 \end{figure}
 
 \subsection{Architectural Design}

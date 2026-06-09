@@ -46,6 +46,20 @@ WEB-06 & Analytical Business Dashboard & Web Dashboard & Complete \\
 \hline
 WEB-07 & Multilingual Support \& Role-Based Access Controls & Multilingual translation framework (FR/EN) & Complete \\
 \hline
+MOB-06 & Employee Directory Management (CRUD) & Employee Grid/List views, Profile, Edit, Archive & Complete \\
+\hline
+MOB-07 & Disciplinary Warnings \& Templates & Warning categories, template editor, email dispatch & Complete \\
+\hline
+MOB-08 & Settings \& Personalization (Theme, Language) & Settings screen with dark/light mode, FR/EN toggle & Complete \\
+\hline
+MOB-09 & Interactive Document Scanner & Camera-based scanner with perspective cropping & Complete \\
+\hline
+WEB-08 & Employee Attendance Export & Export dialog with month/year selection & Complete \\
+\hline
+WEB-09 & Notes \& Reminders System & Notes panel with reminder flags per company & Complete \\
+\hline
+WEB-10 & Employee Archives Management & Archived employees tab for departed staff & Complete \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -161,6 +175,85 @@ The communication interface integrates real-time chat and document sharing. clie
     \label{fig:mobile_chat}
 \end{figure}
 
+Beyond the basic chat-embedded document view, the application includes a dedicated document management panel. As shown in Figure \ref{fig:mobile_docs_panel}, this panel provides advanced filtering and categorization capabilities. Documents are organized by type (Suppliers, Bank Statements, Revenue, etc.) and by direction (Sent or Received), enabling managers to quickly locate specific files.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\textwidth]{project_images/App_light_and_english/flutter_15.png}
+    \caption{Mobile Application - Advanced Document Management Panel with Category Filters}
+    \label{fig:mobile_docs_panel}
+\end{figure}
+
+The employee management module allows company managers to view, add, edit, and archive employees directly from the mobile application. As shown in Figure \ref{fig:mobile_employees}, the employee directory supports both grid and list view modes with a search function. Managers can toggle between active and archived employees using dedicated tabs, and add new employees through a registration form.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_20.png}
+        \caption{Employees Grid View}
+        \label{fig:m_emp_grid}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_25.png}
+        \caption{Employees List View}
+        \label{fig:m_emp_list_view}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_24.png}
+        \caption{New Employee Form}
+        \label{fig:m_new_emp}
+    \end{subfigure}
+    \caption{Mobile Application - Employee Management Module}
+    \label{fig:mobile_employees}
+\end{figure}
+
+Each employee card provides quick action buttons for editing, archiving, or deleting the record. Tapping on a card opens the full employee profile, which displays personal information, identity data, and social security details. The edit mode allows managers to update any field and change the employee photo, as illustrated in Figure \ref{fig:mobile_emp_profile}.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_21.png}
+        \caption{Employee Profile View}
+        \label{fig:m_emp_view}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_22.png}
+        \caption{Employee Edit Mode}
+        \label{fig:m_emp_edit}
+    \end{subfigure}
+    \caption{Mobile Application - Employee Profile and Edit Interfaces}
+    \label{fig:mobile_emp_profile}
+\end{figure}
+
+The settings screen provides company profile management and application personalization options. As displayed in Figure \ref{fig:mobile_settings}, managers can update their company logo, toggle between light and dark themes, switch the interface language between French and English, and edit company general and legal information such as the SIREN, SIRET, and APE codes.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_26.png}
+        \caption{Settings - Appearance and Language}
+        \label{fig:m_settings_top}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_27.png}
+        \caption{Settings - Company Information}
+        \label{fig:m_settings_bottom}
+    \end{subfigure}
+    \caption{Mobile Application - Settings and Company Profile Management}
+    \label{fig:mobile_settings}
+\end{figure}
+
 \subsubsection{Web Application Interfaces}
 The web application allows HMI Stars managers and administrative staff to manage client companies, monitor employee data, review documents, and communicate with clients in real-time.
 
@@ -227,6 +320,72 @@ Alongside chat, the shared file archive panel provides a central space for docum
     \label{fig:w_docs}
 \end{figure}
 
+For adding new employees to a client company, the platform provides a comprehensive registration form. As shown in Figure \ref{fig:w_add_emp}, this form collects identity, contact, contractual, and attachment data in a structured layout, with mandatory field validation and support for uploading scanned documents (ID, health card, proof of address, signed contract).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_08.png}
+    \caption{Web Platform - New Employee Registration Form}
+    \label{fig:w_add_emp}
+\end{figure}
+
+To access individual employee records, managers click on an employee row to open a detailed information dialog. As illustrated in Figure \ref{fig:w_emp_detail}, this dialog presents the employee's civil status, identity numbers, contact information, and employment details in a clean, scrollable view with an edit option.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_09.png}
+    \caption{Web Platform - Employee Details Dialog}
+    \label{fig:w_emp_detail}
+\end{figure}
+
+The platform also supports exporting individual employee attendance records. As shown in Figure \ref{fig:w_export}, managers can select a specific month and year to generate an attendance report for download, enabling external payroll processing and administrative follow-up.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_10.png}
+    \caption{Web Platform - Employee Attendance Export Dialog}
+    \label{fig:w_export}
+\end{figure}
+
+To manage departing or inactive employees, the company workspace includes an Employee Archives tab. As displayed in Figure \ref{fig:w_archives}, this view lists all employees who have left the company, retaining their records for administrative traceability and compliance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_11.png}
+    \caption{Web Platform - Archived Employees List}
+    \label{fig:w_archives}
+\end{figure}
+
+The web platform mirrors the mobile application's warning system with a dedicated Warnings tab. As shown in Figure \ref{fig:w_warnings}, managers can browse warning categories (Warnings, Summons, Information), view available templates, and issue formal letters directly from the company workspace.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_12.png}
+    \caption{Web Platform - Warnings and Templates Categories}
+    \label{fig:w_warnings}
+\end{figure}
+
+Finally, the Notes and Reminders feature allows consultants to attach internal notes to any client company. As illustrated in Figure \ref{fig:w_notes}, each note includes a title, content, and an optional reminder flag. Notes marked as reminders appear on the dashboard, helping managers keep track of pending actions and important deadlines.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_13.png}
+        \caption{Notes and Reminders List}
+        \label{fig:w_notes_list}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_14.png}
+        \caption{Add Note Dialog}
+        \label{fig:w_notes_add}
+    \end{subfigure}
+    \caption{Web Platform - Notes and Reminders Management}
+    \label{fig:w_notes}
+\end{figure}
+
 \subsubsection{Advanced Security and Authentication Workflows}
 To provide a secure and user-friendly experience, we updated the authentication system by replacing traditional email magic links with a native, in-app 6-digit One-Time Password (OTP) verification flow. When a client manager registers or tries to log in with an unconfirmed email, the system catches the exception and prompts them with a verification screen to input their OTP. Similarly, during password recovery, the user enters their email, receives a code, verifies it in-app, and resets their password without encountering browser redirection loops. 
 
@@ -234,10 +393,47 @@ Additionally, we added strict security checks on the profile settings page. Befo
 
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=1\textwidth]{capture_application/otp_security_flow.png}
-    \caption{Bilingual OTP Verification and Profile Reauthentication Interfaces (Space reserved for figure)}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_02_1.png}
+        \caption{Verification / OTP Screen}
+        \label{fig:m_otp_verification}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_26.png}
+        \caption{Reauthentication Settings}
+        \label{fig:m_reauth_settings}
+    \end{subfigure}
+    \caption{Bilingual OTP Verification and Profile Reauthentication Interfaces}
     \label{fig:otp_security_flow}
 \end{figure}
+
+\subsubsection{Bilingual Email Templates and Multi-Channel Notification Subsystem}
+To guarantee a professional and cohesive user experience, we customized the automated email notification templates dispatched by the Supabase authentication service. Rather than sending plain, default system emails, we designed premium responsive HTML email templates. As specified in the database and security configurations, these templates feature a unified layout with French copy at the top and English copy below, ensuring full bilingual support. Structurally, the emails are styled using clean HTML/CSS containing a corporate header, the HMI Stars logo, and distinct card components highlighted with the signature gold-brown accent (\#b4975a). This includes:
+\begin{itemize}
+    \item \textbf{Confirm Sign Up}: Delivers the 6-digit registration confirmation OTP with the subject \textit{Confirmez votre inscription | Confirm Sign Up}.
+    \item \textbf{Reset Password}: Dispatches recovery OTPs with the subject \textit{Réinitialisation de votre mot de passe | Reset Password}.
+    \item \textbf{Email Change Confirmation}: Drives the dual-OTP verification steps with the subject \textit{Confirmez le changement d'email | Confirm Email Change}.
+    \item \textbf{Security Notifications}: Dispatches instant notices confirming completed modifications to passwords or emails. Additionally, phone number changes trigger an immediate notification email containing both old and new numbers to maintain an audit trail.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.85\textwidth]{project_images/App_light_and_english/supabase_email_template.png}
+    \caption{Customized Supabase HTML Email Templates (Space reserved for figure)}
+    \label{fig:supabase_email_templates}
+\end{figure}
+
+
+Complementing the email alerts, we implemented a dual-mode notification architecture for in-app events:
+\begin{itemize}
+    \item \textbf{FCM Push Notifications}: Real-time push alerts are routed via Firebase Cloud Messaging (FCM). When administrative updates are triggered, the server resolves the device token stored in the database (\texttt{entreprises.jeton\_notification}) to deliver background notification packets
+    instantly.
+    \item \textbf{Gold-Themed Toast Notification Engine}: For foreground user feedback, the interface features a custom toast notification manager (\texttt{ToastUtils.show}). Positioned non-intrusively in the bottom-right corner of the desktop viewport, it displays state changes (such as database sync confirmations or validation errors) using a floating card styled with a solid gold border and a smooth bounce slide-in animation driven by a cubic bezier curve (\textit{Curves.easeOutBack}).
+\end{itemize}
+
 
 \subsubsection{Interactive Document Scanner Subsystem}
 To make document uploads easier, we integrated an interactive mobile document scanner. This tool allows client managers to snap photos of physical paper records (such as receipts, tax declarations, or KBIS extracts) and crop them using a boundary-detection overlay. 
@@ -246,8 +442,8 @@ To prevent high-resolution photos from causing performance lags or Application N
 
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=1\textwidth]{capture_application/document_scanner_view.png}
-    \caption{Mobile Document Scanner View and Perspective Cropping Interface (Space reserved for figure)}
+    \includegraphics[width=0.45\textwidth]{project_images/App_light_and_english/flutter_23.png}
+    \caption{Mobile Document Scanner View and Perspective Cropping Interface}
     \label{fig:document_scanner_view}
 \end{figure}
 
@@ -258,8 +454,27 @@ The templates are stored in a Supabase table, letting administrators update lega
 
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=1\textwidth]{capture_application/warnings_templates.png}
-    \caption{Warning Categories Selectors and Templates Creator Workspace (Space reserved for figure)}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_16.png}
+        \caption{Warning Categories}
+        \label{fig:warn_cats}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_17.png}
+        \caption{Templates List}
+        \label{fig:warn_list}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_19.png}
+        \caption{Letter Viewer}
+        \label{fig:warn_viewer}
+    \end{subfigure}
+    \caption{Warning Categories, Templates List, and Letter Viewer Interfaces}
     \label{fig:warnings_templates}
 \end{figure}
 
@@ -270,8 +485,20 @@ To draw attention to specific alerts, the dashboard shows the closest three appr
 
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=1\textwidth]{capture_application/dashboard_highlights.png}
-    \caption{Command-Driven Dashboard and Alert Highlighting Cards (Space reserved for figure)}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_03.png}
+        \caption{Dashboard Overview}
+        \label{fig:m_dashboard_overview}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_03_1.png}
+        \caption{Alert Highlighting}
+        \label{fig:m_alert_highlight}
+    \end{subfigure}
+    \caption{Command-Driven Dashboard and Alert Highlighting Cards}
     \label{fig:dashboard_highlights}
 \end{figure}
 
@@ -283,6 +510,6 @@ The utility of the system was evaluated by five staff members of HMI Stars Consu
 A usability evaluation was conducted with client gérants. The average system response time for real-time messages was clocked at under 450ms. Using the Path URL routing strategy and Supabase implicit auth flow resolved the login redirect loop on web browsers, ensuring a smooth password reset process.
 
 \section{Conclusion}
-The testing and evaluation phases confirmed that the HMI Stars system is stable, secure, and meets all initial project requirements. The transition phase successfully configured and launched the components within their designated execution environments.
+The testing and evaluation phases confirmed that the HMI Stars ecosystem is stable, secure, and fully meets all initial project requirements. The mobile application successfully delivers employee management, attendance tracking, leave requests, real-time messaging, document sharing with scanning capabilities, and disciplinary warning templates. The web platform provides a comprehensive administration workspace with company management, employee registries, document archives, warning systems, notes and reminders, and attendance export capabilities. Both components support bilingual interfaces (French and English) and adaptive themes (light and dark), ensuring accessibility and comfort for all users. The transition phase successfully configured and launched all components within their designated execution environments, confirming readiness for production deployment.
 
 
