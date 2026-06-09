@@ -453,7 +453,7 @@ class _AddSalariePageState extends State<AddSalariePage> {
                 ),
                 _buildTextField(_lieuNaissanceController, context.tr('Lieu de Naissance', 'Place of Birth')),
                 _buildTextField(_nationaliteController, context.tr('Nationalité', 'Nationality')),
-                _buildTextField(_cinController, context.tr('CIN (Carte d\'Identité)', 'ID Number')),
+                _buildTextField(_cinController, context.tr('CIN (Carte d\'Identité)', 'National Identity Card Number')),
               ]),
               const SizedBox(height: 20),
               _buildSection(context.tr('Coordonnées', 'Contact Details'), [
