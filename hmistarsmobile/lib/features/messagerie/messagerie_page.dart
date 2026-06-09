@@ -11,6 +11,7 @@ import 'widgets/document_type_picker.dart';
 import 'widgets/company_info_sheet.dart';
 import 'widgets/documents_sheet.dart';
 import 'widgets/document_scanner_view.dart';
+import 'widgets/photo_enhance_view.dart';
 import '../../core/widgets/top_notification_banner.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/utils/translation_extension.dart';
@@ -172,10 +173,22 @@ class _MessageriePageState extends State<MessageriePage> {
     if (option == 'photo') {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(source: ImageSource.camera);
-      if (pickedFile != null) {
-        await _promptDocumentType(
-          filename: pickedFile.name,
-          path: pickedFile.path,
+      if (pickedFile != null && mounted) {
+        // Route through PhotoEnhanceView so user can apply filters before sending
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PhotoEnhanceView(
+              imagePath: pickedFile.path,
+              onPhotoConfirmed: (finalPath) async {
+                Navigator.pop(context);
+                await _promptDocumentType(
+                  filename: finalPath.split('/').last,
+                  path: finalPath,
+                );
+              },
+            ),
+          ),
         );
       }
     } else if (option == 'scan') {

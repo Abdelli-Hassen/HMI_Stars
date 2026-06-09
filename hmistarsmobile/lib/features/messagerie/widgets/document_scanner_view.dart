@@ -7,6 +7,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../../../core/widgets/top_notification_banner.dart';
 import '../../../core/utils/translation_extension.dart';
 
@@ -24,9 +25,9 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
   Uint8List? _originalImageBytes;
   Uint8List? _processedImageBytes;
   bool _isProcessing = false;
-  int _visualRotationTurns = 0; // 0 = 0°, 1 = 90° CW, 2 = 180°, 3 = 270° CW (90° CCW)
-  String _activeFilter = 'original'; // 'original', 'bw', 'enhanced'
-  
+  int _visualRotationTurns = 0;
+  String _activeFilter = 'original';
+
   // Cache processed results by filter type
   final Map<String, Uint8List> _processedCache = {};
 
@@ -40,7 +41,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: source,
-        imageQuality: 90, // Keep high quality
+        imageQuality: 95,
       );
 
       if (pickedFile != null) {
@@ -52,9 +53,8 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
           _processedImageBytes = bytes;
           _visualRotationTurns = 0;
           _activeFilter = 'original';
-          _processedCache.clear(); // Clear cache when a new image is picked
-          // Seed the cache with the original image
-          _processedCache["original"] = bytes;
+          _processedCache.clear();
+          _processedCache['original'] = bytes;
         });
       }
     } catch (e) {
@@ -76,7 +76,6 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
     img.Image? image = img.decodeImage(bytes);
     if (image == null) return bytes;
 
-    // Apply filter
     if (filter == 'bw') {
       img.grayscale(image);
       // CamScanner-style background removal and thresholding
@@ -96,7 +95,6 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
               pixel.g = 0;
               pixel.b = 0;
             } else {
-              // Smooth contrast stretch for clean text scanning
               final val = ((l - 80) / 60.0 * 255.0).round().clamp(0, 255);
               pixel.r = val;
               pixel.g = val;
@@ -106,15 +104,13 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
         }
       }
     } else if (filter == 'enhanced') {
-      // Color Scan / Magic Color
       img.contrast(image, contrast: 125);
       img.adjustColor(image, saturation: 1.25);
     }
 
-    return Uint8List.fromList(img.encodeJpg(image, quality: 85));
+    return Uint8List.fromList(img.encodeJpg(image, quality: 90));
   }
 
-  // Heavy final rotation logic applied only right before saving/compiling to PDF
   static Uint8List _applyFinalRotation(Map<String, dynamic> params) {
     final Uint8List bytes = params['bytes'];
     final int turns = params['turns'];
@@ -122,7 +118,6 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
     img.Image? image = img.decodeImage(bytes);
     if (image == null) return bytes;
 
-    // Apply rotation
     if (turns == 1) {
       image = img.copyRotate(image, angle: 90);
     } else if (turns == 2) {
@@ -131,12 +126,12 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       image = img.copyRotate(image, angle: 270);
     }
 
-    return Uint8List.fromList(img.encodeJpg(image, quality: 85));
+    return Uint8List.fromList(img.encodeJpg(image, quality: 90));
   }
 
   Future<void> _processImage() async {
     if (_originalImageBytes == null) return;
-    
+
     final cacheKey = _activeFilter;
     if (_processedCache.containsKey(cacheKey)) {
       setState(() {
@@ -154,17 +149,14 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       });
 
       _processedCache[cacheKey] = processed;
-      setState(() {
-        _processedImageBytes = processed;
-      });
+      if (mounted) setState(() => _processedImageBytes = processed);
     } catch (e) {
       debugPrint('Error processing image: $e');
     } finally {
-      setState(() => _isProcessing = false);
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
-  // Visual rotations: instantaneous, no recalculations/processing
   void _rotateLeft() {
     setState(() {
       _visualRotationTurns = (_visualRotationTurns - 1) % 4;
@@ -178,18 +170,17 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
   }
 
   void _setFilter(String filter) {
-    setState(() {
-      _activeFilter = filter;
-    });
+    setState(() => _activeFilter = filter);
     _processImage();
   }
 
+  // ─── OCR-based Real PDF Generation ───────────────────────────────────────
   Future<void> _handleSave() async {
-    if (_processedImageBytes == null) return;
+    if (_processedImageBytes == null || _originalImage == null) return;
 
     setState(() => _isProcessing = true);
     try {
-      // Process final rotation on compute isolate right before saving to PDF
+      // 1. Apply final rotation to image bytes
       Uint8List finalBytes = _processedImageBytes!;
       if (_visualRotationTurns != 0) {
         finalBytes = await compute(_applyFinalRotation, {
@@ -198,28 +189,123 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
         });
       }
 
+      // 2. Save rotated image to a temp file for ML Kit input
+      final tempDir = await getTemporaryDirectory();
+      final tempImgPath = '${tempDir.path}/ocr_input_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      await File(tempImgPath).writeAsBytes(finalBytes);
+
+      // 3. Run Google ML Kit OCR
+      final inputImage = InputImage.fromFilePath(tempImgPath);
+      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      RecognizedText? recognizedText;
+      try {
+        recognizedText = await textRecognizer.processImage(inputImage);
+      } catch (ocrError) {
+        debugPrint('OCR failed: $ocrError');
+      } finally {
+        await textRecognizer.close();
+      }
+
+      // 4. Decode image to get its actual dimensions
+      final decodedImage = img.decodeImage(finalBytes);
+      final imgWidth = decodedImage?.width.toDouble() ?? 1080;
+      final imgHeight = decodedImage?.height.toDouble() ?? 1440;
+
+      // 5. Build PDF
       final pdf = pw.Document();
-      final image = pw.MemoryImage(finalBytes);
+      final pageFormat = PdfPageFormat.a4;
+      final scaleX = pageFormat.width / imgWidth;
+      final scaleY = pageFormat.height / imgHeight;
 
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          margin: pw.EdgeInsets.zero, // full page scan
-          build: (pw.Context context) {
-            return pw.Center(
-              child: pw.Image(image, fit: pw.BoxFit.contain),
-            );
-          },
-        ),
-      );
+      final bool hasText = recognizedText != null &&
+          recognizedText.blocks.isNotEmpty;
 
+      if (hasText) {
+        // ── Real text-based PDF: lay out each text block at its position ──
+        pdf.addPage(
+          pw.Page(
+            pageFormat: pageFormat,
+            margin: pw.EdgeInsets.zero,
+            build: (pw.Context ctx) {
+              return pw.Stack(
+                children: [
+                  // Background: the scanned image (lightly visible or hidden)
+                  pw.Positioned(
+                    left: 0, top: 0,
+                    child: pw.Opacity(
+                      opacity: 0.08, // near-invisible background for layout ref
+                      child: pw.Image(
+                        pw.MemoryImage(finalBytes),
+                        width: pageFormat.width,
+                        height: pageFormat.height,
+                        fit: pw.BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                  // Text blocks positioned to match original layout
+                  ...recognizedText!.blocks.map((block) {
+                    final bb = block.boundingBox;
+                    final left = bb.left * scaleX;
+                    final top = bb.top * scaleY;
+                    final width = bb.width * scaleX;
+                    final height = bb.height * scaleY;
+
+                    // Estimate font size from block height and line count
+                    final lineCount = block.lines.length;
+                    final rawFontSize = lineCount > 0
+                        ? (height / lineCount).clamp(6.0, 32.0)
+                        : 10.0;
+                    final fontSize = (rawFontSize * 0.75).clamp(6.0, 28.0);
+
+                    final blockText = block.lines
+                        .map((l) => l.text)
+                        .join('\n');
+
+                    return pw.Positioned(
+                      left: left,
+                      top: top,
+                      child: pw.SizedBox(
+                        width: width,
+                        child: pw.Text(
+                          blockText,
+                          style: pw.TextStyle(
+                            fontSize: fontSize,
+                            color: PdfColors.black,
+                          ),
+                          softWrap: true,
+                          overflow: pw.TextOverflow.clip,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ],
+              );
+            },
+          ),
+        );
+      } else {
+        // ── Fallback: high-quality image inside PDF ──
+        final pdfImage = pw.MemoryImage(finalBytes);
+        pdf.addPage(
+          pw.Page(
+            pageFormat: pageFormat,
+            margin: pw.EdgeInsets.zero,
+            build: (pw.Context ctx) {
+              return pw.Center(
+                child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
+              );
+            },
+          ),
+        );
+      }
+
+      // 6. Save PDF
       final outputDir = await getTemporaryDirectory();
       final fileName = 'scan_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final file = File('${outputDir.path}/$fileName');
       await file.writeAsBytes(await pdf.save());
 
       if (mounted) {
-        // Pop the scanner route first before triggering prompt to avoid navigation race
         Navigator.pop(context);
         widget.onScanCompleted(file.path);
       }
@@ -253,7 +339,8 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
               icon: const Icon(Icons.check, color: Colors.greenAccent),
               label: Text(
                 context.tr('Envoyer', 'Send'),
-                style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.greenAccent, fontWeight: FontWeight.bold),
               ),
             ),
         ],
@@ -263,28 +350,36 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.document_scanner_outlined, size: 72, color: Colors.white54),
+                  const Icon(Icons.document_scanner_outlined,
+                      size: 72, color: Colors.white54),
                   const SizedBox(height: 20),
                   Text(
-                    context.tr('Aucun document capturé', 'No document captured'),
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                    context.tr(
+                        'Aucun document capturé', 'No document captured'),
+                    style:
+                        const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
-                    label: Text(context.tr('Prendre une photo', 'Take a photo')),
+                    label: Text(
+                        context.tr('Prendre une photo', 'Take a photo')),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library),
-                    label: Text(context.tr('Choisir de la galerie', 'Choose from gallery')),
-                    style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                    label: Text(context.tr(
+                        'Choisir de la galerie', 'Choose from gallery')),
+                    style:
+                        TextButton.styleFrom(foregroundColor: Colors.white70),
                   ),
                 ],
               ),
@@ -317,11 +412,35 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
                                     ),
                                   ),
                                 )
-                              : const CircularProgressIndicator(color: Colors.white),
+                              : const CircularProgressIndicator(
+                                  color: Colors.white),
                         ),
                       ),
                     ),
-                    
+
+                    // OCR badge notice
+                    Container(
+                      color: const Color(0xFF1E1E1E),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.auto_awesome,
+                              color: Colors.amber, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            context.tr(
+                              'Le PDF sera généré avec le texte extrait par OCR',
+                              'PDF will be generated with OCR-extracted text',
+                            ),
+                            style: const TextStyle(
+                                color: Colors.white54, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     // Toolbar for Rotation & Filters
                     Container(
                       color: Colors.black,
@@ -333,27 +452,37 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _buildFilterButton('original', context.tr('Original', 'Original')),
-                              _buildFilterButton('bw', context.tr('Noir & Blanc', 'B&W Scan')),
-                              _buildFilterButton('enhanced', context.tr('Amélioré', 'Enhanced')),
+                              _buildFilterButton(
+                                  'original',
+                                  context.tr('Original', 'Original')),
+                              _buildFilterButton(
+                                  'bw',
+                                  context.tr('Noir & Blanc', 'B&W Scan')),
+                              _buildFilterButton(
+                                  'enhanced',
+                                  context.tr('Amélioré', 'Enhanced')),
                             ],
                           ),
                           const SizedBox(height: 16),
                           const Divider(color: Colors.white24, height: 1),
                           const SizedBox(height: 12),
-                          // Action Buttons
+                          // Rotation Buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               IconButton(
                                 onPressed: _rotateLeft,
-                                icon: const Icon(Icons.rotate_left_rounded, color: Colors.white, size: 28),
-                                tooltip: context.tr('Pivoter à gauche', 'Rotate left'),
+                                icon: const Icon(Icons.rotate_left_rounded,
+                                    color: Colors.white, size: 28),
+                                tooltip:
+                                    context.tr('Pivoter à gauche', 'Rotate left'),
                               ),
                               IconButton(
                                 onPressed: _rotateRight,
-                                icon: const Icon(Icons.rotate_right_rounded, color: Colors.white, size: 28),
-                                tooltip: context.tr('Pivoter à droite', 'Rotate right'),
+                                icon: const Icon(Icons.rotate_right_rounded,
+                                    color: Colors.white, size: 28),
+                                tooltip: context.tr(
+                                    'Pivoter à droite', 'Rotate right'),
                               ),
                             ],
                           ),
@@ -369,11 +498,17 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const CircularProgressIndicator(color: Colors.white),
+                          const CircularProgressIndicator(
+                              color: Colors.white),
                           const SizedBox(height: 16),
                           Text(
-                            context.tr('Traitement de l\'image...', 'Processing image...'),
-                            style: const TextStyle(color: Colors.white, fontSize: 16),
+                            context.tr(
+                              'Extraction du texte et génération du PDF...',
+                              'Extracting text & generating PDF...',
+                            ),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 16),
                           ),
                         ],
                       ),
