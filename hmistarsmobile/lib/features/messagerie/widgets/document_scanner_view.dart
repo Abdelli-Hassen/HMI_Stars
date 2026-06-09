@@ -5,10 +5,11 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:math' as math;
 import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:printing/printing.dart';
+import 'package:flutter_document_scanner/flutter_document_scanner.dart';
 import '../../../core/widgets/top_notification_banner.dart';
 import '../../../core/utils/translation_extension.dart';
 
@@ -22,17 +23,83 @@ class DocumentScannerView extends StatefulWidget {
 }
 
 class _DocumentScannerViewState extends State<DocumentScannerView> {
-  File? _originalImage;
-  Uint8List? _originalImageBytes;
-  Uint8List? _processedImageBytes;
+  final _scannerController = DocumentScannerController();
+  bool _imageSelected = false;
   bool _isProcessing = false;
-  int _visualRotationTurns = 0;
-  String _activeFilter = 'original';
-  final Map<String, Uint8List> _processedCache = {};
+  String _processingMessage = '';
 
   @override
   void initState() {
     super.initState();
+    _scannerController.currentPage.listen((AppPages page) {
+      if (mounted) {
+        setState(() {
+          _imageSelected = page != AppPages.takePhoto;
+        });
+      }
+    });
+
+    // Show loading overlay during take-photo processing (contour detection)
+    _scannerController.statusTakePhotoPage.listen((AppStatus status) {
+      if (mounted) {
+        if (status == AppStatus.loading) {
+          setState(() {
+            _isProcessing = true;
+            _processingMessage = 'Détection des contours...';
+          });
+        } else if (status == AppStatus.success || status == AppStatus.failure) {
+          setState(() => _isProcessing = false);
+        }
+      }
+    });
+
+    // Show loading overlay during crop processing
+    _scannerController.statusCropPhoto.listen((AppStatus status) {
+      if (mounted) {
+        if (status == AppStatus.loading) {
+          setState(() {
+            _isProcessing = true;
+            _processingMessage = 'Recadrage en cours...';
+          });
+        } else if (status == AppStatus.success || status == AppStatus.failure) {
+          setState(() => _isProcessing = false);
+        }
+      }
+    });
+
+    // Show loading during filter application
+    _scannerController.statusEditPhoto.listen((AppStatus status) {
+      if (mounted) {
+        if (status == AppStatus.loading) {
+          setState(() {
+            _isProcessing = true;
+            _processingMessage = 'Application du filtre...';
+          });
+        } else if (status == AppStatus.success || status == AppStatus.failure) {
+          setState(() => _isProcessing = false);
+        }
+      }
+    });
+
+    // Show loading during save/PDF generation
+    _scannerController.statusSavePhotoDocument.listen((AppStatus status) {
+      if (mounted) {
+        if (status == AppStatus.loading) {
+          setState(() {
+            _isProcessing = true;
+            _processingMessage = 'Création du PDF...';
+          });
+        } else if (status == AppStatus.success || status == AppStatus.failure) {
+          setState(() => _isProcessing = false);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scannerController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -40,24 +107,26 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: source,
-        imageQuality: 95,
+        imageQuality: 100,
       );
 
       if (pickedFile != null) {
-        final file = File(pickedFile.path);
-        final bytes = await file.readAsBytes();
         setState(() {
-          _originalImage = file;
-          _originalImageBytes = bytes;
-          _processedImageBytes = bytes;
-          _visualRotationTurns = 0;
-          _activeFilter = 'original';
-          _processedCache.clear();
-          _processedCache['original'] = bytes;
+          _isProcessing = true;
+          _processingMessage = 'Détection des contours...';
         });
+
+        // This fires the bloc event and returns immediately
+        // The loading overlay stays until statusTakePhotoPage changes to success
+        await _scannerController.findContoursFromExternalImage(
+          image: File(pickedFile.path),
+        );
+        // DO NOT set _isProcessing = false here.
+        // The statusTakePhotoPage listener will handle that.
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isProcessing = false);
         TopNotificationBanner.show(
           context,
           "${context.trStatic('Erreur lors de la capture', 'Error capturing image')}: $e",
@@ -67,261 +136,26 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
     }
   }
 
-  // ─── TASK 2: Adaptive Thresholding via Sauvola method ──────────────────────
-  // Uses integral image (summed area table) for O(n) per-pixel performance.
-  // Window = 31px, k = 0.15. Result: white background, crisp dark text & lines.
-  static Uint8List _applyAdaptiveThreshold(Uint8List bytes) {
-    img.Image? image = img.decodeImage(bytes);
-    if (image == null) return bytes;
+  Future<void> _processCroppedImage(Uint8List croppedBytes) async {
+    setState(() {
+      _isProcessing = true;
+      _processingMessage = 'Amélioration du document...';
+    });
 
-    // Resize to a manageable size if very large (keeps processing fast)
-    if (image.width > 2000 || image.height > 2000) {
-      image = img.copyResize(image, width: 1600);
-    }
-
-    // Grayscale
-    final gray = img.grayscale(image);
-    final w = gray.width;
-    final h = gray.height;
-
-    // Build integral image (summed area table) for O(1) window sums
-    final List<List<int>> integral = List.generate(
-      h + 1,
-      (_) => List.filled(w + 1, 0),
-    );
-    for (int y = 0; y < h; y++) {
-      for (int x = 0; x < w; x++) {
-        final lum = gray.getPixel(x, y).r.toInt();
-        integral[y + 1][x + 1] =
-            lum + integral[y][x + 1] + integral[y + 1][x] - integral[y][x];
-      }
-    }
-
-    const halfWin = 15; // window = 31px
-    const k = 0.15;
-
-    // Build output image (white background)
-    final output = img.Image(width: w, height: h);
-    img.fill(output, color: img.ColorRgb8(255, 255, 255));
-
-    for (int y = 0; y < h; y++) {
-      for (int x = 0; x < w; x++) {
-        final x1 = (x - halfWin).clamp(0, w - 1);
-        final y1 = (y - halfWin).clamp(0, h - 1);
-        final x2 = (x + halfWin).clamp(0, w - 1);
-        final y2 = (y + halfWin).clamp(0, h - 1);
-
-        final count = (x2 - x1 + 1) * (y2 - y1 + 1);
-        final sum = integral[y2 + 1][x2 + 1]
-            - integral[y1][x2 + 1]
-            - integral[y2 + 1][x1]
-            + integral[y1][x1];
-
-        final mean = sum / count;
-        final threshold = mean * (1.0 - k);
-
-        final lum = gray.getPixel(x, y).r.toDouble();
-        if (lum < threshold) {
-          output.setPixel(x, y, img.ColorRgb8(0, 0, 0));
-        }
-        // else stays white
-      }
-    }
-
-    return Uint8List.fromList(img.encodePng(output));
-  }
-
-  // ─── Enhanced filter: contrast + sharpening ────────────────────────────────
-  static Uint8List _applyEnhanced(Uint8List bytes) {
-    img.Image? image = img.decodeImage(bytes);
-    if (image == null) return bytes;
-    img.adjustColor(image, contrast: 1.35, brightness: 1.05, saturation: 0.85);
-    return Uint8List.fromList(img.encodeJpg(image, quality: 92));
-  }
-
-  // ─── Final rotation applied only at save time ───────────────────────────────
-  static Uint8List _applyFinalRotation(Map<String, dynamic> params) {
-    final Uint8List bytes = params['bytes'];
-    final int turns = params['turns'];
-    img.Image? image = img.decodeImage(bytes);
-    if (image == null) return bytes;
-    if (turns == 1) image = img.copyRotate(image, angle: 90);
-    else if (turns == 2) image = img.copyRotate(image, angle: 180);
-    else if (turns == 3) image = img.copyRotate(image, angle: 270);
-    return Uint8List.fromList(img.encodeJpg(image, quality: 90));
-  }
-
-  Future<void> _processImage() async {
-    if (_originalImageBytes == null) return;
-
-    if (_processedCache.containsKey(_activeFilter)) {
-      setState(() => _processedImageBytes = _processedCache[_activeFilter]);
-      return;
-    }
-
-    setState(() => _isProcessing = true);
     try {
-      Uint8List result;
-      if (_activeFilter == 'bw') {
-        // Task 2: use adaptive threshold (run in isolate — it's heavy)
-        result = await compute(
-          (Uint8List b) => _applyAdaptiveThreshold(b),
-          _originalImageBytes!,
-        );
-      } else if (_activeFilter == 'enhanced') {
-        result = await compute(
-          (Uint8List b) => _applyEnhanced(b),
-          _originalImageBytes!,
-        );
-      } else {
-        result = _originalImageBytes!;
-      }
-      _processedCache[_activeFilter] = result;
-      if (mounted) setState(() => _processedImageBytes = result);
-    } catch (e) {
-      debugPrint('Error processing: $e');
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  void _rotateLeft() =>
-      setState(() => _visualRotationTurns = (_visualRotationTurns - 1) % 4);
-
-  void _rotateRight() =>
-      setState(() => _visualRotationTurns = (_visualRotationTurns + 1) % 4);
-
-  void _setFilter(String filter) {
-    setState(() => _activeFilter = filter);
-    _processImage();
-  }
-
-  // ─── TASK 1 + 3 + 4: Clean white PDF with invisible OCR text layer ─────────
-  Future<void> _handleSave() async {
-    if (_processedImageBytes == null || _originalImage == null) return;
-
-    setState(() => _isProcessing = true);
-    try {
-      // Step A: Apply final rotation to image bytes
-      Uint8List finalBytes = _processedImageBytes!;
-      if (_visualRotationTurns != 0) {
-        finalBytes = await compute(_applyFinalRotation, {
-          'bytes': _processedImageBytes!,
-          'turns': _visualRotationTurns,
-        });
-      }
-
-      // Step B: If filter is 'original', always apply adaptive threshold for PDF
-      // (user expects a clean doc scan, not a raw photo in PDF)
-      Uint8List pdfImageBytes = finalBytes;
-      if (_activeFilter == 'original') {
-        pdfImageBytes = await compute(
-          (Uint8List b) => _applyAdaptiveThreshold(b),
-          finalBytes,
-        );
-      }
-
-      // Step C: Save processed image to temp file for OCR input
-      final tempDir = await getTemporaryDirectory();
-      final tempImgPath =
-          '${tempDir.path}/ocr_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      // OCR works better on the original (not thresholded) image
-      final ocrBytes = _activeFilter == 'bw'
-          ? finalBytes // already rotated original
-          : finalBytes;
-      await File(tempImgPath).writeAsBytes(ocrBytes);
-
-      // Step D: Run OCR
-      final inputImage = InputImage.fromFilePath(tempImgPath);
-      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
-      RecognizedText? recognizedText;
-      try {
-        recognizedText = await recognizer.processImage(inputImage);
-      } catch (_) {
-        // OCR failure is non-fatal — PDF will be image-only
-      } finally {
-        await recognizer.close();
-      }
-
-      // Step E: Get image dimensions
-      final decoded = img.decodeImage(pdfImageBytes);
-      final imgW = decoded?.width.toDouble() ?? 1080;
-      final imgH = decoded?.height.toDouble() ?? 1440;
-
-      final pageFormat = PdfPageFormat.a4;
-      final scaleX = pageFormat.width / imgW;
-      final scaleY = pageFormat.height / imgH;
-
-      // Step F: Build PDF
-      // TASK 1: White A4 page — NO background image bleed
-      // TASK 3: Full-bleed clean processed image
-      // TASK 4: Invisible OCR text overlay for searchability
-      final pdf = pw.Document();
-      final pdfImage = pw.MemoryImage(pdfImageBytes);
-
-      pdf.addPage(
-        pw.Page(
-          pageFormat: pageFormat,
-          // Pure white background, no margin
-          margin: pw.EdgeInsets.zero,
-          build: (pw.Context ctx) {
-            return pw.Stack(
-              children: [
-                // TASK 3: Clean document image fills the page (white bg baked in)
-                pw.Image(
-                  pdfImage,
-                  width: pageFormat.width,
-                  height: pageFormat.height,
-                  fit: pw.BoxFit.fill,
-                ),
-
-                // TASK 4: Invisible OCR text layer for PDF searchability
-                if (recognizedText != null)
-                  ...recognizedText.blocks.map((block) {
-                    final bb = block.boundingBox;
-                    final left = bb.left * scaleX;
-                    final top = bb.top * scaleY;
-                    final width = bb.width * scaleX;
-                    final height = bb.height * scaleY;
-
-                    final lineCount = block.lines.length;
-                    final rawFontSize = lineCount > 0
-                        ? (height / lineCount).clamp(5.0, 30.0)
-                        : 8.0;
-                    final fontSize = (rawFontSize * 0.72).clamp(5.0, 26.0);
-
-                    final blockText =
-                        block.lines.map((l) => l.text).join('\n');
-
-                    return pw.Positioned(
-                      left: left,
-                      top: top,
-                      child: pw.SizedBox(
-                        width: width,
-                        child: pw.Text(
-                          blockText,
-                          style: pw.TextStyle(
-                            fontSize: fontSize,
-                            // Invisible: white text blends into white bg
-                            // but is still indexed by PDF readers
-                            color: PdfColors.white,
-                          ),
-                          softWrap: true,
-                          overflow: pw.TextOverflow.clip,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-              ],
-            );
-          },
-        ),
-      );
-
-      // Step G: Generate PDF bytes & preview before saving
-      final pdfBytes = await pdf.save();
+      // Run heavy image processing in an isolate to prevent ANR
+      final enhancedBytes = await compute(_enhanceImageIsolate, croppedBytes);
 
       if (!mounted) return;
+      setState(() => _processingMessage = 'Génération du PDF...');
+
+      // Build PDF on main thread (pdf.save() is async)
+      final pdfBytes = await _buildPdfFromEnhanced(enhancedBytes);
+
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+
+      // Preview before confirming/sending
       final bool? confirmSend = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
@@ -330,16 +164,13 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       );
 
       if (confirmSend == true && mounted) {
-        final outputDir = await getTemporaryDirectory();
-        final fileName =
-            'scan_${DateTime.now().millisecondsSinceEpoch}.pdf';
-        final file = File('${outputDir.path}/$fileName');
+        final tempDir = await getTemporaryDirectory();
+        final file = File(
+          '${tempDir.path}/scan_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        );
         await file.writeAsBytes(pdfBytes);
-
-        if (mounted) {
-          Navigator.pop(context);
-          widget.onScanCompleted(file.path);
-        }
+        Navigator.pop(context);
+        widget.onScanCompleted(file.path);
       }
     } catch (e) {
       if (mounted) {
@@ -354,6 +185,148 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
     }
   }
 
+  /// Top-level function for compute() isolate - enhances image only
+  static Uint8List _enhanceImageIsolate(Uint8List rawBytes) {
+    final decoded = img.decodeImage(rawBytes);
+    if (decoded == null) throw Exception('Failed to decode image');
+
+    final enhanced = _enhanceDocument(decoded);
+    return Uint8List.fromList(img.encodeJpg(enhanced, quality: 95));
+  }
+
+  /// Build PDF from enhanced image bytes (runs on main thread, is async)
+  static Future<Uint8List> _buildPdfFromEnhanced(Uint8List enhancedBytes) async {
+    final decoded = img.decodeImage(enhancedBytes);
+    final imgW = decoded?.width ?? 1080;
+    final imgH = decoded?.height ?? 1440;
+
+    final pdf = pw.Document();
+    final pdfImage = pw.MemoryImage(enhancedBytes);
+
+    const pageFormat = PdfPageFormat.a4;
+    const margin = 24.0;
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: pageFormat,
+        margin: const pw.EdgeInsets.all(margin),
+        build: (pw.Context ctx) {
+          final availableW = pageFormat.width - margin * 2;
+          final availableH = pageFormat.height - margin * 2;
+          final imgAspect = imgW / imgH;
+          final areaAspect = availableW / availableH;
+
+          double fitW, fitH;
+          if (imgAspect > areaAspect) {
+            fitW = availableW;
+            fitH = availableW / imgAspect;
+          } else {
+            fitH = availableH;
+            fitW = availableH * imgAspect;
+          }
+
+          return pw.Center(
+            child: pw.Image(
+              pdfImage,
+              width: fitW,
+              height: fitH,
+              fit: pw.BoxFit.contain,
+            ),
+          );
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  /// Enhance a document image to look like a real digital scan
+  static img.Image _enhanceDocument(img.Image src) {
+    final w = src.width;
+    final h = src.height;
+
+    // Step 1: Convert to grayscale for analysis
+    final gray = img.grayscale(img.copyResize(src, width: w, height: h));
+
+    // Step 2: Calculate histogram for adaptive thresholding
+    final histogram = List<int>.filled(256, 0);
+    for (int y = 0; y < gray.height; y++) {
+      for (int x = 0; x < gray.width; x++) {
+        final pixel = gray.getPixel(x, y);
+        final lum = img.getLuminance(pixel).toInt().clamp(0, 255);
+        histogram[lum]++;
+      }
+    }
+
+    // Find the background brightness (mode of upper 30% of histogram)
+    final totalPixels = w * h;
+    int bgBrightness = 200;
+    int cumulative = 0;
+    for (int i = 255; i >= 0; i--) {
+      cumulative += histogram[i];
+      if (cumulative > totalPixels * 0.3) {
+        bgBrightness = i;
+        break;
+      }
+    }
+
+    // Step 3: Apply adaptive enhancement to original color image
+    final result = img.Image(width: w, height: h);
+
+    final bgTarget = 255.0;
+    final scaleFactor = bgBrightness > 10 ? bgTarget / bgBrightness : 1.0;
+
+    for (int y = 0; y < h; y++) {
+      for (int x = 0; x < w; x++) {
+        final pixel = src.getPixel(x, y);
+        final r = pixel.r.toDouble();
+        final g = pixel.g.toDouble();
+        final b = pixel.b.toDouble();
+        final lum = (0.299 * r + 0.587 * g + 0.114 * b);
+
+        double newR, newG, newB;
+
+        if (lum > bgBrightness * 0.85) {
+          // Background pixel - push toward white
+          newR = math.min(255, r * scaleFactor * 1.05);
+          newG = math.min(255, g * scaleFactor * 1.05);
+          newB = math.min(255, b * scaleFactor * 1.05);
+        } else if (lum < bgBrightness * 0.4) {
+          // Dark text/ink - darken for contrast
+          final darkFactor = 0.7;
+          newR = (r * darkFactor).clamp(0, 255);
+          newG = (g * darkFactor).clamp(0, 255);
+          newB = (b * darkFactor).clamp(0, 255);
+        } else {
+          // Mid-tone - moderate enhancement
+          final midFactor = scaleFactor * 0.95;
+          newR = (r * midFactor).clamp(0, 255);
+          newG = (g * midFactor).clamp(0, 255);
+          newB = (b * midFactor).clamp(0, 255);
+        }
+
+        result.setPixelRgba(
+          x, y,
+          newR.round(),
+          newG.round(),
+          newB.round(),
+          255,
+        );
+      }
+    }
+
+    // Step 4: Slight sharpening for crisper text
+    return img.convolution(
+      result,
+      filter: [
+        0, -0.5, 0,
+        -0.5, 3, -0.5,
+        0, -0.5, 0,
+      ],
+      div: 1,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -362,258 +335,140 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
         title: Text(context.tr('Scanner un document', 'Scan a document')),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        actions: [
-          if (_processedImageBytes != null)
-            TextButton.icon(
-              onPressed: _isProcessing ? null : _handleSave,
-              icon: const Icon(Icons.check, color: Colors.greenAccent),
-              label: Text(
-                context.tr('Envoyer', 'Send'),
-                style: const TextStyle(
-                    color: Colors.greenAccent, fontWeight: FontWeight.bold),
-              ),
-            ),
-        ],
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 24),
+          onPressed: () {
+            if (_imageSelected) {
+              _scannerController.changePage(AppPages.takePhoto);
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
-      body: _originalImage == null
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.document_scanner_outlined,
-                      size: 72, color: Colors.white54),
-                  const SizedBox(height: 20),
-                  Text(
-                    context.tr(
-                        'Aucun document capturé', 'No document captured'),
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: Text(
-                        context.tr('Prendre une photo', 'Take a photo')),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: Text(context.tr(
-                        'Choisir de la galerie', 'Choose from gallery')),
-                    style: TextButton.styleFrom(
-                        foregroundColor: Colors.white70),
-                  ),
-                ],
-              ),
-            )
-          : Stack(
-              children: [
-                Column(
+      body: Stack(
+        children: [
+          DocumentScanner(
+            controller: _scannerController,
+            generalStyles: GeneralStyles(
+              baseColor: const Color(0xFF121212),
+              showCameraPreview: false,
+              hideDefaultDialogs: true,
+              messageTakingPicture: context.trStatic('Traitement...', 'Processing...'),
+              messageCroppingPicture: context.trStatic('Recadrage...', 'Cropping...'),
+              messageEditingPicture: context.trStatic('Application des filtres...', 'Applying filters...'),
+              messageSavingPicture: context.trStatic('Génération...', 'Generating...'),
+              widgetInsteadOfCameraPreview: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Document Preview
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Center(
-                          child: _processedImageBytes != null
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(4),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.5),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: RotatedBox(
-                                      quarterTurns: _visualRotationTurns,
-                                      child: Image.memory(
-                                        _processedImageBytes!,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : const CircularProgressIndicator(
-                                  color: Colors.white),
-                        ),
+                    const Icon(Icons.document_scanner_outlined,
+                        size: 80, color: Colors.white54),
+                    const SizedBox(height: 24),
+                    Text(
+                      context.tr(
+                          'Aucun document capturé', 'No document captured'),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 16),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt, color: Colors.white),
+                      label: Text(
+                        context.tr('Prendre une photo', 'Take a photo'),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 28, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                     ),
-
-                    // Info badge
-                    Container(
-                      color: const Color(0xFF1A1A2E),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.auto_awesome,
-                              color: Colors.amber, size: 13),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              context.tr(
-                                'PDF blanc avec texte OCR invisible',
-                                'Clean white PDF with invisible OCR text layer',
-                              ),
-                              style: const TextStyle(
-                                  color: Colors.white38, fontSize: 11),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library, color: Colors.white70),
+                      label: Text(
+                        context.tr('Choisir de la galerie', 'Choose from gallery'),
+                        style: const TextStyle(color: Colors.white70),
                       ),
-                    ),
-
-                    // Toolbar
-                    Container(
-                      color: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Filter selectors
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildFilterButton(
-                                'original',
-                                context.tr('Original', 'Original'),
-                                Icons.image_outlined,
-                              ),
-                              _buildFilterButton(
-                                'bw',
-                                context.tr('Doc (N&B)', 'Doc (B&W)'),
-                                Icons.filter_b_and_w_outlined,
-                              ),
-                              _buildFilterButton(
-                                'enhanced',
-                                context.tr('Amélioré', 'Enhanced'),
-                                Icons.auto_fix_high_outlined,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          const Divider(color: Colors.white12, height: 1),
-                          const SizedBox(height: 10),
-                          // Rotation
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceAround,
-                            children: [
-                              IconButton(
-                                onPressed: _rotateLeft,
-                                icon: const Icon(Icons.rotate_left_rounded,
-                                    color: Colors.white, size: 28),
-                                tooltip: context.tr(
-                                    'Pivoter à gauche', 'Rotate left'),
-                              ),
-                              IconButton(
-                                onPressed: _rotateRight,
-                                icon: const Icon(
-                                    Icons.rotate_right_rounded,
-                                    color: Colors.white,
-                                    size: 28),
-                                tooltip: context.tr(
-                                    'Pivoter à droite', 'Rotate right'),
-                              ),
-                            ],
-                          ),
-                        ],
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
                     ),
                   ],
                 ),
-
-                // Processing overlay
-                if (_isProcessing)
-                  Container(
-                    color: Colors.black87,
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CircularProgressIndicator(
-                              color: Colors.white),
-                          const SizedBox(height: 16),
-                          Text(
-                            context.tr(
-                              'Traitement du document...',
-                              'Processing document...',
-                            ),
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 15),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            context.tr(
-                              'Suppression de l\'arrière-plan...',
-                              'Removing background...',
-                            ),
-                            style: const TextStyle(
-                                color: Colors.white54, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildFilterButton(String filter, String label, IconData icon) {
-    final isActive = _activeFilter == filter;
-    return GestureDetector(
-      onTap: () => _setFilter(filter),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive
-              ? Theme.of(context).colorScheme.primary
-              : Colors.grey[900],
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive
-                ? Theme.of(context).colorScheme.primary
-                : Colors.white24,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon,
-                color: isActive ? Colors.white : Colors.white54,
-                size: 20),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.white54,
-                fontSize: 11,
-                fontWeight:
-                    isActive ? FontWeight.bold : FontWeight.normal,
               ),
             ),
-          ],
-        ),
+            cropPhotoDocumentStyle: CropPhotoDocumentStyle(
+              textButtonSave: 'Étape suivante',
+              colorBorderArea: Colors.greenAccent,
+              widthBorderArea: 3.5,
+              dotSize: 28,
+              // Give the crop area proper insets so the image fills the area
+              // and the scaling factor matches between screen and image coordinates
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              // Use a larger default area so auto-detection covers more of the image
+              defaultAreaInitial: const Area(
+                topLeft: Point(20, 20),
+                topRight: Point(360, 20),
+                bottomLeft: Point(20, 600),
+                bottomRight: Point(360, 600),
+              ),
+            ),
+            editPhotoDocumentStyle: const EditPhotoDocumentStyle(
+              textButtonSave: 'Créer le PDF',
+            ),
+            onSave: (Uint8List imageBytes) {
+              _processCroppedImage(imageBytes);
+            },
+          ),
+          if (_isProcessing)
+            Container(
+              color: Colors.black.withOpacity(0.85),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      _processingMessage.isNotEmpty
+                          ? _processingMessage
+                          : context.tr('Traitement en cours...', 'Processing...'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      context.tr('Veuillez patienter', 'Please wait'),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -627,27 +482,50 @@ class ScanPdfPreviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: Text(
-          context.tr('Aperçu du PDF', 'PDF Preview'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          context.tr('Aperçu du document', 'Document Preview'),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
         ),
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF1A1A2E),
         foregroundColor: Colors.white,
+        elevation: 2,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          ),
           onPressed: () => Navigator.pop(context, false),
         ),
         actions: [
-          TextButton.icon(
-            onPressed: () => Navigator.pop(context, true),
-            icon: const Icon(Icons.check, color: Colors.greenAccent),
-            label: Text(
-              context.tr('Confirmer', 'Confirm'),
-              style: const TextStyle(
-                color: Colors.greenAccent,
-                fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context, true),
+              icon: const Icon(Icons.check_circle_outline, size: 20),
+              label: Text(
+                context.tr('Confirmer', 'Confirm'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4CAF50),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
               ),
             ),
           ),
@@ -658,9 +536,21 @@ class ScanPdfPreviewScreen extends StatelessWidget {
         canDebug: false,
         canChangePageFormat: false,
         canChangeOrientation: false,
+        allowPrinting: false,
+        allowSharing: false,
+        pdfPreviewPageDecoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
         actions: const [],
         loadingWidget: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
+          child: CircularProgressIndicator(color: Color(0xFF1A1A2E)),
         ),
       ),
     );
