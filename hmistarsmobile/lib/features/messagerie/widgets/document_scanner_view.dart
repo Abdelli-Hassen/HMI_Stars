@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import '../../../core/widgets/top_notification_banner.dart';
+import '../../../core/utils/translation_extension.dart';
 
 class DocumentScannerView extends StatefulWidget {
   final Function(String pdfPath) onScanCompleted;
@@ -52,7 +53,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
       if (mounted) {
         TopNotificationBanner.show(
           context,
-          'Erreur lors de la création du PDF: $e',
+          '${context.trStatic('Erreur lors de la création du PDF', 'Error creating PDF')}: $e',
           isError: true,
         );
       }
@@ -67,7 +68,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scanner un document'),
+        title: Text(context.tr('Scanner un document', 'Scan a document')),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
@@ -84,14 +85,14 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
           if (_isProcessing)
             Container(
               color: Colors.black54,
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CircularProgressIndicator(color: Colors.white),
                     SizedBox(height: 16),
                     Text(
-                      'Création du PDF...',
+                      context.tr('Création du PDF...', 'Creating PDF...'),
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],

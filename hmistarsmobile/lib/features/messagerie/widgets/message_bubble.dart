@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../core/models/models.dart';
 import '../../../core/providers/app_state.dart';
 import '../../../core/widgets/mobile_file_previewer.dart';
+import '../../../core/utils/translation_extension.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -314,7 +315,7 @@ class MessageBubble extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Lien partagé",
+                          context.tr("Lien partagé", "Shared link"),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -333,7 +334,7 @@ class MessageBubble extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "Cliquez pour ouvrir",
+                          context.tr("Cliquez pour ouvrir", "Click to open"),
                           style: GoogleFonts.inter(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
@@ -394,7 +395,7 @@ class MessageBubble extends StatelessWidget {
 
     for (int i = 0; i < urls.length; i++) {
       final url = urls[i];
-      final nom = i < noms.length ? noms[i] : 'Fichier';
+      final nom = i < noms.length ? noms[i] : context.tr('Fichier', 'File');
 
       final uLower = url.toLowerCase();
       final nLower = nom.toLowerCase();
@@ -642,7 +643,7 @@ class MessageBubble extends StatelessWidget {
       case TypeDocument.kbis:
         return 'KBIS';
       case TypeDocument.tva:
-        return 'ATTESTATION TVA';
+        return 'TVA';
       case TypeDocument.siret:
         return 'SIRET / SIREN';
       case TypeDocument.rib:

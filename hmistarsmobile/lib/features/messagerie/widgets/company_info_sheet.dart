@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/utils/translation_extension.dart';
 
 class CompanyInfoSheet extends StatelessWidget {
   const CompanyInfoSheet({super.key});
@@ -90,25 +91,28 @@ class CompanyInfoSheet extends StatelessWidget {
                 children: [
                   _buildInfoRow(
                     Icons.business,
-                    'Raison Sociale',
+                    context.tr('Raison Sociale', 'Company Name'),
                     'HMI Stars Consulting',
                     context,
                   ),
                   _buildInfoRow(
                     Icons.location_on_outlined,
-                    'Adresse',
+                    context.tr('Adresse', 'Address'),
                     '85 RUE DUHESME 75018 PARIS',
                     context,
                   ),
                   _buildInfoRow(
                     Icons.work_outline,
-                    'Activité principale de la société',
-                    'Conseil pour les affaires et autres conseils \nde gestion',
+                    context.tr('Activité principale de la société', 'Main business activity'),
+                    context.tr(
+                      'Conseil pour les affaires et autres conseils \nde gestion',
+                      'Business consulting and other management \nconsulting',
+                    ),
                     context,
                   ),
                   _buildInfoRow(
                     Icons.email_outlined,
-                    'Email',
+                    context.tr('Email', 'Email'),
                     'hmi.stars.contact@gmail.com',
                     context,
                   ),
@@ -120,7 +124,10 @@ class CompanyInfoSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'HMI Stars Consulting est votre partenaire institutionnel de confiance pour la gestion RH, la paie, et le conseil stratégique.',
+                      context.tr(
+                        'HMI Stars Consulting est votre partenaire institutionnel de confiance pour la gestion RH, la paie, et le conseil stratégique.',
+                        'HMI Stars Consulting is your trusted institutional partner for HR management, payroll, and strategic consulting.',
+                      ),
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,

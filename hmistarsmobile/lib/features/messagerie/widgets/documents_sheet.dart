@@ -7,6 +7,7 @@ import '../../../core/widgets/mobile_file_previewer.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/providers/app_state.dart';
+import '../../../core/utils/translation_extension.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main categories (direction of flow)
@@ -14,14 +15,14 @@ import '../../../core/providers/app_state.dart';
 enum _MainCategory { all, sentByMe, receivedFromHmi }
 
 extension _MainCategoryX on _MainCategory {
-  String get label {
+  String labelFor(BuildContext context) {
     switch (this) {
       case _MainCategory.all:
-        return 'Tous';
+        return context.tr('Tous', 'All');
       case _MainCategory.sentByMe:
-        return 'Envoyés';
+        return context.tr('Envoyés', 'Sent');
       case _MainCategory.receivedFromHmi:
-        return 'Reçus';
+        return context.tr('Reçus', 'Received');
     }
   }
 
@@ -48,60 +49,76 @@ class _DocMeta {
 }
 
 const _typeDocMeta = <TypeDocument, _DocMeta>{
-  TypeDocument.fournisseur: _DocMeta(
-    'Fournisseurs',
-    Icons.store_outlined,
-    Color(0xFF6366F1),
-  ),
-  TypeDocument.releve_bancaire: _DocMeta(
-    'Relevés Bancaires',
-    Icons.account_balance_outlined,
-    Color(0xFF0EA5E9),
-  ),
-  TypeDocument.chiffre_affaires: _DocMeta(
-    "Chiffre d'Affaires",
-    Icons.bar_chart_rounded,
-    Color(0xFF10B981),
-  ),
-  TypeDocument.kbis: _DocMeta(
-    'Kbis',
-    Icons.business_center_outlined,
-    Color(0xFFF59E0B),
-  ),
-  TypeDocument.tva: _DocMeta(
-    'TVA',
-    Icons.receipt_long_outlined,
-    Color(0xFFEF4444),
-  ),
-  TypeDocument.siret: _DocMeta(
-    'SIRET',
-    Icons.badge_outlined,
-    Color(0xFF8B5CF6),
-  ),
-  TypeDocument.rib: _DocMeta(
-    'RIB',
-    Icons.credit_card_outlined,
-    Color(0xFF06B6D4),
-  ),
-  TypeDocument.statuts: _DocMeta(
-    'Statuts',
-    Icons.gavel_outlined,
-    Color(0xFFF97316),
-  ),
-  TypeDocument.media: _DocMeta(
-    'Médias',
-    Icons.perm_media_outlined,
-    Color(0xFFEC4899),
-  ),
-  TypeDocument.autre: _DocMeta(
-    'Autres',
-    Icons.insert_drive_file_outlined,
-    Color(0xFF6B7280),
-  ),
+  TypeDocument.fournisseur: _DocMeta('Fournisseurs', Icons.store_outlined, Color(0xFF6366F1)),
+  TypeDocument.releve_bancaire: _DocMeta('Relevés Bancaires', Icons.account_balance_outlined, Color(0xFF0EA5E9)),
+  TypeDocument.chiffre_affaires: _DocMeta("Chiffre d'Affaires", Icons.bar_chart_rounded, Color(0xFF10B981)),
+  TypeDocument.kbis: _DocMeta('Kbis', Icons.business_center_outlined, Color(0xFFF59E0B)),
+  TypeDocument.tva: _DocMeta('TVA', Icons.receipt_long_outlined, Color(0xFFEF4444)),
+  TypeDocument.siret: _DocMeta('SIRET', Icons.badge_outlined, Color(0xFF8B5CF6)),
+  TypeDocument.rib: _DocMeta('RIB', Icons.credit_card_outlined, Color(0xFF06B6D4)),
+  TypeDocument.statuts: _DocMeta('Statuts', Icons.gavel_outlined, Color(0xFFF97316)),
+  TypeDocument.media: _DocMeta('Médias', Icons.perm_media_outlined, Color(0xFFEC4899)),
+  TypeDocument.autre: _DocMeta('Autres', Icons.insert_drive_file_outlined, Color(0xFF6B7280)),
 };
 
-_DocMeta _metaFor(TypeDocument? type) =>
-    _typeDocMeta[type ?? TypeDocument.autre] ?? _typeDocMeta[TypeDocument.autre]!;
+_DocMeta _metaFor(TypeDocument? type, [BuildContext? context]) {
+  if (context != null) {
+    final translatedMeta = <TypeDocument, _DocMeta>{
+      TypeDocument.fournisseur: _DocMeta(
+        context.tr('Fournisseurs', 'Suppliers'),
+        Icons.store_outlined,
+        const Color(0xFF6366F1),
+      ),
+      TypeDocument.releve_bancaire: _DocMeta(
+        context.tr('Relevés Bancaires', 'Bank Statements'),
+        Icons.account_balance_outlined,
+        const Color(0xFF0EA5E9),
+      ),
+      TypeDocument.chiffre_affaires: _DocMeta(
+        context.tr("Chiffre d'Affaires", 'Revenue'),
+        Icons.bar_chart_rounded,
+        const Color(0xFF10B981),
+      ),
+      TypeDocument.kbis: const _DocMeta(
+        'Kbis',
+        Icons.business_center_outlined,
+        Color(0xFFF59E0B),
+      ),
+      TypeDocument.tva: const _DocMeta(
+        'TVA',
+        Icons.receipt_long_outlined,
+        Color(0xFFEF4444),
+      ),
+      TypeDocument.siret: const _DocMeta(
+        'SIRET',
+        Icons.badge_outlined,
+        Color(0xFF8B5CF6),
+      ),
+      TypeDocument.rib: const _DocMeta(
+        'RIB',
+        Icons.credit_card_outlined,
+        Color(0xFF06B6D4),
+      ),
+      TypeDocument.statuts: _DocMeta(
+        context.tr('Statuts', 'Articles'),
+        Icons.gavel_outlined,
+        const Color(0xFFF97316),
+      ),
+      TypeDocument.media: _DocMeta(
+        context.tr('Médias', 'Media'),
+        Icons.perm_media_outlined,
+        const Color(0xFFEC4899),
+      ),
+      TypeDocument.autre: _DocMeta(
+        context.tr('Autres', 'Others'),
+        Icons.insert_drive_file_outlined,
+        const Color(0xFF6B7280),
+      ),
+    };
+    return translatedMeta[type ?? TypeDocument.autre] ?? translatedMeta[TypeDocument.autre]!;
+  }
+  return _typeDocMeta[type ?? TypeDocument.autre] ?? _typeDocMeta[TypeDocument.autre]!;
+}
 
 String _formatDate(DateTime dt) => DateFormat('dd/MM/yyyy').format(dt);
 
@@ -275,7 +292,7 @@ class _DocumentsSheetState extends State<DocumentsSheet>
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                cat.label,
+                                cat.labelFor(context),
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -304,14 +321,14 @@ class _DocumentsSheetState extends State<DocumentsSheet>
                 children: [
                   // "All" chip
                   _SubChip(
-                    label: 'Tous',
+                    label: context.tr('Tous', 'All'),
                     icon: Icons.apps_rounded,
                     color: cs.primary,
                     isSelected: _subCat == null,
                     onTap: () => setState(() => _subCat = null),
                   ),
                   ...TypeDocument.values.map((type) {
-                    final meta = _metaFor(type);
+                    final meta = _metaFor(type, context);
                     return _SubChip(
                       label: meta.label,
                       icon: meta.icon,
@@ -443,7 +460,7 @@ class _DocumentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final meta = _metaFor(fichier.typeDocument);
+    final meta = _metaFor(fichier.typeDocument, context);
     final sentByMe = fichier.estEnvoyeParUser;
 
     return Container(
@@ -545,7 +562,7 @@ class _DocumentTile extends StatelessWidget {
                             color: cs.primary,
                           ),
                           onPressed: onOpen,
-                          tooltip: 'Ouvrir',
+                          tooltip: context.tr('Ouvrir', 'Open'),
                           padding: EdgeInsets.zero,
                         ),
                 ),
@@ -597,8 +614,8 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final subLabel = subCat != null ? _metaFor(subCat).label : '';
-    final mainLabel = mainCat == _MainCategory.all ? '' : mainCat.label;
+    final subLabel = subCat != null ? _metaFor(subCat, context).label : '';
+    final mainLabel = mainCat == _MainCategory.all ? '' : mainCat.labelFor(context);
     final detail = [mainLabel, subLabel].where((s) => s.isNotEmpty).join(' · ');
 
     return Center(
@@ -614,7 +631,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Aucun document',
+              context.tr('Aucun document', 'No documents'),
               style: GoogleFonts.manrope(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,

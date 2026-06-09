@@ -13,6 +13,7 @@ import 'widgets/documents_sheet.dart';
 import 'widgets/document_scanner_view.dart';
 import '../../core/widgets/top_notification_banner.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/utils/translation_extension.dart';
 
 class MessageriePage extends StatefulWidget {
   const MessageriePage({super.key});
@@ -141,7 +142,7 @@ class _MessageriePageState extends State<MessageriePage> {
       if (mounted) {
         TopNotificationBanner.show(
           context,
-          'Impossible d\'envoyer le message : $e',
+          '${context.trStatic('Impossible d\'envoyer le message', 'Failed to send message')} : $e',
           isError: true,
         );
       }
@@ -236,7 +237,7 @@ class _MessageriePageState extends State<MessageriePage> {
       if (mounted) {
         TopNotificationBanner.show(
           context,
-          'Échec de l\'envoi du fichier : $e',
+          '${context.trStatic('Échec de l\'envoi du fichier', 'Failed to send file')} : $e',
           isError: true,
         );
       }
@@ -279,7 +280,9 @@ class _MessageriePageState extends State<MessageriePage> {
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            isClient ? 'Support HMI Stars' : 'Sélectionner un contact client',
+            isClient
+                ? context.tr('Support HMI Stars', 'HMI Stars Support')
+                : context.tr('Sélectionner un contact client', 'Select client contact'),
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -304,7 +307,7 @@ class _MessageriePageState extends State<MessageriePage> {
                     });
                   },
                   decoration: InputDecoration(
-                    hintText: 'Rechercher un contact...',
+                    hintText: context.tr('Rechercher un contact...', 'Search contact...'),
                     hintStyle: GoogleFonts.inter(
                       color: Theme.of(context).colorScheme.outline,
                       fontSize: 14,
@@ -340,7 +343,7 @@ class _MessageriePageState extends State<MessageriePage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Aucun contact trouvé',
+                            context.tr('Aucun contact trouvé', 'No contact found'),
                             style: GoogleFonts.manrope(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -386,7 +389,9 @@ class _MessageriePageState extends State<MessageriePage> {
                               ),
                             ),
                             subtitle: Text(
-                              role == 'admin' ? 'Administrateur' : 'Secrétaire',
+                              role == 'admin'
+                                  ? context.tr('Administrateur', 'Administrator')
+                                  : context.tr('Secrétaire', 'Secretary'),
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -398,7 +403,7 @@ class _MessageriePageState extends State<MessageriePage> {
                             ),
                             onTap: () {
                               setState(() {
-                                _selectedPlatformContact = contact;
+                                    _selectedPlatformContact = contact;
                               });
                             },
                           );
@@ -427,7 +432,7 @@ class _MessageriePageState extends State<MessageriePage> {
                             ),
                             subtitle: Text(
                               comp.nomGerant?.isNotEmpty == true
-                                  ? 'Gérant: ${comp.nomGerant}'
+                                  ? '${context.tr('Gérant', 'Manager')}: ${comp.nomGerant}'
                                   : comp.email ?? '',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
@@ -441,7 +446,7 @@ class _MessageriePageState extends State<MessageriePage> {
                             onTap: () async {
                               await appState.switchEntreprise(comp);
                               setState(() {
-                                _showChat = true;
+                                    _showChat = true;
                               });
                             },
                           );
@@ -499,7 +504,9 @@ class _MessageriePageState extends State<MessageriePage> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          _selectedPlatformContact?['role'] == 'admin' ? 'Administrateur' : 'Secrétaire',
+                          _selectedPlatformContact?['role'] == 'admin'
+                              ? context.tr('Administrateur', 'Administrator')
+                              : context.tr('Secrétaire', 'Secretary'),
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: Theme.of(context).colorScheme.outline,
@@ -618,7 +625,7 @@ class _MessageriePageState extends State<MessageriePage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
-              _formatDate(date),
+              _formatDate(context, date),
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: Theme.of(context).colorScheme.outline,
@@ -671,7 +678,7 @@ class _MessageriePageState extends State<MessageriePage> {
                 maxLines: 5,
                 minLines: 1,
                 decoration: InputDecoration(
-                  hintText: 'Écrire un message...',
+                  hintText: context.tr('Écrire un message...', 'Write a message...'),
                   hintStyle: GoogleFonts.inter(
                     color: Theme.of(context).colorScheme.outline,
                     fontSize: 14,
@@ -729,24 +736,14 @@ class _MessageriePageState extends State<MessageriePage> {
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final now = DateTime.now();
-    if (_isSameDay(date, now)) return "Aujourd'hui";
-    if (_isSameDay(date, now.subtract(const Duration(days: 1)))) return 'Hier';
-    const months = [
-      'Jan',
-      'Fév',
-      'Mar',
-      'Avr',
-      'Mai',
-      'Jun',
-      'Jul',
-      'Aoû',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Déc',
-    ];
+    if (_isSameDay(date, now)) return context.tr("Aujourd'hui", "Today");
+    if (_isSameDay(date, now.subtract(const Duration(days: 1)))) return context.tr('Hier', 'Yesterday');
+    final isEn = context.read<AppState>().langue == 'English (EN)';
+    final months = isEn
+        ? const ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        : const ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
@@ -777,7 +774,7 @@ class _PhotoOptionsSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              'Choisir une option',
+              context.trStatic('Choisir une option', 'Choose an option'),
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w700,
                 fontSize: 18,
@@ -789,15 +786,15 @@ class _PhotoOptionsSheet extends StatelessWidget {
           _buildOption(
             context,
             icon: Icons.photo_camera,
-            title: 'Prendre une photo',
-            subtitle: 'Envoyer directement la photo',
+            title: context.trStatic('Prendre une photo', 'Take a photo'),
+            subtitle: context.trStatic('Envoyer directement la photo', 'Send photo directly'),
             value: 'photo',
           ),
           _buildOption(
             context,
             icon: Icons.document_scanner,
-            title: 'Scanner un document',
-            subtitle: 'Détecter et convertir en PDF (style CamScanner)',
+            title: context.trStatic('Scanner un document', 'Scan a document'),
+            subtitle: context.trStatic('Détecter et convertir en PDF (style CamScanner)', 'Detect and convert to PDF (CamScanner style)'),
             value: 'scan',
           ),
           const SizedBox(height: 16),

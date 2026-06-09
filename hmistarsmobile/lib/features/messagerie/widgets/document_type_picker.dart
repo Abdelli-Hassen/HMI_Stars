@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/models.dart';
+import '../../../core/utils/translation_extension.dart';
 
 class DocumentTypePicker extends StatelessWidget {
   const DocumentTypePicker({super.key});
@@ -34,7 +35,7 @@ class DocumentTypePicker extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Type de Document',
+                  context.tr('Type de Document', 'Document Type'),
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w800,
                     fontSize: 20,
@@ -43,7 +44,7 @@ class DocumentTypePicker extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Veuillez sélectionner la catégorie de ce document avant l\'envoi.',
+                  context.tr('Veuillez sélectionner la catégorie de ce document avant l\'envoi.', 'Please select the category of this document before sending.'),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -62,24 +63,24 @@ class DocumentTypePicker extends StatelessWidget {
                     context,
                     type: TypeDocument.fournisseur,
                     icon: Icons.store_outlined,
-                    title: 'Fournisseur (Charge)',
-                    subtitle: 'Factures, bons de livraison, charges',
+                    title: context.tr('Fournisseur (Charge)', 'Supplier (Expense)'),
+                    subtitle: context.tr('Factures, bons de livraison, charges', 'Invoices, delivery notes, expenses'),
                     color: Colors.deepOrange,
                   ),
                   _buildTypeOption(
                     context,
                     type: TypeDocument.releve_bancaire,
                     icon: Icons.account_balance_outlined,
-                    title: 'Relevé Bancaire',
-                    subtitle: 'Relevés de compte, extraits bancaires',
+                    title: context.tr('Relevé Bancaire', 'Bank Statement'),
+                    subtitle: context.tr('Relevés de compte, extraits bancaires', 'Account statements, bank extracts'),
                     color: Colors.blue,
                   ),
                   _buildTypeOption(
                     context,
                     type: TypeDocument.chiffre_affaires,
                     icon: Icons.receipt_long_outlined,
-                    title: 'Chiffre d\'Affaires',
-                    subtitle: 'Factures clients, tickets de caisse, CA',
+                    title: context.tr('Chiffre d\'Affaires', 'Revenue'),
+                    subtitle: context.tr('Factures clients, tickets de caisse, CA', 'Client invoices, receipts, revenue'),
                     color: Colors.teal,
                   ),
                   _buildTypeOption(
@@ -87,15 +88,15 @@ class DocumentTypePicker extends StatelessWidget {
                     type: TypeDocument.kbis,
                     icon: Icons.business_outlined,
                     title: 'KBIS',
-                    subtitle: 'Extrait Kbis, immatriculation',
+                    subtitle: context.tr('Extrait Kbis, immatriculation', 'Kbis extract, registration'),
                     color: Colors.purple,
                   ),
                   _buildTypeOption(
                     context,
                     type: TypeDocument.tva,
                     icon: Icons.percent_outlined,
-                    title: 'Attestation TVA',
-                    subtitle: 'Attestation de vigilance TVA, déclarations',
+                    title: context.tr('Attestation TVA', 'VAT Certificate'),
+                    subtitle: context.tr('Attestation de vigilance TVA, déclarations', 'VAT vigilance certificate, declarations'),
                     color: Colors.indigo,
                   ),
                   _buildTypeOption(
@@ -103,7 +104,7 @@ class DocumentTypePicker extends StatelessWidget {
                     type: TypeDocument.siret,
                     icon: Icons.badge_outlined,
                     title: 'SIRET / SIREN',
-                    subtitle: 'Numéro SIRET, avis de situation INSEE',
+                    subtitle: context.tr('Numéro SIRET, avis de situation INSEE', 'SIRET number, INSEE status notice'),
                     color: Colors.amber[800]!,
                   ),
                   _buildTypeOption(
@@ -111,31 +112,31 @@ class DocumentTypePicker extends StatelessWidget {
                     type: TypeDocument.rib,
                     icon: Icons.credit_card_outlined,
                     title: 'RIB',
-                    subtitle: 'Relevé d\'identité bancaire',
+                    subtitle: context.tr('Relevé d\'identité bancaire', 'Bank identity statement'),
                     color: Colors.cyan,
                   ),
                   _buildTypeOption(
                     context,
                     type: TypeDocument.statuts,
                     icon: Icons.gavel_outlined,
-                    title: 'Statuts',
-                    subtitle: 'Statuts de l\'entreprise signés',
+                    title: context.tr('Statuts', 'Articles of Association'),
+                    subtitle: context.tr('Statuts de l\'entreprise signés', 'Signed company articles'),
                     color: Colors.red,
                   ),
                   _buildTypeOption(
                     context,
                     type: TypeDocument.media,
                     icon: Icons.image_outlined,
-                    title: 'Média / Photo',
-                    subtitle: 'Photo, image, capture ou média',
+                    title: context.tr('Média / Photo', 'Media / Photo'),
+                    subtitle: context.tr('Photo, image, capture ou média', 'Photo, image, capture or media'),
                     color: Colors.pink,
                   ),
                   _buildTypeOption(
                     context,
                     type: TypeDocument.autre,
                     icon: Icons.folder_outlined,
-                    title: 'Autre Document',
-                    subtitle: 'Tout autre type de document',
+                    title: context.tr('Autre Document', 'Other Document'),
+                    subtitle: context.tr('Tout autre type de document', 'Any other type of document'),
                     color: Theme.of(context).colorScheme.outline,
                   ),
                   const SizedBox(height: 20),
