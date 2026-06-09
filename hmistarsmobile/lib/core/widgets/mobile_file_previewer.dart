@@ -114,6 +114,9 @@ class MobileFilePreviewer {
               body: PdfPreview(
                 build: (format) async {
                   try {
+                    if (!resolvedUrl.startsWith('http')) {
+                      return await io.File(resolvedUrl).readAsBytes();
+                    }
                     final httpClient = io.HttpClient();
                     final request = await httpClient.getUrl(Uri.parse(resolvedUrl));
                     final response = await request.close();
