@@ -6,7 +6,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import '../../features/router/app_router.dart';
+import '../providers/app_state.dart';
 
 /// Service gérant les notifications push (FCM) avec une approche robuste 
 /// (ne crashe pas si google-services.json est manquant).
@@ -183,11 +185,22 @@ class ServiceNotification {
 
   /// Affiche un toast personnalisé haut de gamme lorsque l'application est au premier plan
   void _afficherNotificationEnPremierPlan(RemoteMessage message) {
-    final title = message.notification?.title ?? 'Notification';
+    final title = message.notification?.title ?? 'HMI Stars Consulting';
     final body = message.notification?.body ?? '';
+    
+    // Retrieve associated company name from data payload if available
+    final entrepriseName = message.data['entreprise_name'] ?? '';
     
     final context = rootNavigatorKey.currentContext;
     if (context == null) return;
+
+    // Check if the received notification's company is the currently active/selected one
+    final appState = Provider.of<AppState>(context, listen: false);
+    final isCurrentCompany = appState.parametres?.raisonSociale == entrepriseName;
+    
+    // Do not display company name in the title or badge if it is already the currently active company
+    final displayTitle = isCurrentCompany ? 'HMI Stars Consulting' : title;
+    final displayCompany = isCurrentCompany ? '' : entrepriseName;
 
     final overlayState = Overlay.of(context);
     late OverlayEntry overlayEntry;
@@ -203,8 +216,9 @@ class ServiceNotification {
             child: Material(
               color: Colors.transparent,
               child: _InAppNotificationBanner(
-                title: title,
+                title: displayTitle,
                 body: body,
+                entrepriseName: displayCompany,
                 onDismiss: () {
                   if (overlayEntry.mounted) {
                     overlayEntry.remove();
@@ -226,8 +240,8 @@ class ServiceNotification {
 
     overlayState.insert(overlayEntry);
 
-    // Supprimer automatiquement après 4 secondes
-    Timer(const Duration(seconds: 4), () {
+    // Supprimer automatiquement après 5 secondes
+    Timer(const Duration(seconds: 5), () {
       if (overlayEntry.mounted) {
         overlayEntry.remove();
       }
@@ -239,12 +253,14 @@ class ServiceNotification {
 class _InAppNotificationBanner extends StatelessWidget {
   final String title;
   final String body;
+  final String entrepriseName;
   final VoidCallback onDismiss;
   final VoidCallback onTap;
 
   const _InAppNotificationBanner({
     required this.title,
     required this.body,
+    required this.entrepriseName,
     required this.onDismiss,
     required this.onTap,
   });
@@ -260,20 +276,20 @@ class _InAppNotificationBanner extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1F242C) : Colors.white,
+            color: isDark ? const Color(0xFF1A1F26) : Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.12),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
             ],
             border: Border.all(
-              color: isDark ? const Color(0xFF323537) : const Color(0xFFEDEEEF),
-              width: 1,
+              color: const Color(0xFFb4975a), // signature gold-brown accent border
+              width: 1.5,
             ),
           ),
           child: Row(
@@ -282,12 +298,12 @@ class _InAppNotificationBanner extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE08B).withOpacity(0.2),
+                  color: const Color(0xFFb4975a).withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.notifications_active_outlined,
-                  color: Color(0xFFEAC249),
+                  color: Color(0xFFb4975a),
                   size: 24,
                 ),
               ),
@@ -299,17 +315,41 @@ class _InAppNotificationBanner extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF001E40),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF001E40),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (entrepriseName.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFb4975a).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              entrepriseName,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFb4975a),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       body,
                       style: TextStyle(
