@@ -132,6 +132,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     ]);
   }
 
+  /// Reset current company choice to trigger redirection to the selector page
+  void triggerCompanySelection() {
+    _entrepriseId = null;
+    _entreprisesDisponibles = List.from(_allEntreprises);
+    notifyListeners();
+  }
+
   Future<String?> login(String email, String password) async {
     try {
       // S'assurer qu'aucune session persistante n'interfère avec la nouvelle connexion
@@ -143,11 +150,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       }
       return 'Erreur de connexion inconnue.';
     } on AuthException catch (e) {
-      // Traduire les erreurs courantes
-      if (e.message.toLowerCase().contains('invalid login credentials')) {
+      final msg = e.message.toLowerCase();
+      // Supabase returns 'email not confirmed' explicitly
+      if (msg.contains('email not confirmed') || msg.contains('not confirmed')) {
+        return 'email_not_confirmed';
+      }
+      if (msg.contains('invalid login credentials')) {
         return 'Identifiants invalides ou e-mail non vérifié.';
-      } else if (e.message.toLowerCase().contains('email not confirmed')) {
-        return 'Adresse e-mail non confirmée.';
       }
       return e.message;
     } catch (e) {
@@ -189,6 +198,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       debugPrint('[AppState] verifySignupOTP error: $e');
       return false;
     }
+  }
+
+  /// Resends the signup confirmation OTP to the given email.
+  Future<void> resendConfirmationOTP(String email) async {
+    await _authService.resendConfirmationOTP(email);
   }
 
   void _onSignedIn(Session? session) async {

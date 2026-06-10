@@ -53,4 +53,12 @@ class AuthService {
       type: OtpType.signup,
     );
   }
+
+  /// Resends the signup confirmation OTP to the given email.
+  Future<void> resendConfirmationOTP(String email) async {
+    await _client.auth.resend(
+      type: OtpType.signup,
+      email: email,
+    );
+  }
 }

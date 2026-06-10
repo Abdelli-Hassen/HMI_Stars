@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/top_notification_banner.dart';
+import '../../core/utils/translation_extension.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -39,17 +40,14 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _isLoading = false);
       if (errorMessage == null) {
         context.go('/tableau-de-bord');
+      } else if (errorMessage == 'email_not_confirmed') {
+        _showOtpDialog(_emailController.text.trim());
       } else {
-        if (errorMessage.toLowerCase().contains('non confirm') ||
-            errorMessage.toLowerCase().contains('not confirmed')) {
-          _showOtpDialog(_emailController.text.trim());
-        } else {
-          TopNotificationBanner.show(
-            context,
-            errorMessage,
-            isError: true,
-          );
-        }
+        TopNotificationBanner.show(
+          context,
+          errorMessage,
+          isError: true,
+        );
       }
     }
   }
@@ -57,20 +55,44 @@ class _LoginPageState extends State<LoginPage> {
   void _showOtpDialog(String email) {
     final otpController = TextEditingController();
     bool isVerifying = false;
+    bool isResending = false;
+    int resendCooldown = 0;
+
+    // Auto-resend the OTP when the dialog first opens
+    final appState = context.read<AppState>();
+    appState.resendConfirmationOTP(email).catchError((_) {});
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setStateDialog) {
+          // Start cooldown timer helper
+          void startCooldown() {
+            resendCooldown = 60;
+            Future.doWhile(() async {
+              await Future.delayed(const Duration(seconds: 1));
+              if (!dialogContext.mounted) return false;
+              setStateDialog(() => resendCooldown--);
+              return resendCooldown > 0;
+            });
+          }
+
+          // Kick off cooldown on first build
+          if (resendCooldown == 0 && !isResending) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (dialogContext.mounted) startCooldown();
+            });
+          }
+
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('Confirmation de Compte'),
+            title: Text(context.tr('Confirmation de Compte', 'Account Confirmation')),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Saisissez le code de confirmation à 6 chiffres envoyé à $email',
+                  '${context.tr('Saisissez le code de confirmation à 6 chiffres envoyé à', 'Enter the 6-digit confirmation code sent to')} $email',
                   style: GoogleFonts.inter(fontSize: 14),
                 ),
                 const SizedBox(height: 16),
@@ -89,12 +111,61 @@ class _LoginPageState extends State<LoginPage> {
                     counterText: '',
                   ),
                 ),
+                const SizedBox(height: 12),
+                // Resend OTP button with cooldown
+                TextButton.icon(
+                  onPressed: (resendCooldown > 0 || isResending)
+                      ? null
+                      : () async {
+                          setStateDialog(() => isResending = true);
+                          try {
+                            await appState.resendConfirmationOTP(email);
+                            if (dialogContext.mounted) {
+                              setStateDialog(() => isResending = false);
+                              startCooldown();
+                              TopNotificationBanner.show(
+                                context,
+                                context.trStatic(
+                                  'Code renvoyé avec succès !',
+                                  'Code resent successfully!',
+                                ),
+                                isError: false,
+                              );
+                            }
+                          } catch (e) {
+                            if (dialogContext.mounted) {
+                              setStateDialog(() => isResending = false);
+                              TopNotificationBanner.show(
+                                context,
+                                context.trStatic(
+                                  'Impossible de renvoyer le code.',
+                                  'Unable to resend the code.',
+                                ),
+                                isError: true,
+                              );
+                            }
+                          }
+                        },
+                  icon: isResending
+                      ? const SizedBox(
+                          height: 14,
+                          width: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh, size: 18),
+                  label: Text(
+                    resendCooldown > 0
+                        ? '${context.tr('Renvoyer dans', 'Resend in')} ${resendCooldown}s'
+                        : context.tr('Renvoyer le code', 'Resend code'),
+                    style: GoogleFonts.inter(fontSize: 13),
+                  ),
+                ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: isVerifying ? null : () => Navigator.pop(dialogContext),
-                child: const Text('Annuler'),
+                child: Text(context.tr('Annuler', 'Cancel')),
               ),
               ElevatedButton(
                 onPressed: isVerifying ? null : () async {
@@ -103,21 +174,20 @@ class _LoginPageState extends State<LoginPage> {
 
                   setStateDialog(() => isVerifying = true);
                   try {
-                    final appState = context.read<AppState>();
                     final ok = await appState.verifySignupOTP(email, token);
                     if (mounted) {
                       Navigator.pop(dialogContext);
                       if (ok) {
                         TopNotificationBanner.show(
                           context,
-                          'Compte confirmé avec succès !',
+                          context.trStatic('Compte confirmé avec succès !', 'Account confirmed successfully!'),
                           isError: false,
                         );
                         context.go('/tableau-de-bord');
                       } else {
                         TopNotificationBanner.show(
                           context,
-                          'Code incorrect ou expiré.',
+                          context.trStatic('Code incorrect ou expiré.', 'Incorrect or expired code.'),
                           isError: true,
                         );
                       }
@@ -139,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Valider'),
+                    : Text(context.tr('Valider', 'Validate')),
               ),
             ],
           );
@@ -203,7 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Cabinet de conseil spécialisé en gestion, création d\'entreprise et accompagnement social.',
+                    context.tr('Cabinet de conseil spécialisé en gestion, création d\'entreprise et accompagnement social.', 'Consulting firm specializing in management, business creation, and social support.'),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -231,7 +301,7 @@ class _LoginPageState extends State<LoginPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Email
-                          _buildLabel('Identifiant Professionnel'),
+                          _buildLabel(context.tr('Adresse e-mail', 'E-mail adress')),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _emailController,
@@ -240,16 +310,16 @@ class _LoginPageState extends State<LoginPage> {
                               hintText: 'nom@hmistars.com',
                             ),
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Email requis';
+                              if (v == null || v.isEmpty) return context.trStatic('Email requis', 'Email required');
                               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) {
-                                return 'Veuillez saisir un e-mail valide';
+                                return context.trStatic('Veuillez saisir un e-mail valide', 'Please enter a valid e-mail');
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 20),
                           // Password
-                          _buildLabel('Mot de Passe'),
+                          _buildLabel(context.tr('Mot de Passe', 'Password')),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _passwordController,
@@ -270,9 +340,9 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Mot de passe requis';
+                              if (v == null || v.isEmpty) return context.trStatic('Mot de passe requis', 'Password required');
                               if (v.trim().length < 6) {
-                                return 'Au moins 6 caractères requis';
+                                return context.trStatic('Au moins 6 caractères requis', 'At least 6 characters required');
                               }
                               return null;
                             },
@@ -284,7 +354,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: GestureDetector(
                               onTap: () => context.push('/mot-de-passe-oublie'),
                               child: Text(
-                                'Mot de passe oublié ?',
+                                context.tr('Mot de passe oublié ?', 'Forgot password?'),
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -325,7 +395,7 @@ class _LoginPageState extends State<LoginPage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          'Se connecter',
+                                          context.tr('Se connecter', 'Login'),
                                           style: GoogleFonts.manrope(
                                             fontWeight: FontWeight.w700,
                                             fontSize: 16,
@@ -348,33 +418,48 @@ class _LoginPageState extends State<LoginPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.verified_user_outlined,
-                                    size: 16,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.outline,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Secured by HMI Shield',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outline,
+                              GestureDetector(
+                                onTap: () {
+                                  final appState = context.read<AppState>();
+                                  if (appState.langue == 'English (EN)') {
+                                    appState.setLangue('Français (FR)');
+                                  } else {
+                                    appState.setLangue('English (EN)');
+                                  }
+                                },
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.language,
+                                      size: 18,
+                                      color: Theme.of(context).colorScheme.outline,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      context.watch<AppState>().langue == 'English (EN)'
+                                          ? 'Français'
+                                          : 'English',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context).colorScheme.outline,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              Text(
-                                'Support Technique',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  color: Theme.of(context).colorScheme.outline,
-                                  decoration: TextDecoration.underline,
+                              GestureDetector(
+                                onTap: () => context.read<AppState>().toggleDarkMode(),
+                                child: Text(
+                                  context.watch<AppState>().isDarkMode
+                                      ? context.tr('Mode clair', 'Light Mode')
+                                      : context.tr('Mode nuit', 'Night Mode'),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: Theme.of(context).colorScheme.outline,
+                                    decoration: TextDecoration.underline,
+                                  ),
                                 ),
                               ),
                             ],
@@ -402,7 +487,7 @@ class _LoginPageState extends State<LoginPage> {
                             vertical: 4,
                           ),
                           child: Text(
-                            'AVIS',
+                            context.tr('AVIS', 'NOTICE'),
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -414,7 +499,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'L\'accès est strictement réservé au personnel autorisé. Toute tentative de connexion non autorisée fera l\'objet d\'un audit de sécurité.',
+                            context.tr('L\'accès est strictement réservé au personnel autorisé. Toute tentative de connexion non autorisée fera l\'objet d\'un audit de sécurité.', 'Access is strictly reserved for authorized personnel. Any unauthorized connection attempt will be subject to a security audit.'),
                             style: GoogleFonts.manrope(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,

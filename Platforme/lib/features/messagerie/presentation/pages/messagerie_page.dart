@@ -1331,7 +1331,7 @@ class _BubbleMessage extends StatelessWidget {
                       const SizedBox(height: 8),
                     ],
 
-                    if (message.contenu.isNotEmpty)
+                    if (!message.estFichier && message.contenu.isNotEmpty)
                       Text(
                         message.contenu,
                         style: AppTextStyles.bodyMedium.copyWith(

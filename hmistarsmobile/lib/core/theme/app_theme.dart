@@ -36,23 +36,23 @@ class AppColors {
   static Color get tertiaryFixedDim => const Color(0xFFEAC249);
 
   // Surface containers
-  static Color get surface => _isDark ? const Color(0xFF111416) : const Color(0xFFF8F9FA);
-  static Color get surfaceBright => _isDark ? const Color(0xFF37393B) : const Color(0xFFF8F9FA);
-  static Color get surfaceDim => _isDark ? const Color(0xFF111416) : const Color(0xFFD9DADB);
-  static Color get surfaceContainer => _isDark ? const Color(0xFF1D2022) : const Color(0xFFEDEEEF);
-  static Color get surfaceContainerLow => _isDark ? const Color(0xFF191C1E) : const Color(0xFFF3F4F5);
-  static Color get surfaceContainerLowest => _isDark ? const Color(0xFF0C0F10) : const Color(0xFFFFFFFF);
-  static Color get surfaceContainerHigh => _isDark ? const Color(0xFF272A2C) : const Color(0xFFE7E8E9);
-  static Color get surfaceContainerHighest => _isDark ? const Color(0xFF323537) : const Color(0xFFE1E3E4);
+  static Color get surface => _isDark ? const Color(0xFF161B22) : const Color(0xFFF8F9FA);
+  static Color get surfaceBright => _isDark ? const Color(0xFF282E38) : const Color(0xFFF8F9FA);
+  static Color get surfaceDim => _isDark ? const Color(0xFF161B22) : const Color(0xFFD9DADB);
+  static Color get surfaceContainer => _isDark ? const Color(0xFF282E38) : const Color(0xFFEDEEEF);
+  static Color get surfaceContainerLow => _isDark ? const Color(0xFF1F242C) : const Color(0xFFF3F4F5);
+  static Color get surfaceContainerLowest => _isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF);
+  static Color get surfaceContainerHigh => _isDark ? const Color(0xFF323944) : const Color(0xFFE7E8E9);
+  static Color get surfaceContainerHighest => _isDark ? const Color(0xFF3D4653) : const Color(0xFFE1E3E4);
   static Color get background => _isDark ? const Color(0xFF0D1117) : const Color(0xFFF8F9FA);
 
   // On-surface
-  static Color get onSurface => _isDark ? const Color(0xFFE1E2E4) : const Color(0xFF191C1D);
-  static Color get onSurfaceVariant => _isDark ? const Color(0xFFC3C6D1) : const Color(0xFF43474F);
+  static Color get onSurface => _isDark ? const Color(0xFFF0F2F5) : const Color(0xFF191C1D);
+  static Color get onSurfaceVariant => _isDark ? const Color(0xFFC5CBD3) : const Color(0xFF43474F);
 
   // Outline
-  static Color get outline => _isDark ? const Color(0xFF8D9199) : const Color(0xFF737780);
-  static Color get outlineVariant => _isDark ? const Color(0xFF43474F) : const Color(0xFFC3C6D1);
+  static Color get outline => _isDark ? const Color(0xFF8D95A1) : const Color(0xFF737780);
+  static Color get outlineVariant => _isDark ? const Color(0xFF3D444D) : const Color(0xFFC3C6D1);
 
   // Error
   static Color get error => _isDark ? const Color(0xFFFFB4AB) : const Color(0xFFBA1A1A);
@@ -174,11 +174,11 @@ class AppTheme {
         fillColor: AppColors.surfaceContainerLowest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: AppColors.outlineVariant, width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: AppColors.outlineVariant, width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -351,11 +351,11 @@ class AppTheme {
         fillColor: const Color(0xFF1F242C),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: Color(0xFF3D444D), width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: Color(0xFF3D444D), width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

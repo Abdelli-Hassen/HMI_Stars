@@ -90,7 +90,7 @@ As shown in Figure \ref{fig:mobile_login_home}, the application opens with a cle
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_02.png}
+        \includegraphics[width=\textwidth]{project_images/company_select.png}
         \caption{Company Selection}
         \label{fig:m_company_selection}
     \end{subfigure}
@@ -118,14 +118,14 @@ Company managers can track their employees's daily activities and register point
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_05.png}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_08.png}
         \caption{Employees attendance list}
         \label{fig:attendance_list}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_06.png}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_10.png}
         \caption{Absence declaration form}
         \label{fig:m_abs_form}
     \end{subfigure}
@@ -139,14 +139,14 @@ The leaves and absences request subsystem allows managers to declare absences an
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_07.png}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_06.png}
         \caption{Leaves list view}
         \label{fig:m_leaves_list}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_08.png}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_07_1.png}
         \caption{Absence declaration form}
         \label{fig:m_leaves_request_form}
     \end{subfigure}
@@ -160,28 +160,19 @@ The communication interface integrates real-time chat and document sharing. clie
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{project_images/App_light_and_english/flutter_09.png}
+        \includegraphics[width=0.9\textwidth]{project_images/App_light_and_english/flutter_13.png}
         \caption{Real-time chat screen}
         \label{fig:m_chat}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{project_images/App_light_and_english/flutter_10.png}
+        \includegraphics[width=0.9\textwidth]{project_images/App_light_and_english/flutter_15.png}
         \caption{Shared documents panel}
         \label{fig:m_docs}
     \end{subfigure}
     \caption{Mobile Application - Chats and Document Sharing}
     \label{fig:mobile_chat}
-\end{figure}
-
-Beyond the basic chat-embedded document view, the application includes a dedicated document management panel. As shown in Figure \ref{fig:mobile_docs_panel}, this panel provides advanced filtering and categorization capabilities. Documents are organized by type (Suppliers, Bank Statements, Revenue, etc.) and by direction (Sent or Received), enabling managers to quickly locate specific files.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.45\textwidth]{project_images/App_light_and_english/flutter_15.png}
-    \caption{Mobile Application - Advanced Document Management Panel with Category Filters}
-    \label{fig:mobile_docs_panel}
 \end{figure}
 
 The employee management module allows company managers to view, add, edit, and archive employees directly from the mobile application. As shown in Figure \ref{fig:mobile_employees}, the employee directory supports both grid and list view modes with a search function. Managers can toggle between active and archived employees using dedicated tabs, and add new employees through a registration form.
@@ -233,24 +224,24 @@ Each employee card provides quick action buttons for editing, archiving, or dele
     \label{fig:mobile_emp_profile}
 \end{figure}
 
-The settings screen provides company profile management and application personalization options. As displayed in Figure \ref{fig:mobile_settings}, managers can update their company logo, toggle between light and dark themes, switch the interface language between French and English, and edit company general and legal information such as the SIREN, SIRET, and APE codes.
+The settings screen provides company profile management and application personalization options. As shown in Figure \ref{fig:mobile_settings}, managers can update their company logo, switch between light and dark themes, change the interface language between French and English, and edit the company's general and legal information, such as its SIREN, SIRET, and APE codes.
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_26.png}
-        \caption{Settings - Appearance and Language}
+        \caption{Appearance and Language Settings}
         \label{fig:m_settings_top}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_27.png}
-        \caption{Settings - Company Information}
+        \caption{Company Information Settings}
         \label{fig:m_settings_bottom}
     \end{subfigure}
-    \caption{Mobile Application - Settings and Company Profile Management}
+    \caption{Mobile Application -- Settings and Company Profile Management}
     \label{fig:mobile_settings}
 \end{figure}
 
@@ -387,7 +378,7 @@ Finally, the Notes and Reminders feature allows consultants to attach internal n
 \end{figure}
 
 \subsubsection{Advanced Security and Authentication Workflows}
-To provide a secure and user-friendly experience, we updated the authentication system by replacing traditional email magic links with a native, in-app 6-digit One-Time Password (OTP) verification flow. When a client manager registers or tries to log in with an unconfirmed email, the system catches the exception and prompts them with a verification screen to input their OTP. Similarly, during password recovery, the user enters their email, receives a code, verifies it in-app, and resets their password without encountering browser redirection loops. 
+To provide a secure and user-friendly experience, we updated the authentication system by replacing traditional email magic links with a native, in-app 6-digit One-Time Password (OTP) verification flow. When a client manager registers or tries to log in with an unconfirmed email, the system catches the authentication exception and prompts them with a verification dialog to input their OTP. The dialog automatically triggers a fresh OTP dispatch upon opening and includes a ``Resend Code'' button governed by a 60-second cooldown timer, preventing abuse while ensuring the user can always obtain a valid code. Similarly, during password recovery, the user enters their email, receives a code, verifies it in-app, and resets their password without encountering browser redirection loops. 
 
 Additionally, we added strict security checks on the profile settings page. Before updating sensitive information like passwords or emails, the app silently reauthenticates the user with their current password. Email changes use a dual-OTP sequence to verify both the old and new email addresses, protecting the account from unauthorized takeover.
 
@@ -395,7 +386,7 @@ Additionally, we added strict security checks on the profile settings page. Befo
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_02_1.png}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/otp_password_reset.png}
         \caption{Verification / OTP Screen}
         \label{fig:m_otp_verification}
     \end{subfigure}
@@ -511,5 +502,4 @@ A usability evaluation was conducted with client gérants. The average system re
 
 \section{Conclusion}
 The testing and evaluation phases confirmed that the HMI Stars ecosystem is stable, secure, and fully meets all initial project requirements. The mobile application successfully delivers employee management, attendance tracking, leave requests, real-time messaging, document sharing with scanning capabilities, and disciplinary warning templates. The web platform provides a comprehensive administration workspace with company management, employee registries, document archives, warning systems, notes and reminders, and attendance export capabilities. Both components support bilingual interfaces (French and English) and adaptive themes (light and dark), ensuring accessibility and comfort for all users. The transition phase successfully configured and launched all components within their designated execution environments, confirming readiness for production deployment.
-
 

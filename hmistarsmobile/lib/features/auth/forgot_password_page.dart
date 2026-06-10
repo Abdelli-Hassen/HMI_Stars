@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/top_notification_banner.dart';
+import '../../core/utils/translation_extension.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -35,7 +36,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (email.isEmpty) {
       TopNotificationBanner.show(
         context,
-        'Veuillez saisir votre adresse e-mail.',
+        context.trStatic('Veuillez saisir votre adresse e-mail.', 'Please enter your email address.'),
         isError: true,
       );
       return;
@@ -43,7 +44,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
       TopNotificationBanner.show(
         context,
-        'Veuillez saisir une adresse e-mail valide.',
+        context.trStatic('Veuillez saisir une adresse e-mail valide.', 'Please enter a valid email address.'),
         isError: true,
       );
       return;
@@ -55,10 +56,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        String msg = 'Erreur lors de l\'envoi. Vérifiez l\'adresse e-mail.';
+        String msg = context.trStatic('Erreur lors de l\'envoi. Vérifiez l\'adresse e-mail.', 'Error sending. Check your email address.');
         if (e.toString().toLowerCase().contains('unknown verification email') || 
             e.toString().toLowerCase().contains('not found')) {
-          msg = 'Adresse e-mail inconnue ou non vérifiée.';
+          msg = context.trStatic('Adresse e-mail inconnue ou non vérifiée.', 'Unknown or unverified email address.');
         } else if (e is Exception) {
           // Si on peut extraire le message de l'exception
           final str = e.toString();
@@ -81,7 +82,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (token.length < 6) {
       TopNotificationBanner.show(
         context,
-        'Veuillez saisir le code OTP à 6 chiffres.',
+        context.trStatic('Veuillez saisir le code OTP à 6 chiffres.', 'Please enter the 6-digit OTP code.'),
         isError: true,
       );
       return;
@@ -89,7 +90,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (newPassword.length < 8) {
       TopNotificationBanner.show(
         context,
-        'Le nouveau mot de passe doit contenir au moins 8 caractères.',
+        context.trStatic('Le nouveau mot de passe doit contenir au moins 8 caractères.', 'The new password must be at least 8 characters long.'),
         isError: true,
       );
       return;
@@ -104,7 +105,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         if (mounted) {
           TopNotificationBanner.show(
             context,
-            'Code incorrect ou expiré.',
+            context.trStatic('Code incorrect ou expiré.', 'Incorrect or expired code.'),
             isError: true,
           );
         }
@@ -115,7 +116,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         setState(() => _verifying = false);
         TopNotificationBanner.show(
           context,
-          'Mot de passe réinitialisé avec succès.',
+          context.trStatic('Mot de passe réinitialisé avec succès.', 'Password reset successfully.'),
           isError: false,
         );
         context.go('/connexion');
@@ -154,7 +155,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             children: [
               const SizedBox(height: 16),
               Text(
-                'Mot de passe\noublié ?',
+                context.tr('Mot de passe\noublié ?', 'Forgot\npassword?'),
                 style: GoogleFonts.manrope(
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
@@ -164,7 +165,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Entrez votre adresse e-mail institutionnelle. Nous vous enverrons un code OTP pour réinitialiser votre mot de passe.',
+                context.tr('Entrez votre adresse e-mail institutionnelle. Nous vous enverrons un code OTP pour réinitialiser votre mot de passe.', 'Enter your institutional email address. We will send you an OTP code to reset your password.'),
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -190,7 +191,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ADRESSE E-MAIL',
+                        context.tr('ADRESSE E-MAIL', 'EMAIL ADDRESS'),
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -214,7 +215,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(
                               context,
-                            ).colorScheme.primary,
+                            ).colorScheme.tertiary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(
@@ -231,7 +232,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   ),
                                 )
                               : Text(
-                                  'Envoyer le code',
+                                  context.tr('Envoyer le code', 'Send code'),
                                   style: GoogleFonts.manrope(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
@@ -260,7 +261,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'CODE DE CONFIRMATION (OTP)',
+                        context.tr('CODE DE CONFIRMATION (OTP)', 'CONFIRMATION CODE (OTP)'),
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -286,7 +287,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        'NOUVEAU MOT DE PASSE',
+                        context.tr('NOUVEAU MOT DE PASSE', 'NEW PASSWORD'),
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -315,7 +316,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         child: ElevatedButton(
                           onPressed: _verifying ? null : _verifyAndReset,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor: Theme.of(context).colorScheme.tertiary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(
@@ -332,7 +333,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   ),
                                 )
                               : Text(
-                                  'Réinitialiser le mot de passe',
+                                  context.tr('Réinitialiser le mot de passe', 'Reset password'),
                                   style: GoogleFonts.manrope(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,

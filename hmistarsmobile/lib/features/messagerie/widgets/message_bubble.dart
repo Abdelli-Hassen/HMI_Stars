@@ -115,19 +115,13 @@ class MessageBubble extends StatelessWidget {
       }
       
       // Fallback for company initials/icon
-      final initial = p != null && p.raisonSociale.isNotEmpty
-          ? p.raisonSociale[0].toUpperCase()
-          : 'C';
       return CircleAvatar(
         radius: 16,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: Text(
-          initial,
-          style: GoogleFonts.manrope(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+        child: Icon(
+          Icons.business,
+          size: 16,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
         ),
       );
     } else {

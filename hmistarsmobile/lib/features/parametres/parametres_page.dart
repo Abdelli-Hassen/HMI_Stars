@@ -432,6 +432,9 @@ class _ParametresPageState extends State<ParametresPage> {
                   _buildSectionHeader(context.tr('Apparence', 'Appearance')),
                   _buildAppearanceSection(context, appState, isDark),
                   const SizedBox(height: 24),
+                  _buildSectionHeader(context.tr('Compte', 'Account')),
+                  _buildAccountSection(context, appState),
+                  const SizedBox(height: 24),
                   _buildSectionHeader(context.tr('Modifier les informations', 'Edit Information')),
                   _buildEditSection(),
                   const SizedBox(height: 24),
@@ -706,6 +709,79 @@ class _ParametresPageState extends State<ParametresPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAccountSection(BuildContext context, AppState appState) {
+    final hasMultiple = appState.allEntreprises.length > 1;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.swap_horiz_rounded,
+              color: Theme.of(context).colorScheme.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr('Changer d\'entreprise', 'Change Company'),
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  hasMultiple
+                      ? context.tr(
+                          'Basculer vers une autre entreprise associée',
+                          'Switch to another associated company',
+                        )
+                      : context.tr(
+                          'Aucune autre entreprise disponible',
+                          'No other company available',
+                        ),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: hasMultiple
+                ? () {
+                    appState.triggerCompanySelection();
+                    context.go('/selection-entreprise');
+                  }
+                : null,
+            icon: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: hasMultiple
+                  ? Theme.of(context).colorScheme.tertiary
+                  : Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
