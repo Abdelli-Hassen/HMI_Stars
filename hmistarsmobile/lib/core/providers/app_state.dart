@@ -110,6 +110,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _entreprisesDisponibles = []; // selection done
     notifyListeners();
     ServiceNotification().enregistrerJetonPourEntreprises([choix.id]);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selected_entreprise_id', choix.id);
+    } catch (e) {
+      debugPrint('[AppState] Error saving selected company ID: $e');
+    }
+
     await Future.wait([
       loadSalaries(),
       loadMessages(),
@@ -124,6 +132,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _parametres = choix;
     notifyListeners();
     ServiceNotification().enregistrerJetonPourEntreprises([choix.id]);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selected_entreprise_id', choix.id);
+    } catch (e) {
+      debugPrint('[AppState] Error saving switched company ID: $e');
+    }
+
     await Future.wait([
       loadSalaries(),
       loadMessages(),
@@ -133,10 +149,16 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   /// Reset current company choice to trigger redirection to the selector page
-  void triggerCompanySelection() {
+  void triggerCompanySelection() async {
     _entrepriseId = null;
     _entreprisesDisponibles = List.from(_allEntreprises);
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('selected_entreprise_id');
+    } catch (e) {
+      debugPrint('[AppState] Error clearing saved company ID: $e');
+    }
   }
 
   Future<String?> login(String email, String password) async {
@@ -316,12 +338,38 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
           loadConges(),
         ]);
       } else {
-        // Multiple companies — trigger the selector screen
-        _entrepriseId = null;
-        _parametres = null;
-        _entreprisesDisponibles = entreprises;
-        _isLoadingParametres = false;
-        notifyListeners();
+        // Multiple companies — check if there is a previously saved selection
+        final prefs = await SharedPreferences.getInstance();
+        final savedId = prefs.getString('selected_entreprise_id');
+        
+        ClientParametres? match;
+        if (savedId != null) {
+          try {
+            match = entreprises.firstWhere((e) => e.id == savedId);
+          } catch (_) {}
+        }
+
+        if (match != null) {
+          // Auto-select the saved company
+          _entrepriseId = match.id;
+          _parametres = match;
+          _entreprisesDisponibles = [];
+          _isLoadingParametres = false;
+          notifyListeners();
+          await Future.wait([
+            loadSalaries(),
+            loadMessages(),
+            loadTemplates(),
+            loadConges(),
+          ]);
+        } else {
+          // No saved company selection, show selection page
+          _entrepriseId = null;
+          _parametres = null;
+          _entreprisesDisponibles = entreprises;
+          _isLoadingParametres = false;
+          notifyListeners();
+        }
       }
     } catch (e) {
       debugPrint('[AppState] _loadEntreprise error: $e');

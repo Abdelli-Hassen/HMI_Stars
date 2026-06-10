@@ -400,28 +400,81 @@ To provide a secure and user-friendly experience, we updated the authentication 
 \end{figure}
 
 \subsubsection{Bilingual Email Templates and Multi-Channel Notification Subsystem}
-To guarantee a professional and cohesive user experience, we customized the automated email notification templates dispatched by the Supabase authentication service. Rather than sending plain, default system emails, we designed premium responsive HTML email templates. As specified in the database and security configurations, these templates feature a unified layout with French copy at the top and English copy below, ensuring full bilingual support. Structurally, the emails are styled using clean HTML/CSS containing a corporate header, the HMI Stars logo, and distinct card components highlighted with the signature gold-brown accent (\#b4975a). This includes:
-\begin{itemize}
-    \item \textbf{Confirm Sign Up}: Delivers the 6-digit registration confirmation OTP with the subject \textit{Confirmez votre inscription | Confirm Sign Up}.
-    \item \textbf{Reset Password}: Dispatches recovery OTPs with the subject \textit{Réinitialisation de votre mot de passe | Reset Password}.
-    \item \textbf{Email Change Confirmation}: Drives the dual-OTP verification steps with the subject \textit{Confirmez le changement d'email | Confirm Email Change}.
-    \item \textbf{Security Notifications}: Dispatches instant notices confirming completed modifications to passwords or emails. Additionally, phone number changes trigger an immediate notification email containing both old and new numbers to maintain an audit trail.
-\end{itemize}
+
+To guarantee a professional and cohesive user experience, we customized the automated email notification templates dispatched by the Supabase authentication service. Rather than sending plain default system emails, we designed premium responsive HTML email templates. These templates follow a unified bilingual layout containing French content at the top and English content below, ensuring accessibility for all users. Each template incorporates the HMI Stars visual identity through the integration of the company logo, structured content cards, and the signature gold-brown accent color.
+
+\paragraph{Confirm Sign Up Email}
+The registration process is secured through a six-digit One-Time Password (OTP) sent to the user's email address. The customized confirmation email uses the subject \textit{Confirmez votre inscription | Confirm Sign Up} and presents the verification code within a clearly highlighted card component.
 
 \begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.85\textwidth]{project_images/App_light_and_english/supabase_email_template.png}
-    \caption{Customized Supabase HTML Email Templates (Space reserved for figure)}
-    \label{fig:supabase_email_templates}
+\centering
+\includegraphics[width=0.65\textwidth]{project_images/mails_preview/confirm_acc_mail.png}
+\caption{Customized Confirm Sign Up Email Template}
+\label{fig:mail_confirm}
 \end{figure}
+
+\paragraph{Reset Password Email}
+To facilitate secure account recovery, a dedicated password reset template is used to deliver verification OTPs. The email is sent with the subject \textit{Réinitialisation de votre mot de passe | Reset Password} and follows the same bilingual design standards adopted throughout the platform.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{project_images/mails_preview/password_reset_mail.png}
+\caption{Customized Reset Password Email Template}
+\label{fig:mail_reset}
+\end{figure}
+
+\paragraph{Email Change OTP Verification}
+When a user requests to change their email address, Supabase initiates a security workflow sending an OTP verification code. The customized template delivers this verification code, ensuring the request is authenticated.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{project_images/mails_preview/mail_otp_change_mail.png}
+\caption{Customized Email Change OTP Verification Template}
+\label{fig:mail_otp_change}
+\end{figure}
+
+\paragraph{Email Change Confirmation}
+After validating the verification code, a final confirmation email is dispatched to the user to confirm the update. The customized template details the successful change using the subject \textit{Confirmez le changement d'email | Confirm Email Change}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{project_images/mails_preview/mail_change_mail.png}
+\caption{Customized Email Change Confirmation Template}
+\label{fig:mail_change}
+\end{figure}
+
+\paragraph{Password Change Notice}
+For transparency and security, any updates to the account password trigger an immediate email notification confirming the action, helping prevent undetected account compromises.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{project_images/mails_preview/pass_change_mail.png}
+\caption{Customized Password Change Notification Template}
+\label{fig:mail_pass_change}
+\end{figure}
+
+\paragraph{Phone Number Change Notice}
+Modifications to the registered phone number trigger an automated notification email containing the details of the change to maintain a reliable audit trail.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{project_images/mails_preview/nmbr_change_mail.png}
+\caption{Customized Phone Number Change Notification Template}
+\label{fig:mail_nmbr_change}
+\end{figure}
+
 
 
 Complementing the email alerts, we implemented a dual-mode notification architecture for in-app events:
 \begin{itemize}
     \item \textbf{FCM Push Notifications}: Real-time push alerts are routed via Firebase Cloud Messaging (FCM). When administrative updates are triggered, the server resolves the device token stored in the database (\texttt{entreprises.jeton\_notification}) to deliver background notification packets
     instantly.
-    \item \textbf{Gold-Themed Toast Notification Engine}: For foreground user feedback, the interface features a custom toast notification manager (\texttt{ToastUtils.show}). Positioned non-intrusively in the bottom-right corner of the desktop viewport, it displays state changes (such as database sync confirmations or validation errors) using a floating card styled with a solid gold border and a smooth bounce slide-in animation driven by a cubic bezier curve (\textit{Curves.easeOutBack}).
+
+%add the phone_notif.png here
+
+\item \textbf{Red/Green Toast Notification Engine}: For foreground user feedback, the interface features a custom toast notification manager (\texttt{ToastUtils.show}). Positioned non-intrusively in the bottom-right corner of the desktop viewport, it displays state changes (such as database sync confirmations or validation errors) using a floating card styled with a color-coded system: green for successful operations and red for errors or failures. The component uses a smooth bounce slide-in animation driven by a cubic bezier curve (\textit{Curves.easeOutBack}).
 \end{itemize}
+%add the green_notif.png and red_notif here
 
 
 \subsubsection{Interactive Document Scanner Subsystem}
