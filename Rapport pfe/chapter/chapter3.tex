@@ -380,24 +380,22 @@ Finally, the Notes and Reminders feature allows consultants to attach internal n
 \subsubsection{Advanced Security and Authentication Workflows}
 To provide a secure and user-friendly experience, we updated the authentication system by replacing traditional email magic links with a native, in-app 6-digit One-Time Password (OTP) verification flow. When a client manager registers or tries to log in with an unconfirmed email, the system catches the authentication exception and prompts them with a verification dialog to input their OTP. The dialog automatically triggers a fresh OTP dispatch upon opening and includes a ``Resend Code'' button governed by a 60-second cooldown timer, preventing abuse while ensuring the user can always obtain a valid code. Similarly, during password recovery, the user enters their email, receives a code, verifies it in-app, and resets their password without encountering browser redirection loops. 
 
-Additionally, we added strict security checks on the profile settings page. Before updating sensitive information like passwords or emails, the app silently reauthenticates the user with their current password. Email changes use a dual-OTP sequence to verify both the old and new email addresses, protecting the account from unauthorized takeover.
-
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/otp_password_reset.png}
-        \caption{Verification / OTP Screen}
+        \caption{Forgot Password OTP Screen}
         \label{fig:m_otp_verification}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_26.png}
-        \caption{Reauthentication Settings}
-        \label{fig:m_reauth_settings}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/otp_login_confirmation.png}
+        \caption{Account Confirmation Dialog}
+        \label{fig:m_login_otp}
     \end{subfigure}
-    \caption{Bilingual OTP Verification and Profile Reauthentication Interfaces}
+    \caption{Bilingual OTP Verification and Login Confirmation Interfaces}
     \label{fig:otp_security_flow}
 \end{figure}
 
