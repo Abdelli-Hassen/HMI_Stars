@@ -397,6 +397,11 @@ class _MessageriePageState extends State<MessageriePage> {
                             setState(() {
                               _selectedPlatformContact = contact;
                             });
+                            // Mark only this conversation's messages as read
+                            final cid = contact['id'] as String?;
+                            if (cid != null) {
+                              context.read<AppState>().marquerConversationCommeLue(cid);
+                            }
                           },
                         );
                       },

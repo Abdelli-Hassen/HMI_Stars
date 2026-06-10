@@ -883,6 +883,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
           fichierNom: nomsFichiers.join(','),
           typeDocument: msg.typeDocument,
           estFichier: true,
+          contactId: msg.contactId,
         );
         saved = await _messageService.sendMessage(msgToSend);
       } else {

@@ -468,13 +468,19 @@ class PlatformDataService {
   }
 
   /// Marque tous les messages d'une entreprise comme lus.
-  Future<void> marquerMessagesCommeLus(String entrepriseId) async {
-    await _client
+  Future<void> marquerMessagesCommeLus(String entrepriseId, {String? contactId}) async {
+    var query = _client
         .from('messages')
         .update({'est_lu': true})
         .eq('entreprise_id', entrepriseId)
         .eq('est_envoye_par_user', true)
         .eq('est_lu', false);
+
+    if (contactId != null) {
+      query = query.like('contenu', '%<!--contact:$contactId-->%');
+    }
+
+    await query;
   }
 
   /// Envoie un message depuis la plateforme (est_envoye_par_user = false).

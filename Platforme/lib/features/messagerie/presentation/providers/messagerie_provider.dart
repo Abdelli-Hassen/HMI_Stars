@@ -309,9 +309,9 @@ class MessagerieProvider extends ChangeNotifier {
           _messagesActuels.sort((a, b) => b.dateEnvoi.compareTo(a.dateEnvoi));
           aChangeGlobal = true;
 
-          // Marquer comme lu dans la DB si c'est le client qui envoie
-          if (isFromClient && !estLu) {
-            _dataService.marquerMessagesCommeLus(eid).catchError((e) {
+          // Marquer comme lu dans la DB si c'est le client qui envoie et que c'est pour nous
+          if (isFromClient && !estLu && (m.contactId == null || m.contactId == myUid)) {
+            _dataService.marquerMessagesCommeLus(eid, contactId: myUid).catchError((e) {
               debugPrint('[MessagerieProvider] Erreur marquage lu temps réel : $e');
             });
           }
@@ -379,7 +379,7 @@ class MessagerieProvider extends ChangeNotifier {
     notifyListeners();
 
     // Marquer comme lu dans la DB (async)
-    _dataService.marquerMessagesCommeLus(entrepriseId).catchError((e) {
+    _dataService.marquerMessagesCommeLus(entrepriseId, contactId: _currentUserId).catchError((e) {
       debugPrint('[MessagerieProvider] Erreur marquage lu : $e');
     });
 
