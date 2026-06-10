@@ -466,15 +466,40 @@ Modifications to the registered phone number trigger an automated notification e
 
 
 Complementing the email alerts, we implemented a dual-mode notification architecture for in-app events:
+
 \begin{itemize}
-    \item \textbf{FCM Push Notifications}: Real-time push alerts are routed via Firebase Cloud Messaging (FCM). When administrative updates are triggered, the server resolves the device token stored in the database (\texttt{entreprises.jeton\_notification}) to deliver background notification packets
-    instantly.
 
-%add the phone_notif.png here
+\item \textbf{FCM Push Notifications}: Real-time push alerts are routed via Firebase Cloud Messaging (FCM). When administrative updates are triggered, the server resolves the device token stored in the database (\texttt{entreprises.jeton\_notification}) and delivers notification packets instantly, even when the mobile application is running in the background. This mechanism ensures that users remain informed about important events such as new messages, reminders, attendance updates, or administrative requests.
 
-\item \textbf{Red/Green Toast Notification Engine}: For foreground user feedback, the interface features a custom toast notification manager (\texttt{ToastUtils.show}). Positioned non-intrusively in the bottom-right corner of the desktop viewport, it displays state changes (such as database sync confirmations or validation errors) using a floating card styled with a color-coded system: green for successful operations and red for errors or failures. The component uses a smooth bounce slide-in animation driven by a cubic bezier curve (\textit{Curves.easeOutBack}).
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{project_images/phone_notif.png}
+\caption{Firebase Cloud Messaging (FCM) Push Notification}
+\label{fig:fcm_notification}
+\end{figure}
+
+\item \textbf{Red/Green Toast Notification Engine}: For foreground user feedback, the interface features a custom toast notification manager (\texttt{ToastUtils.show}). Positioned non-intrusively in the bottom-right corner of the desktop viewport, it displays state changes such as successful database synchronizations, completed operations, validation errors, or failed requests. The component uses a color-coded visual system, displaying green notifications for successful actions and red notifications for errors or warnings. Each toast is animated using a smooth bounce slide-in transition driven by a cubic bezier curve (\textit{Curves.easeOutBack}).
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/green_notif.png}
+    \caption{Success Toast Notification}
+    \label{fig:toast_success}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/red_notif.png}
+    \caption{Error Toast Notification}
+    \label{fig:toast_error}
+\end{subfigure}
+\caption{Custom Foreground Toast Notification System}
+\label{fig:toast_notifications}
+\end{figure}
+
 \end{itemize}
-%add the green_notif.png and red_notif here
 
 
 \subsubsection{Interactive Document Scanner Subsystem}
@@ -484,8 +509,43 @@ To prevent high-resolution photos from causing performance lags or Application N
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.45\textwidth]{project_images/App_light_and_english/flutter_23.png}
-    \caption{Mobile Document Scanner View and Perspective Cropping Interface}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_01_1.png}
+        \caption{Mode Selection}
+        \label{fig:scanner_step1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_02_1.png}
+        \caption{Media Source Choice}
+        \label{fig:scanner_step2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_03_1.png}
+        \caption{Perspective Cropping}
+        \label{fig:scanner_step3}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_04_1.png}
+        \caption{Quality Filtering}
+        \label{fig:scanner_step4}
+    \end{subfigure}
+    \hspace{0.5cm}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_05_1.png}
+        \caption{Preview and Send}
+        \label{fig:scanner_step5}
+    \end{subfigure}
+    \caption{Interactive Document Scanner Workflow}
     \label{fig:document_scanner_view}
 \end{figure}
 
@@ -521,9 +581,8 @@ The templates are stored in a Supabase table, letting administrators update lega
 \end{figure}
 
 \subsubsection{Command-Driven Dashboard and Alert Highlighting}
-The mobile home screen was redesigned to serve as an active workspace. It features simplified Key Performance Indicators (KPIs) showing active employee counts and pending check-ins for the day. A dedicated "RAPPELS" Action Center, styled in our signature gold-brown brand accent, displays clear alerts to guide the user on what tasks need immediate attention. 
+The mobile home screen was designed to give users a clear overview of their daily activities. It displays useful information such as the number of active employees and pending attendance records for the day. A dedicated \textbf{“RAPPELS”} section highlights important reminders and actions that require attention, helping managers stay organized and keep track of their tasks efficiently.
 
-To draw attention to specific alerts, the dashboard shows the closest three approaching deadlines sorted chronologically. Clicking an alert routes the user to the details page and triggers a gold pulsing highlight animation around the target card. This animation, created using performance-friendly rendering controllers, guides the user directly to the important item.
 
 \begin{figure}[H]
     \centering
@@ -533,23 +592,18 @@ To draw attention to specific alerts, the dashboard shows the closest three appr
         \caption{Dashboard Overview}
         \label{fig:m_dashboard_overview}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_03_1.png}
-        \caption{Alert Highlighting}
-        \label{fig:m_alert_highlight}
-    \end{subfigure}
     \caption{Command-Driven Dashboard and Alert Highlighting Cards}
     \label{fig:dashboard_highlights}
 \end{figure}
 
 
 \subsection{Utility Evaluation}
-The utility of the system was evaluated by five staff members of HMI Stars Consulting. The automated transmission of VAT and KBIS documents reduced average document collection delays from 4 days to less than 2 hours.
+
+The implemented features were thoroughly tested throughout the development process to ensure that they met the functional requirements of HMI Stars Consulting. Special attention was given to document management, employee tracking, attendance management, and communication features. The results confirmed that the system successfully supports the company's daily administrative operations in a centralized and efficient manner.
 
 \subsection{Usability Evaluation}
-A usability evaluation was conducted with client gérants. The average system response time for real-time messages was clocked at under 450ms. Using the Path URL routing strategy and Supabase implicit auth flow resolved the login redirect loop on web browsers, ensuring a smooth password reset process.
+
+Several tests were carried out to verify the usability and reliability of the application on both web and mobile platforms. The user interfaces were refined to provide a simple and intuitive experience, while real-time features such as messaging and notifications were validated to ensure smooth interactions. Authentication, navigation, and data synchronization processes were also tested to guarantee a stable and seamless user experience.
 
 \section{Conclusion}
 The testing and evaluation phases confirmed that the HMI Stars ecosystem is stable, secure, and fully meets all initial project requirements. The mobile application successfully delivers employee management, attendance tracking, leave requests, real-time messaging, document sharing with scanning capabilities, and disciplinary warning templates. The web platform provides a comprehensive administration workspace with company management, employee registries, document archives, warning systems, notes and reminders, and attendance export capabilities. Both components support bilingual interfaces (French and English) and adaptive themes (light and dark), ensuring accessibility and comfort for all users. The transition phase successfully configured and launched all components within their designated execution environments, confirming readiness for production deployment.
