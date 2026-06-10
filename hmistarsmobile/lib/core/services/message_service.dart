@@ -162,15 +162,23 @@ class MessageService {
   }
 
 
-  /// Marque tous les messages reçus de la plateforme comme lus pour l'entreprise.
-  Future<void> marquerMessagesCommeLus(String entrepriseId) async {
+  /// Marque les messages reçus d'un contact spécifique comme lus.
+  /// Si [contactId] est fourni, seuls les messages de ce contact sont marqués.
+  Future<void> marquerMessagesCommeLus(String entrepriseId, {String? contactId}) async {
     try {
-      await _client
+      var query = _client
           .from('messages')
           .update({'est_lu': true})
           .eq('entreprise_id', entrepriseId)
           .eq('est_envoye_par_user', false)
           .eq('est_lu', false);
+      
+      // Only mark messages for the specific conversation as read
+      if (contactId != null) {
+        query = query.eq('contact_id', contactId);
+      }
+      
+      await query;
     } catch (_) {
       // Ignorer l'erreur silencieusement
     }

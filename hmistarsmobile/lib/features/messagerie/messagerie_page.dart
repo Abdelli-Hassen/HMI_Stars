@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart' as fp;
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
-import '../../core/widgets/app_header.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/document_type_picker.dart';
 import 'widgets/company_info_sheet.dart';
@@ -77,7 +76,6 @@ class _MessageriePageState extends State<MessageriePage> {
 
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
-  bool _showChat = false;
   String _searchQuery = '';
   Map<String, dynamic>? _selectedPlatformContact;
 
@@ -120,11 +118,7 @@ class _MessageriePageState extends State<MessageriePage> {
     if (text.isEmpty) return;
     final appState = context.read<AppState>();
     final entrepriseId = appState.entrepriseId ?? '';
-    final allCompanies = appState.allEntreprises;
-    final isClient = allCompanies.length <= 1;
-    final activeContactId = isClient
-        ? (_selectedPlatformContact?['id'] as String?)
-        : appState.currentUserId;
+    final activeContactId = _selectedPlatformContact?['id'] as String?;
 
     _textController.clear();
     _scrollToBottom();
@@ -135,7 +129,7 @@ class _MessageriePageState extends State<MessageriePage> {
           entrepriseId: entrepriseId,
           contenu: text,
           dateEnvoi: DateTime.now(),
-          estEnvoyePar: isClient,
+          estEnvoyePar: true, // mobile user is always the client
           contactId: activeContactId,
         ),
       );
@@ -224,12 +218,8 @@ class _MessageriePageState extends State<MessageriePage> {
     if (type == null || !mounted) return;
     final appState = context.read<AppState>();
     final entrepriseId = appState.entrepriseId ?? '';
-    final allCompanies = appState.allEntreprises;
-    final isClient = allCompanies.length <= 1;
-    final activeContactId = isClient
-        ? (_selectedPlatformContact?['id'] as String?)
-        : appState.currentUserId;
-    
+    final activeContactId = _selectedPlatformContact?['id'] as String?;
+
     _scrollToBottom();
     try {
       await appState.addMessage(
@@ -238,7 +228,7 @@ class _MessageriePageState extends State<MessageriePage> {
           entrepriseId: entrepriseId,
           contenu: filename,
           dateEnvoi: DateTime.now(),
-          estEnvoyePar: isClient,
+          estEnvoyePar: true, // mobile user is always the client
           fichierNom: filename,
           fichierUrl: path,
           typeDocument: type,
@@ -261,31 +251,25 @@ class _MessageriePageState extends State<MessageriePage> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final messages = appState.messages;
-    final allCompanies = appState.allEntreprises;
-    final currentCompany = appState.parametres;
 
-    final isClient = allCompanies.length <= 1;
-    final activeContactId = isClient
-        ? (_selectedPlatformContact?['id'] as String?)
-        : appState.currentUserId;
+    // Always treat the mobile user as a client — company was already selected
+    // on the company-selector screen. Never show other companies here.
+    final activeContactId = _selectedPlatformContact?['id'] as String?;
 
     final filteredChatMessages = messages.where((msg) {
-      if (activeContactId == null) return true;
-      return msg.contactId == null || msg.contactId == activeContactId;
+      // Strict match: only show messages belonging to this specific conversation.
+      // A message belongs here if its contactId matches the selected platform contact.
+      return msg.contactId == activeContactId;
     }).toList();
 
-    final shouldShowChat = (isClient && _selectedPlatformContact != null) || (!isClient && _showChat);
+    final shouldShowChat = _selectedPlatformContact != null;
 
     if (!shouldShowChat) {
-      // Search results filtering
-      final List<dynamic> filteredContacts = isClient
-          ? appState.platformContacts.where((u) {
-              final nom = u['nom'] as String? ?? '';
-              return nom.toLowerCase().contains(_searchQuery.toLowerCase());
-            }).toList()
-          : allCompanies.where((c) {
-              return c.raisonSociale.toLowerCase().contains(_searchQuery.toLowerCase());
-            }).toList();
+      // Show only platform contacts, filtered by search query
+      final List<Map<String, dynamic>> filteredContacts = appState.platformContacts.where((u) {
+        final nom = u['nom'] as String? ?? '';
+        return nom.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
 
       return Scaffold(
         appBar: AppBar(
@@ -293,9 +277,7 @@ class _MessageriePageState extends State<MessageriePage> {
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            isClient
-                ? context.tr('Support HMI Stars', 'HMI Stars Support')
-                : context.tr('Sélectionner un contact client', 'Select client contact'),
+            context.tr('Support HMI Stars', 'HMI Stars Support'),
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -350,7 +332,7 @@ class _MessageriePageState extends State<MessageriePage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            isClient ? Icons.people_outline : Icons.business,
+                            Icons.people_outline,
                             size: 60,
                             color: Colors.grey,
                           ),
@@ -374,96 +356,49 @@ class _MessageriePageState extends State<MessageriePage> {
                         color: Theme.of(context).colorScheme.outlineVariant,
                       ),
                       itemBuilder: (context, index) {
-                        final dynamic item = filteredContacts[index];
+                        // Always platform contacts (Map<String, dynamic>)
+                        final contact = filteredContacts[index];
+                        final nom = contact['nom'] as String? ?? 'Utilisateur';
+                        final role = contact['role'] as String? ?? '';
+                        final isSelected = _selectedPlatformContact?['id'] == contact['id'];
 
-                        if (isClient) {
-                          // Renders platform contact user (Map<String, dynamic>)
-                          final contact = item as Map<String, dynamic>;
-                          final nom = contact['nom'] as String? ?? 'Utilisateur';
-                          final role = contact['role'] as String? ?? '';
-                          final isSelected = _selectedPlatformContact?['id'] == contact['id'];
+                        final initials = nom.isNotEmpty
+                            ? nom.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
+                            : '?';
 
-                          final initials = nom.isNotEmpty
-                              ? nom.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
-                              : '?';
-
-                          return ListTile(
-                            leading: _buildAvatar(
-                              contact['avatar_url'] as String?,
-                              initials,
-                              isSelected: isSelected,
+                        return ListTile(
+                          leading: _buildAvatar(
+                            contact['avatar_url'] as String?,
+                            initials,
+                            isSelected: isSelected,
+                          ),
+                          title: Text(
+                            nom,
+                            style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
-                            title: Text(
-                              nom,
-                              style: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                          ),
+                          subtitle: Text(
+                            role == 'admin'
+                                ? context.tr('Administrateur', 'Administrator')
+                                : context.tr('Secrétaire', 'Secretary'),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
-                            subtitle: Text(
-                              role == 'admin'
-                                  ? context.tr('Administrateur', 'Administrator')
-                                  : context.tr('Secrétaire', 'Secretary'),
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            trailing: Icon(
-                              Icons.chevron_right,
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                            onTap: () {
-                              setState(() {
-                                    _selectedPlatformContact = contact;
-                              });
-                            },
-                          );
-                        } else {
-                          // Renders Client Company (ClientParametres)
-                          final comp = item as ClientParametres;
-                          final isSelected = comp.id == currentCompany?.id;
-
-                          final initials = comp.raisonSociale.isNotEmpty
-                              ? comp.raisonSociale.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
-                              : '?';
-
-                          return ListTile(
-                            leading: _buildAvatar(
-                              comp.logoUrl,
-                              initials,
-                              isSelected: isSelected,
-                            ),
-                            title: Text(
-                              comp.raisonSociale,
-                              style: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                            subtitle: Text(
-                              comp.nomGerant?.isNotEmpty == true
-                                  ? '${context.tr('Gérant', 'Manager')}: ${comp.nomGerant}'
-                                  : comp.email ?? '',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            trailing: Icon(
-                              Icons.chevron_right,
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                            onTap: () async {
-                              await appState.switchEntreprise(comp);
-                              setState(() {
-                                    _showChat = true;
-                              });
-                            },
-                          );
-                        }
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _selectedPlatformContact = contact;
+                            });
+                          },
+                        );
                       },
                     ),
             ),
@@ -484,75 +419,47 @@ class _MessageriePageState extends State<MessageriePage> {
           ),
           onPressed: () {
             setState(() {
-              if (isClient) {
-                _selectedPlatformContact = null;
-              } else {
-                _showChat = false;
-              }
+              _selectedPlatformContact = null;
             });
           },
         ),
-        title: isClient
-            ? Row(
+        title: Row(
+          children: [
+            _buildAvatar(
+              _selectedPlatformContact?['avatar_url'] as String?,
+              _selectedPlatformContact?['nom'] != null
+                  ? (_selectedPlatformContact!['nom'] as String).trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
+                  : 'HMI',
+              radius: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAvatar(
-                    _selectedPlatformContact?['avatar_url'] as String?,
-                    _selectedPlatformContact?['nom'] != null
-                        ? (_selectedPlatformContact!['nom'] as String).trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
-                        : 'HMI',
-                    radius: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _selectedPlatformContact?['nom'] ?? 'HMI Stars Consulting',
-                          style: GoogleFonts.manrope(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          _selectedPlatformContact?['role'] == 'admin'
-                              ? context.tr('Administrateur', 'Administrator')
-                              : context.tr('Secrétaire', 'Secretary'),
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    _selectedPlatformContact?['nom'] ?? 'HMI Stars Consulting',
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              )
-            : Row(
-                children: [
-                  _buildAvatar(
-                    currentCompany?.logoUrl,
-                    currentCompany?.raisonSociale != null
-                        ? currentCompany!.raisonSociale.trim().split(' ').map((e) => e[0]).take(2).join('').toUpperCase()
-                        : 'HMI',
-                    radius: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      currentCompany?.raisonSociale ?? 'HMI Stars',
-                      style: GoogleFonts.manrope(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    _selectedPlatformContact?['role'] == 'admin'
+                        ? context.tr('Administrateur', 'Administrator')
+                        : context.tr('Secrétaire', 'Secretary'),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.outline,
                     ),
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
         actions: [
           // Documents button
           IconButton(

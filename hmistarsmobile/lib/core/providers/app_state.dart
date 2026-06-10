@@ -713,9 +713,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       final fetched = await _messageService.getMessages(eid, offset: 0, limit: _messagePageSize);
       _messages = fetched;
       _hasMoreMessages = fetched.length >= _messagePageSize;
-      
-      // Marquer comme lus
-      _messageService.marquerMessagesCommeLus(eid);
+      // NOTE: Do NOT mark as read here — only mark read when the user
+      // explicitly opens a specific conversation (see marquerConversationCommeLue)
     } finally {
       if (isFirstLoad) {
         _isLoadingMessages = false;
@@ -766,7 +765,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         }
 
         if (hasUnread) {
-          _messageService.marquerMessagesCommeLus(eid);
+          // Do NOT auto-mark as read here — the UI will call marquerConversationCommeLue
+          // only when the user is actually viewing the conversation.
         }
       },
       onError: (err) {
@@ -778,6 +778,23 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         });
       },
     );
+  }
+
+  /// Called by the UI when the user opens a specific conversation.
+  /// Only marks messages from [contactId] as read — never the whole enterprise.
+  Future<void> marquerConversationCommeLue(String contactId) async {
+    final eid = _entrepriseId;
+    if (eid == null) return;
+    await _messageService.marquerMessagesCommeLus(eid, contactId: contactId);
+    // Update local state so the read-badge disappears immediately
+    final updated = _messages.map((m) {
+      if (m.contactId == contactId && !m.estEnvoyePar && !m.estLu) {
+        return m.copyWith(estLu: true);
+      }
+      return m;
+    }).toList();
+    _messages = updated;
+    notifyListeners();
   }
 
   Future<void> loadMoreMessages() async {

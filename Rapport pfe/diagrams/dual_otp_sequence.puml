@@ -1,0 +1,62 @@
+@startuml
+autonumber
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+skinparam BackgroundColor #ffffff
+skinparam RoundCorner 4
+
+skinparam ActorBorderColor #b4975a
+skinparam ActorBackgroundColor #fcfbf7
+skinparam ParticipantBorderColor #b4975a
+skinparam ParticipantBackgroundColor #fcfbf7
+skinparam DatabaseBorderColor #b4975a
+skinparam DatabaseBackgroundColor #fcfbf7
+skinparam ArrowColor #b4975a
+
+actor "Client Manager" as User
+
+box "Client App (Mobile / Web)" #LightBlue
+  participant "HMI Stars App" as App
+end box
+
+box "Supabase Backend" #LightGreen
+  participant "GoTrue Auth Engine" as Supabase
+end box
+
+actor "SMTP Mail Server" as Mail
+
+== Step 1: Initiate Email Change ==
+User -> App : Input new email address
+activate App
+App -> Supabase : updateUser(email: newEmail)
+activate Supabase
+Supabase -> Mail : Dispatch OTPs to old & new email
+activate Mail
+Mail --> User : Deliver OTP codes to both mailboxes
+deactivate Mail
+Supabase --> App : Return OTP status (needs confirmation)
+deactivate Supabase
+App --> User : Render OTP Input screen
+deactivate App
+
+== Step 2: Verify Old Email OTP ==
+User -> App : Input OTP 1 (sent to old_email)
+activate App
+App -> Supabase : verifyOTP(email: oldEmail, token: otp1, type: emailChange)
+activate Supabase
+Supabase --> App : Return status: need_new_email_verification
+deactivate Supabase
+App --> User : Prompt for OTP 2 (sent to new_email)
+deactivate App
+
+== Step 3: Verify New Email OTP ==
+User -> App : Input OTP 2 (sent to new_email)
+activate App
+App -> Supabase : verifyOTP(email: newEmail, token: otp2, type: emailChange)
+activate Supabase
+Supabase --> App : Confirm email update (Complete)
+deactivate Supabase
+App --> User : Show success toast notification
+deactivate App
+
+@enduml
