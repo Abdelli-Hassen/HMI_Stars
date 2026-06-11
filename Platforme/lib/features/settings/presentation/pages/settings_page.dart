@@ -149,12 +149,16 @@ class _SettingsPageState extends State<SettingsPage> {
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(child: _buildProfileSection()),
               const SizedBox(width: 16),
-              Expanded(child: _buildWorkspaceSection()),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildWorkspaceSection(),
+                    const SizedBox(height: 16),
+                    _buildSecuritySection(),
+                  ],
+                ),
+              ),
             ]),
-            const SizedBox(height: 24),
-
-            // ─── Security Section ───
-            _buildSecuritySection(),
           ],
         ),
       ),

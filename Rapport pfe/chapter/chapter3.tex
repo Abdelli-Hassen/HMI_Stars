@@ -1,16 +1,16 @@
 \chapter{System Realization}
 
 \section{Introduction}
-This final chapter focuses on the realization and testing of the HMI Stars ecosystem. We cover the Transition phase, compare the specifications with the actual system, detail the execution environment, and present functional test results and usability evaluations.
+In this final chapter, we detail the implementation, deployment, and validation of the HMI Stars platform. We describe the transition phase, compare the initial specifications against our actual implementation, define the execution environment, and evaluate both system functionality and overall usability.
 
-Additionally, both the mobile client application and the web administration platform support adaptive appearance personalization (switching dynamically between Light and Dark modes) and complete interface localization (French and English locales) across all screens, dialogs, and components.
+We also highlight how the mobile client application and the web administration dashboard support dynamic appearance modes (switching between light and dark themes) and fully localized interfaces (supporting French and English language options) across all screens and user components.
 
 \section{Phase of Transition}
-During the transition phase, the system was prepared and packaged for deployment and local evaluation. \\The web administration platform was configured and deployed on a local web server (utilizing local port binding and hot-reload tooling for simulation), allowing internal managers to access it directly within the intranet environment.\\ In parallel, the mobile client application was compiled into release-ready binaries (specifically, an optimized Android package/APK) to facilitate local device and\\ emulator testing.\\ Both components interface seamlessly with the remote Supabase cloud database\\ instance.
+During the transition phase, we packaged and configured the entire system for deployment and local testing. We hosted the web administration panel on a local development server using port binding and live-reload tools to simulate an intranet workflow for HMI Stars managers. Simultaneously, we compiled the mobile client application into an optimized Android Package (APK) for testing on physical devices and emulators. Both client frontends communicate directly with the remote Supabase cloud database.
 
 
 \section{Confrontation Specification vs. Realization}
-Table \ref{tab:confrontation_mobile} and Table \ref{tab:confrontation_web} compare the initially specified requirements against the delivered software components for the Mobile Client Application and Web Administration Platform respectively to verify project completeness.
+To verify project completeness, we cross-reference our initial functional specifications with the implemented features. Table \ref{tab:confrontation_mobile} and Table \ref{tab:confrontation_web} summarize the implementation status of the requirements defined for the mobile application and the web platform, respectively.
 
 \begin{table}[H]
 \centering
@@ -73,24 +73,26 @@ WEB-10 & Employee Archives Management & Archived employees tab for departed staf
 \end{table}
 
 \section{Execution Environment}
-The system was evaluated under the following operational environments:\\
-\textbf{Admin Client (Web): } Executed on Microsoft Edge and Google Chrome browsers. \\
-\textbf{Mobile Client (App): } Run on Android emulator and physical devices.\\
-\textbf{Backend Server: } Supabase hosted cloud project.
+We evaluated and tested the system across multiple operational platforms:
+\begin{itemize}
+    \item \textbf{Web Administration Portal (Admin Client):} Executed and tested using Microsoft Edge and Google Chrome web browsers.
+    \item \textbf{Mobile Client Application:} Deployed and run on both Android emulators and physical Android devices.
+    \item \textbf{Backend Infrastructure:} Powered by a cloud-hosted Supabase project.
+\end{itemize}
 
 \section{Application Testing}
 
 \subsection{Demonstration of Implemented Features}
-This section presents the actual user interfaces of the HMI Stars ecosystem. The system consists of two main frontends: the mobile application used by the consulting enterprise's clients, and the web platform used by the consulting enterprise's managers.
+In this section, we present the functional user interfaces of the completed HMI Stars ecosystem. The platform comprises two main frontend environments: a mobile application designed for client managers and a web application tailored for the consulting firm's administrators.
 
-All interfaces support dynamic switching between French/English languages and Light/Dark themes. To provide visual consistency in this report, the screenshots display the standard Light theme, unless highlighting specific dark mode behaviors.
+Every interface supports real-time switching between French and English locales, as well as light and dark visual themes. To maintain structural consistency throughout this report, we present the interface screenshots using the default light theme unless specifically demonstrating dark mode capabilities.
 
 \subsubsection{Mobile Application Interfaces}
-The mobile application allows client managers to perform their daily HR operations. The screens are presented in order of the application's logical navigation and workflow.
+The mobile application enables client managers to execute their daily human resource operations. We present these screens following the logical navigation paths and user workflow of the application.
 
 \paragraph{Authentication and Onboarding Flow} 
 
-As shown in Figure \ref{fig:mobile_auth_flow}, the application begins with the Login screen. Forgot Password requests are managed via the Password Forget screen, an OTP password reset flow, and account confirmation dialogs.
+As illustrated in Figure \ref{fig:mobile_auth_flow}, the mobile user experience begins with the secure Login interface. We handle password recovery requests through a dedicated password reset screen, a one-time password (OTP) verification form, and subsequent account confirmation dialogs.
 
 \begin{figure}[H]
     \centering
@@ -123,7 +125,7 @@ As shown in Figure \ref{fig:mobile_auth_flow}, the application begins with the L
 \end{figure}
 
 \paragraph{Company Selection and Main Dashboard}
-Once authenticated, managers associate their session with a specific enterprise. Figure \ref{fig:mobile_dashboard_flow} shows the Company Selector screen and the main analytical Dashboard workspace, which features metric highlights and a pulsating warning alerts panel.
+Following successful authentication, managers select their active company profile to initialize the session. Figure \ref{fig:mobile_dashboard_flow} presents the Company Selector screen alongside the main analytical Dashboard workspace. The dashboard aggregates operational statistics, displays key metrics, and features a warning alerts notification panel.
 
 \begin{figure}[H]
     \centering
@@ -144,8 +146,8 @@ Once authenticated, managers associate their session with a specific enterprise.
     \label{fig:mobile_dashboard_flow}
 \end{figure}
 
-\paragraph{Pointage \& Attendance Logging}
-The daily attendance tracking flow is shown in Figure \ref{fig:mobile_pointage}. It provides a calendar overview, an employee attendance grid, check-in options with note logs, and absence declaration popups.
+\paragraph{Attendance Tracking and Logging}
+We demonstrate the daily attendance tracking workflow in Figure \ref{fig:mobile_pointage}. The interface provides an interactive calendar, a comprehensive employee attendance grid, detailed check-in logs with custom notes, and modal forms for declaring absences.
 
 \begin{figure}[H]
     \centering
@@ -602,7 +604,7 @@ The Warnings tab manages legal warning dispatches and default templates. Manager
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_09.png}
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/avr_dashboard.png}
     \caption{Web Platform - Warnings Workspace Dashboard}
     \label{fig:web_warnings_workspace}
 \end{figure}
@@ -612,7 +614,7 @@ Administrators can customize or create new warning dispatches using the interact
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_21.png}
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/custom_warning.png}
     \caption{Web Platform - Warnings Custom Editor Form}
     \label{fig:web_warnings_editor}
 \end{figure}
@@ -622,14 +624,14 @@ Once the letter is ready, managers select recipients using a search-enabled reci
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_22.png}
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/employee_select_avr.png}
     \caption{Web Platform - Warnings Recipient Selector Dialog}
     \label{fig:web_warnings_recipient}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_24.png}
+    \includegraphics[width=0.90\textwidth]{project_images/Plat_light_and_french/warning_preview.png}
     \caption{Web Platform - Warnings Email Letter Preview}
     \label{fig:web_warnings_preview}
 \end{figure}
@@ -639,43 +641,45 @@ The Notes \& Reminders tab allows consultants to log internal notes. Figure \ref
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.85\textwidth}
+    \begin{subfigure}[b]{0.80\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_13.png}
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_10.png}
         \caption{Company Notes Board}
     \end{subfigure}
     
     \vspace{0.3cm}
     
-    \begin{subfigure}[b]{0.85\textwidth}
+    \begin{subfigure}[b]{0.80\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_14.png}
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_11.png}
         \caption{Add Note Dialog}
     \end{subfigure}
     \caption{Web Platform - Workspace Notes and Reminders Tab}
     \label{fig:web_notes_flow}
 \end{figure}
 
-\paragraph{Interactive Leave Request Supervision}
-Leave requests are managed through a validation dashboard. Figure \ref{fig:web_leaves_supervision} shows the requests list and the details modal.
+\paragraph{Global Urgent Reminder Management}
+Urgent reminders from all registered companies are centralized in a dedicated supervision interface. Figure \ref{fig:web_urgent_reminders} illustrates the global urgent reminders dashboard and the completion management interface. Administrators can monitor pending reminders across companies and mark completed tasks directly through the validation panel.
 
 \begin{figure}[H]
     \centering
+
     \begin{subfigure}[b]{0.85\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_18.png}
-        \caption{Leave Requests Dashboard}
+        \caption{Global Urgent Reminders Dashboard}
     \end{subfigure}
-    
+
     \vspace{0.3cm}
-    
+
     \begin{subfigure}[b]{0.85\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_19.png}
-        \caption{Leave Details Panel}
+        \caption{Urgent Reminder Completion Interface}
     \end{subfigure}
-    \caption{Web Platform - Leaves and Absences Supervision Panel}
-    \label{fig:web_leaves_supervision}
+
+    \caption{Web Platform - Global Urgent Reminder Monitoring and Validation}
+    \label{fig:web_urgent_reminders}
 \end{figure}
 
 \paragraph{Central Messaging Workspace}
@@ -685,151 +689,92 @@ The support messaging panel manages real-time interactions with client managers,
     \centering
     \begin{subfigure}[b]{0.85\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_06.png}
-        \caption{Support Messaging Channel}
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_23.png}
+        \caption{Chat Center}
     \end{subfigure}
     
     \vspace{0.3cm}
     
     \begin{subfigure}[b]{0.85\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_07.png}
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_22.png}
         \caption{Shared Files Directory}
     \end{subfigure}
     \caption{Web Platform - Real-time Messagerie Workspace}
     \label{fig:web_messaging_workspace}
 \end{figure}
 
-\paragraph{HR Document Previewer}
-The platform includes an internal PDF previewer for files like KBIS extracts, VAT forms, and RIBs, as displayed in Figure \ref{fig:web_pdf_preview}.
+\paragraph{HR Document Management and Preview}
+The platform provides a centralized interface for managing administrative and HR documents, including KBIS extracts, VAT declarations, RIBs, and other company files. Figure \ref{fig:web_pdf_preview} illustrates the integrated PDF preview dialog, which allows documents to be consulted directly within the platform without requiring external software.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/flutter_20.png}
-    \caption{Web Platform - HR Document PDF Preview Dialog}
+
+    \begin{subfigure}[b]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_24.png}
+        \caption{HR Documents Management Interface}
+    \end{subfigure}
+
+    \vspace{0.3cm}
+
+    \begin{subfigure}[b]{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/doc_preview.png}
+        \caption{Document PDF Preview Dialog}
+    \end{subfigure}
+
+    \caption{Web Platform - HR Document Management and PDF Preview}
     \label{fig:web_pdf_preview}
 \end{figure}
 
-\paragraph{General Supervision Calendar}
-A consolidated calendar view helps administrators track attendance across all client companies, as shown in Figure \ref{fig:web_general_calendar}.
+\paragraph{Global Notes and Reminders Management}
+The platform provides a centralized workspace for managing notes and reminders across all client companies. Administrators can monitor upcoming tasks, track important deadlines, and organize follow-up actions from a single interface. Figure \ref{fig:web_global_reminders} illustrates the global notes and reminders management dashboard.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/flutter_27.png}
-    \caption{Web Platform - General Supervision Attendance Calendar}
-    \label{fig:web_general_calendar}
+    \caption{Web Platform - Global Notes and Reminders Dashboard}
+    \label{fig:web_global_reminders}
 \end{figure}
-
-\paragraph{Settings, User Accounts, and Platform Admin Listings}
-Figure \ref{fig:web_config_flow} shows the platform configuration tools, including the settings page, the platform admin list, and the user invitation dialog.
+\vspace{-1cm}
+\paragraph{Platform Settings and User Management}
+The settings interface allows users to adjust their account preferences, while the platform accounts section lets administrators manage users, including role changes and account deletion. Figure \ref{fig:web_config_flow} shows both interfaces.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.85\textwidth}
+
+    \begin{subfigure}[b]{0.80\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_15.png}
-        \caption{Preferences settings}
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/settings.png}
+        \caption{User Settings Configuration}
     \end{subfigure}
-    
+
     \vspace{0.3cm}
-    
-    \begin{subfigure}[b]{0.85\textwidth}
+
+    \begin{subfigure}[b]{0.80\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_16.png}
-        \caption{Platform Admin Accounts}
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/acc_page.png}
+        \caption{Platform Accounts Management (Role Control and Deletion)}
     \end{subfigure}
-    
-    \vspace{0.3cm}
-    
-    \begin{subfigure}[b]{0.85\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_17.png}
-        \caption{Invitation / Edit Dialog}
-    \end{subfigure}
-    \caption{Web Platform - Settings and Accounts Configurations}
+
+    \caption{Web Platform - Settings and User Account Administration}
     \label{fig:web_config_flow}
 \end{figure}
 
 \paragraph{Web Platform Dark Mode Theme Options}
-Similar to the mobile client, the web administration platform supports an alternative Dark Mode theme to reduce eye strain and provide a premium, modern aesthetic for administrative staff. Figure \ref{fig:web_dark_mode} shows the web login page, main analytical dashboard, and preferences configuration screen rendered in Dark Mode.
+Similar to the mobile client, the web administration platform supports an alternative Dark Mode theme to reduce eye strain and provide a premium, modern aesthetic for administrative staff. Figure \ref{fig:web_dark_mode} shows the rendered in Dark Mode.
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.85\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_01.png}
-        \caption{Login Interface}
-        \label{fig:w_dark_login}
-    \end{subfigure}
-    
-    \vspace{0.3cm}
-    
-    \begin{subfigure}[b]{0.85\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_02.png}
         \caption{Analytical Dashboard}
         \label{fig:w_dark_dash}
     \end{subfigure}
-    
-    \vspace{0.3cm}
-    
-    \begin{subfigure}[b]{0.85\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_16.png}
-        \caption{Preferences Settings}
-        \label{fig:w_dark_settings}
-    \end{subfigure}
     \caption{Web Administration Platform - Dark Mode Theme Interfaces}
     \label{fig:web_dark_mode}
-\end{figure}
-
-
-\paragraph{Platform Utilities}
-Figure \ref{fig:web_utilities_flow} shows other utilities, including notification centers, toast popups, automatic alert configuration panels, and manager association dialogs.
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.85\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_23.png}
-        \caption{Notification Center Drawer}
-    \end{subfigure}
-    
-    \vspace{0.3cm}
-    
-    \begin{subfigure}[b]{0.85\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_28.png}
-        \caption{Standard success Toast}
-    \end{subfigure}
-    
-    \vspace{0.3cm}
-    
-    \begin{subfigure}[b]{0.85\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_29.png}
-        \caption{Automatic alerts setup}
-    \end{subfigure}
-    
-    \vspace{0.3cm}
-    
-    \begin{subfigure}[b]{0.85\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_30.png}
-        \caption{Associate Managers dialogue}
-    \end{subfigure}
-    \caption{Web Platform - Dynamic Utility Dialogs and Toast feedback}
-    \label{fig:web_utilities_flow}
-\end{figure}
-
-\paragraph{Consolidated Reports Export}
-The platform also supports exporting consolidated Excel activity spreadsheets for accounting and bookkeeping, as shown in Figure \ref{fig:web_consolidated_export}.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/flutter_31.png}
-    \caption{Web Platform - Consolidated Activity Reports Export Panel}
-    \label{fig:web_consolidated_export}
 \end{figure}
 
 \subsubsection{Bilingual Email Templates and Notification Subsystem}
@@ -886,29 +831,6 @@ In-app alerts are delivered via Firebase Cloud Messaging (FCM), as shown in Figu
 \caption{Firebase Cloud Messaging (FCM) Mobile Push Notification}
 \label{fig:fcm_notif_phone}
 \end{figure}
-
-\subsubsection{Exported Output Demonstrations}
-Exported PDF employee files and CSV/Excel attendance files demonstrate the platform's data-generation features, as illustrated in Figure \ref{fig:output_demos}.
-
-\begin{figure}[H]
-\centering
-\begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=0.85\textwidth]{project_images/employee_data_fr.png}
-    \caption{Bilingual PDF Employee File}
-    \label{fig:out_pdf}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=0.85\textwidth]{project_images/eployee_attendance_file.png}
-    \caption{Attendance Spreadsheet}
-    \label{fig:out_excel}
-\end{subfigure}
-\caption{Application Output Files - PDF Export and Excel Attendance Spreadsheet}
-\label{fig:output_demos}
-\end{figure}
-
 
 \subsection{Utility Evaluation}
 The implemented features were thoroughly tested throughout the development process to ensure that they met the functional requirements of HMI Stars Consulting. Special attention was given to document management, employee tracking, attendance management, and communication features. The results confirmed that the system successfully supports the company's daily administrative operations in a centralized and efficient manner.
