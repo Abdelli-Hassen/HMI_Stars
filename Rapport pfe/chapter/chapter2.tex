@@ -73,25 +73,246 @@ UC-09: Document Scanner & Medium & High & Iteration 4 \\
 \end{table}
 
 \subsection{Detailed Description of Use Cases}
-Here is the detailed description for the employee attendance submission use case:\\
-\textbf{Actor} :  Client (Gérant).\\
-\textbf{Pre-condition} :  The Client is authenticated and has active employees registered \\ under their company.\\
-\textbf{Main Flow} :
-    \\1. The Client navigates to the "Pointage" section.
-   \\2. The system load the list of active employees.
-    \\3. The Client chooses a date from the calendar.
-\\4. The Client marks the attendance status (present/absent) for each employee.
-    \\5. The Client clicks "Save".
-    \\6. The system records the pointage in the PostgreSQL database.\\
-\textbf{Alternative Flow (Offline)} : If network is unavailable, the system caches the pointage local records and synchronizes them once connection is restored.
+The following tables provide the formal textual description for each prioritized use case identified in Table \ref{tab:priorities}.
+
+\begin{table}[H]
+\centering
+\caption{UC-01: Authenticate}
+\label{tab:uc01}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile) / HMI Manager (Web) \\
+\hline
+\textbf{Precondition} & The user has a registered account with valid credentials. \\
+\hline
+\textbf{Main Flow} & 1. The user opens the login screen.\newline 2. The user enters their email and password.\newline 3. The system validates the credentials against Supabase Auth.\newline 4. The system redirects the user to the dashboard. \\
+\hline
+\textbf{Alternative Flow} & If credentials are invalid, the system displays an error message and remains on the login screen. \\
+\hline
+\textbf{Postcondition} & The user is authenticated and has access to their role-based dashboard. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-02: Manage Employees}
+\label{tab:uc02}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile \& Web) \\
+\hline
+\textbf{Precondition} & The client is authenticated and has a registered company. \\
+\hline
+\textbf{Main Flow} & 1. The client navigates to the employees section.\newline 2. The client adds a new employee by filling in personal and contract details.\newline 3. The system stores the employee record in the database.\newline 4. The employee appears in the active registry list. \\
+\hline
+\textbf{Alternative Flow} & The client can also edit existing employee information or archive an inactive employee. \\
+\hline
+\textbf{Postcondition} & The employee record is created, updated, or archived in the database. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-03: Submit Attendance (Pointage)}
+\label{tab:uc03}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile) \\
+\hline
+\textbf{Precondition} & The client is authenticated and has active employees registered under their company. \\
+\hline
+\textbf{Main Flow} & 1. The client navigates to the ``Pointage'' section.\newline 2. The system loads the list of active employees.\newline 3. The client selects a date from the calendar.\newline 4. The client marks the attendance status (present/absent) for each employee.\newline 5. The client clicks ``Save''.\newline 6. The system records the attendance in the PostgreSQL database. \\
+\hline
+\textbf{Alternative Flow} & If the network is unavailable, the system caches the records locally and synchronizes them once connection is restored. \\
+\hline
+\textbf{Postcondition} & Daily attendance records are saved and visible in the attendance history. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-04: Submit Leave Request}
+\label{tab:uc04}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile) \\
+\hline
+\textbf{Precondition} & The client is authenticated and has active employees. \\
+\hline
+\textbf{Main Flow} & 1. The client navigates to the leave request section.\newline 2. The client selects an employee, a leave type, and start/end dates.\newline 3. The client optionally adds a comment and submits the request.\newline 4. The system stores the leave entry in the database. \\
+\hline
+\textbf{Alternative Flow} & If required fields are missing, the system displays a validation error and prevents submission. \\
+\hline
+\textbf{Postcondition} & The leave request is recorded and appears in the leave history list. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-05: Real-Time Chat}
+\label{tab:uc05}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile) / HMI Manager (Web) \\
+\hline
+\textbf{Precondition} & Both the client and the HMI manager are authenticated. \\
+\hline
+\textbf{Main Flow} & 1. The user opens the messaging section.\newline 2. The user selects a conversation.\newline 3. The user types and sends a message.\newline 4. The system transmits the message via Supabase real-time WebSocket.\newline 5. The message appears instantly on both sides. \\
+\hline
+\textbf{Alternative Flow} & The user can attach a file or image instead of text. The system uploads the file to Supabase Storage and shares the download link in the conversation. \\
+\hline
+\textbf{Postcondition} & The message is stored in the database and visible to both participants. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-06: Upload Documents}
+\label{tab:uc06}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile) / HMI Manager (Web) \\
+\hline
+\textbf{Precondition} & The user is authenticated and associated with a company. \\
+\hline
+\textbf{Main Flow} & 1. The user navigates to the documents section.\newline 2. The user selects a document category (KBIS, VAT, RIB, etc.).\newline 3. The user uploads a file from the device.\newline 4. The system stores the file in Supabase Storage and creates a metadata record. \\
+\hline
+\textbf{Alternative Flow} & If the file exceeds the size limit or has an unsupported format, the system rejects the upload with an error message. \\
+\hline
+\textbf{Postcondition} & The document is stored and visible in the company's document list. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-07: Manage Warnings \& Templates}
+\label{tab:uc07}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & HMI Manager (Web) / Client (Mobile) \\
+\hline
+\textbf{Precondition} & The user is authenticated. Warning letter templates exist in the system. \\
+\hline
+\textbf{Main Flow} & 1. The user navigates to the warnings section.\newline 2. The user selects or creates a warning template.\newline 3. The user fills in the employee name, date, and reason.\newline 4. The user sends the letter via Gmail integration. \\
+\hline
+\textbf{Alternative Flow} & The user can save a draft template for future reuse without sending. \\
+\hline
+\textbf{Postcondition} & The warning letter is generated and sent, or the template is saved for later use. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-08: Settings \& Personalization}
+\label{tab:uc08}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile) / HMI Manager (Web) \\
+\hline
+\textbf{Precondition} & The user is authenticated. \\
+\hline
+\textbf{Main Flow} & 1. The user opens the settings screen.\newline 2. The user changes preferences such as language (FR/EN) or theme (Light/Dark).\newline 3. The system applies the changes immediately and stores the preferences. \\
+\hline
+\textbf{Alternative Flow} & The user can also update profile information (name, avatar). \\
+\hline
+\textbf{Postcondition} & The user's preferences are persisted and applied across all sessions. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{UC-09: Document Scanner}
+\label{tab:uc09}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Actor} & Client (Mobile) \\
+\hline
+\textbf{Precondition} & The client is authenticated and camera permission is granted. \\
+\hline
+\textbf{Main Flow} & 1. The client opens the scanner from the chat or documents section.\newline 2. The client captures a photo of a physical document.\newline 3. The system applies cropping and contrast filters.\newline 4. The client confirms and sends the scanned image as an attachment. \\
+\hline
+\textbf{Alternative Flow} & The client can retake the photo or adjust the crop before confirming. \\
+\hline
+\textbf{Postcondition} & The scanned document image is uploaded and attached to the conversation or document list. \\
+\hline
+\end{tabular}
+\end{table}
+
 
 \subsection{User Interface Prototypes}
-Simple interface layouts were drafted to validate user flows, focusing on simple forms for the mobile attendance screens and a split-screen view for the web admin dashboard.
+To validate the initial user flows and interaction concepts before starting implementation, we drafted low-fidelity interface mockups. We focused on designing structured dashboards for both client-side and administration-side interfaces to coordinate information access.
+
+Figure \ref{fig:mobile_wireframe} presents the mobile dashboard interface mockup, detailing the top welcome header, the key human resource metric cards, and the warning alert notification area. Figure \ref{fig:web_wireframe} illustrates the web administration portal dashboard prototype, highlighting the sidebar navigation on the left, top menu bar controls, and the central analytics charts workspace on the right.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=1.2\textwidth]{images/mobile_attendance_wireframe.png}
+        \caption{Mobile Dashboard Wireframe}
+        \label{fig:mobile_wireframe}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/web_dashboard_wireframe.png}
+        \caption{Web Dashboard Workspace Wireframe}
+        \label{fig:web_wireframe}
+    \end{subfigure}
+    \caption{Low-Fidelity User Interface Prototypes}
+    \label{fig:ui_wireframes}
+\end{figure}
 
 \section{Phase of Elaboration}
 
 \subsection{Architectural Analysis}
-In the elaboration phase, we analyze the structural constraints.\\ The system must support cross-platform mobile and web-based administration while ensuring database-level data isolation.
+During the elaboration phase, we analyzed the structural constraints that shape the system architecture. The HMI Stars ecosystem must support cross-platform mobile and web-based administration while ensuring strict database-level data isolation between client companies.
+
+\subsubsection{Non-Functional Requirements}
+Table \ref{tab:nfr} identifies the key non-functional requirements that guided the architectural decisions.
+
+\begin{table}[H]
+\centering
+\caption{Non-functional requirements}
+\label{tab:nfr}
+\begin{tabular}{|l|p{9.5cm}|}
+\hline
+\textbf{Requirement} & \textbf{Description} \\
+\hline
+\textbf{Security} & Each client company must access only its own data. Row Level Security (RLS) policies enforce per-company isolation directly at the PostgreSQL level. \\
+\hline
+\textbf{Real-time responsiveness} & Chat messages, file uploads, and attendance updates must propagate to all connected clients within seconds via WebSocket channels. \\
+\hline
+\textbf{Cross-platform compatibility} & The solution must run on Android devices (mobile app) and modern web browsers (admin platform) from a single codebase. \\
+\hline
+\textbf{Availability} & The backend must remain accessible at all times. Supabase provides managed cloud hosting with automated backups and failover. \\
+\hline
+\textbf{Offline tolerance} & The mobile application must allow attendance logging even without network connectivity, with automatic synchronization upon reconnection. \\
+\hline
+\textbf{Maintainability} & The codebase must follow a modular structure so that new features (e.g., payroll, contracts) can be added without modifying existing modules. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Architectural Style}
+We adopted a \textbf{client-server architecture} with a shared Backend-as-a-Service (BaaS) layer. In this approach, both the mobile application and the web platform act as independent frontend clients that communicate with a centralized Supabase backend through REST API calls and real-time WebSocket subscriptions.
+
+We considered two alternative architectural approaches before selecting this model:
+\begin{itemize}
+    \item \textbf{Custom REST API (Node.js / Express):} This approach would require building and maintaining a dedicated backend server, handling authentication, session management, and API routing manually. We rejected it because the project scope did not justify the added infrastructure complexity, and Supabase provides all required services (auth, database, storage, real-time) out of the box.
+    \item \textbf{Microservices architecture:} Splitting the backend into independent services (auth service, chat service, document service) would improve scalability but introduce significant operational overhead (service discovery, inter-service communication, deployment orchestration). Given the small team size and the consulting firm's user volume, this level of distribution was unnecessary.
+\end{itemize}
+
+The chosen BaaS architecture offers several advantages for this project: zero server-side code for standard CRUD operations, built-in authentication with email/OTP support, native PostgreSQL RLS for data isolation, and a managed real-time engine — all reducing development time while maintaining production-grade security.
+
 
 \subsection{Use Case Analysis}
 We model the dynamic interactions of use cases using UML sequence diagrams to show the workflow between frontend components, the routing system, the database tables, and actors.
@@ -170,9 +391,32 @@ The logical classes are mapped to physical PostgreSQL tables.\\
 To enforce complete security isolation, PostgreSQL \textbf{Row Level Security (RLS)}  is enabled on all tables. The client can only read data where the company ID matches their own authenticated organization ID.
 
 \subsection{Implementation Environment}
-\textbf{Frontend Development : } VS Code editor with Flutter SDK and Dart extensions.
-\textbf{Backend Management :} Supabase CLI and Web Dashboard.\\
-\textbf{Version Control :}  Git repository.
+Table \ref{tab:impl_env} details the tools and platforms used throughout the development and testing of the HMI Stars system.
+
+\begin{table}[H]
+\centering
+\caption{Development tools and implementation environment}
+\label{tab:impl_env}
+\begin{tabular}{|l|p{3.5cm}|p{7cm}|}
+\hline
+\textbf{Category} & \textbf{Tool / Platform} & \textbf{Role} \\
+\hline
+IDE & Visual Studio Code & Primary code editor with Flutter, Dart, and SQL extensions \\
+\hline
+Frontend SDK & Flutter SDK (Dart) & Cross-platform UI framework for building the mobile and web applications from a single codebase \\
+\hline
+Backend & Supabase (Cloud) & Backend-as-a-Service providing PostgreSQL database, authentication, real-time WebSocket engine, and storage \\
+\hline
+Backend CLI & Supabase CLI & Local database migrations, schema management, and Edge Function deployment \\
+\hline
+Version Control & Git \& GitHub & Source code versioning and remote repository hosting \\
+\hline
+Mobile Emulator & Android Studio Emulator & Testing and debugging the mobile APK on virtual Android devices \\
+\hline
+Web Browser & Microsoft Edge / Chrome & Running and testing the web administration platform locally \\
+\hline
+\end{tabular}
+\end{table}
 
 \subsection{Identification of Implementation Subsystems}
 The code is modularized into feature folders following clean architecture guidelines:

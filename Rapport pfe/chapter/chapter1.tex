@@ -86,7 +86,7 @@ We studied the three systems from different aspects indicated in the table below
 \subsubsection{Criticism of the existing}
 Based on the comparison of the existing systems, we note the following limitations:
 \begin{itemize}
-    \item \textbf{Odoo}: Although ERPNext offers a wide range of features, it can be complex to learn and use. In addition, creating highly customized client portals or specific mobile functionalities often requires advanced customization or additional development efforts.
+    \item \textbf{Odoo}: Although Odoo offers a wide range of features, it can be complex to learn and use. In addition, creating highly customized client portals or specific mobile functionalities often requires advanced customization or additional development efforts.
     \item \textbf{ERPNext}: While it simplifies document attachments and has a solid database schema, it lacks interactive real-time messaging workspaces where managers and client companies can communicate immediately.
     \item \textbf{Dolibarr}: Dolibarr is lightweight and free, but its interface is outdated and relies on legacy web technologies. It does not provide reactive, real-time feedback for document processing states or instant support messaging.
 \end{itemize}
@@ -99,14 +99,64 @@ To address the needs of HMI Stars Consulting and overcome the limitations of exi
     \item \textbf{A Real-Time Backend Server:} Powered by Supabase, handling instant synchronization of messages and files while guaranteeing strict data isolation using PostgreSQL Row Level Security (RLS).
 \end{enumerate}
 
+\subsubsection{Technology Choices}
+The technical track of the project required selecting a cross-platform frontend framework and a backend-as-a-service platform. Table \ref{tab:tech_choices} summarizes the comparison criteria that guided our decisions.
+
+\begin{table}[H]
+\centering
+\caption{Technology comparison for frontend framework and backend platform}
+\label{tab:tech_choices}
+\begin{tabular}{|l|p{5.5cm}|p{5.5cm}|}
+\hline
+\textbf{Criteria} & \textbf{Frontend Framework} & \textbf{Backend Platform} \\
+\hline
+\textbf{Options evaluated} & Flutter (Dart) vs. React Native (JavaScript) & Supabase (PostgreSQL) vs. Firebase (NoSQL) \\
+\hline
+\textbf{Single codebase} & Flutter compiles natively for Android, iOS, and Web from one Dart codebase & React Native requires separate web tooling (React Native Web) \\
+\hline
+\textbf{Data model} & -- & Supabase uses relational PostgreSQL tables with SQL joins; Firebase uses NoSQL document collections \\
+\hline
+\textbf{Row-level security} & -- & Supabase offers native PostgreSQL RLS policies; Firebase relies on Firestore security rules \\
+\hline
+\textbf{Real-time engine} & -- & Both provide real-time listeners; Supabase uses PostgreSQL change notifications over WebSockets \\
+\hline
+\textbf{Open-source} & Both are open-source & Supabase is fully open-source and self-hostable; Firebase is proprietary \\
+\hline
+\end{tabular}
+\end{table}
+
+We selected \textbf{Flutter} because it provides true cross-platform compilation from a single Dart codebase for mobile and web, which aligns with our requirement to build both a client mobile application and an administration web platform from a shared code structure. We selected \textbf{Supabase} over Firebase because the project's data model (companies, employees, contracts, attendance records) fits naturally into relational PostgreSQL tables with foreign key constraints and SQL joins. Additionally, Supabase's native Row Level Security (RLS) policies allow us to enforce strict per-company data isolation directly at the database level without additional application-layer logic.
+
 \section{Methodological Choices and Work Organization}
 
 \subsection{The Unified Process (2TUP)}
 
-We chose the \textbf{2TUP (Two Track Unified Process)} methodology for the development of this project. This approach separates the development process into two seperate tracks: a functional track, focused on business requirements and use cases, and a technical track, focused on the technologies and architecture used to implement the solution.
-By addressing functional and technical aspects in parallel, 2TUP helps identify potential risks early and ensures a better alignment between business needs and technical choices.
+We chose the \textbf{2TUP (Two Track Unified Process)} methodology for the development of this project. This approach separates the development process into two parallel tracks: a \textbf{functional track}, focused on capturing business requirements, modeling use cases, and specifying system behavior; and a \textbf{technical track}, focused on selecting technologies, defining the architecture, and designing the database and deployment infrastructure. The two tracks converge during the Construction phase, where the functional specifications and technical decisions are merged into a working implementation.
 
-\subsection{Unified Modeling Language (UML)}
+Table \ref{tab:2tup_tracks} shows how the two tracks are distributed across the report chapters and sections.
+
+\begin{table}[H]
+\centering
+\caption{Mapping of 2TUP tracks to report sections}
+\label{tab:2tup_tracks}
+\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\hline
+\textbf{Phase} & \textbf{Functional Track} & \textbf{Technical Track} \\
+\hline
+Inception (Ch. 1 \& 2) & Use case diagrams, actor identification, priority table, detailed use case descriptions & Technology comparison (Flutter vs RN, Supabase vs Firebase) \\
+\hline
+Elaboration (Ch. 2) & Sequence diagrams, use case analysis, class diagram design & Non-functional requirements, architectural style selection, deployment architecture \\
+\hline
+Construction (Ch. 2) & Use case implementation mapping & Database mapping, implementation environment, subsystem identification, MVC pattern \\
+\hline
+Transition (Ch. 3) & Functional test cases, usability evaluation & Execution environment, deployment verification \\
+\hline
+\end{tabular}
+\end{table}
+
+Although the report presents both tracks within the same chapters for readability, each section addresses either the functional or the technical perspective. This adaptation was chosen because the project involves a small development team, where separating the tracks into entirely distinct documents would introduce unnecessary redundancy without adding clarity.
+
+\subsubsection{Unified Modeling Language (UML)}
 UML is used as the standard modeling language to specify, visualize, and document the different elements of the system throughout the functional development process.
 \begin{figure}[H]
     \centering
@@ -115,7 +165,33 @@ UML is used as the standard modeling language to specify, visualize, and documen
     \label{fig:UML}
 \end{figure}
 \subsection{Work Organization}
-The project timeline is organized around the four iterative phases of the Unified Process: Inception (defining scope and analyzing functional requirements), Elaboration (designing the architecture and validating technologies), Construction (implementing the database and frontend development), and Transition (testing, validation, and deployment).
+The project timeline is organized around the four iterative phases of the Unified Process. Each phase targets specific deliverables and maps to a subset of the prioritized use cases. Table \ref{tab:iteration_schedule} presents the iteration schedule followed during the development of the HMI Stars system.
+
+\begin{table}[H]
+\centering
+\caption{Project iteration schedule}
+\label{tab:iteration_schedule}
+\begin{tabular}{|l|l|p{4.5cm}|p{4cm}|}
+\hline
+\textbf{Phase} & \textbf{Duration} & \textbf{Key Deliverables} & \textbf{Use Cases Addressed} \\
+\hline
+Inception & 2 weeks & Requirements analysis, actor identification, use case diagrams, priority table & -- \\
+\hline
+Elaboration & 3 weeks & Architectural analysis, sequence diagrams, class diagram, database schema design & -- \\
+\hline
+Construction -- Iter. 1 & 3 weeks & Authentication module, employee CRUD, database mapping with RLS & UC-01, UC-02 \\
+\hline
+Construction -- Iter. 2 & 3 weeks & Attendance logging, leave request submission, offline caching & UC-03, UC-04 \\
+\hline
+Construction -- Iter. 3 & 3 weeks & Real-time chat, file upload, document management & UC-05, UC-06 \\
+\hline
+Construction -- Iter. 4 & 2 weeks & Warning templates, settings, document scanner, push notifications & UC-07, UC-08, UC-09 \\
+\hline
+Transition & 2 weeks & Functional testing, usability evaluation, deployment, report writing & -- \\
+\hline
+\end{tabular}
+\end{table}
+
 
 \section{Conclusion}
 The study of the existing system highlights the urgent need to transition to a structured, secure communication platform. The 2TUP methodology provides a solid framework to develop this project. The next chapter will detail the design development, covering the Inception, Elaboration, and Construction phases.
