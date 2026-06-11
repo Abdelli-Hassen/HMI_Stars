@@ -3,22 +3,22 @@
 \section{Introduction}
 This final chapter focuses on the realization and testing of the HMI Stars ecosystem. We cover the Transition phase, compare the specifications with the actual system, detail the execution environment, and present functional test results and usability evaluations.
 
+Additionally, both the mobile client application and the web administration platform support adaptive appearance personalization (switching dynamically between Light and Dark modes) and complete interface localization (French and English locales) across all screens, dialogs, and components.
+
 \section{Phase of Transition}
-During the transition phase, the system was prepared and packaged for deployment and local evaluation . \\The web administration platform was configured and deployed on a local web server (utilizing local port binding and hot-reload tooling for simulation) , allowing internal managers to access it directly within the intranet environment .\\ In parallel , the mobile client application was compiled into release-ready binaries (specifically , an optimized Android package/APK) to facilitate local device and\\ emulator testing .\\ Both components interface seamlessly with the remote Supabase cloud database\\ instance .
+During the transition phase, the system was prepared and packaged for deployment and local evaluation. \\The web administration platform was configured and deployed on a local web server (utilizing local port binding and hot-reload tooling for simulation), allowing internal managers to access it directly within the intranet environment.\\ In parallel, the mobile client application was compiled into release-ready binaries (specifically, an optimized Android package/APK) to facilitate local device and\\ emulator testing.\\ Both components interface seamlessly with the remote Supabase cloud database\\ instance.
 
 
 \section{Confrontation Specification vs. Realization}
-Table 3.1 compares the initially specified requirements against the delivered software components to verify project completeness .
+Table \ref{tab:confrontation_mobile} and Table \ref{tab:confrontation_web} compare the initially specified requirements against the delivered software components for the Mobile Client Application and Web Administration Platform respectively to verify project completeness.
 
 \begin{table}[H]
 \centering
-\caption{Confrontation table of specifications vs realization}
-\label{tab:confrontation}
-\begin{tabular}{|l|p{5cm}|p{5cm}|l|}
+\caption{Confrontation table of specifications vs realization -- Mobile Client Application}
+\label{tab:confrontation_mobile}
+\begin{tabular}{|l|p{5cm}|p{5.5cm}|l|}
 \hline
 \textbf{Req ID} & \textbf{Functional Specification} & \textbf{Realized Component} & \textbf{Status} \\
-\hline
-\multicolumn{4}{|l|}{\textbf{Mobile Client Application (Gérants / Clients)}} \\
 \hline
 MOB-01 & Secure Authentication \& Company Selection & Mobile Welcome/Login Screen, Company Selector & Complete \\
 \hline
@@ -30,7 +30,24 @@ MOB-04 & Activity Tracking \& Attendance Logging (Pointage) & "Pointage" Calenda
 \hline
 MOB-05 & Simplified Client Dashboard & Main Home Dashboard & Complete \\
 \hline
-\multicolumn{4}{|l|}{\textbf{Web Administration Platform (Consultants / Managers)}} \\
+MOB-06 & Employee Directory Management (CRUD) & Employee Grid/List views, Profile, Edit, Archive & Complete \\
+\hline
+MOB-07 & Disciplinary Warnings \& Templates & Warning categories, template editor, email dispatch & Complete \\
+\hline
+MOB-08 & Settings \& Personalization (Theme, Language) & Settings screen with dark/light mode, FR/EN toggle & Complete \\
+\hline
+MOB-09 & Interactive Document Scanner & Camera-based scanner with perspective cropping & Complete \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Confrontation table of specifications vs realization -- Web Administration Platform}
+\label{tab:confrontation_web}
+\begin{tabular}{|l|p{5cm}|p{5.5cm}|l|}
+\hline
+\textbf{Req ID} & \textbf{Functional Specification} & \textbf{Realized Component} & \textbf{Status} \\
 \hline
 WEB-01 & Multi-Company Directory Management & Companies Grid Directory \& Detail Panel & Complete \\
 \hline
@@ -46,14 +63,6 @@ WEB-06 & Analytical Business Dashboard & Web Dashboard & Complete \\
 \hline
 WEB-07 & Multilingual Support \& Role-Based Access Controls & Multilingual translation framework (FR/EN) & Complete \\
 \hline
-MOB-06 & Employee Directory Management (CRUD) & Employee Grid/List views, Profile, Edit, Archive & Complete \\
-\hline
-MOB-07 & Disciplinary Warnings \& Templates & Warning categories, template editor, email dispatch & Complete \\
-\hline
-MOB-08 & Settings \& Personalization (Theme, Language) & Settings screen with dark/light mode, FR/EN toggle & Complete \\
-\hline
-MOB-09 & Interactive Document Scanner & Camera-based scanner with perspective cropping & Complete \\
-\hline
 WEB-08 & Employee Attendance Export & Export dialog with month/year selection & Complete \\
 \hline
 WEB-09 & Notes \& Reminders System & Notes panel with reminder flags per company & Complete \\
@@ -64,75 +73,122 @@ WEB-10 & Employee Archives Management & Archived employees tab for departed staf
 \end{table}
 
 \section{Execution Environment}
-The system was evaluated under the following operational environments :\\
-\textbf{Admin Client (Web) : } Executed on Microsoft Edge and Google Chrome browsers.
-\textbf{Mobile Client (App) : }  Run on Android emulator and physical devices .\\
-\textbf{Backend Server : } Supabase hosted cloud project .
+The system was evaluated under the following operational environments:\\
+\textbf{Admin Client (Web): } Executed on Microsoft Edge and Google Chrome browsers. \\
+\textbf{Mobile Client (App): } Run on Android emulator and physical devices.\\
+\textbf{Backend Server: } Supabase hosted cloud project.
 
 \section{Application Testing}
 
 \subsection{Demonstration of Implemented Features}
-This section presents the actual user interfaces of the HMI Stars ecosystem. \\The system consists of two main frontends : the mobile application used by \\consulting enterprise's clients , and the web platform used by the consulting enterprise's managers .
+This section presents the actual user interfaces of the HMI Stars ecosystem. The system consists of two main frontends: the mobile application used by the consulting enterprise's clients, and the web platform used by the consulting enterprise's managers.
+
+All interfaces support dynamic switching between French/English languages and Light/Dark themes. To provide visual consistency in this report, the screenshots display the standard Light theme, unless highlighting specific dark mode behaviors.
 
 \subsubsection{Mobile Application Interfaces}
-The mobile application allows company managers to handle their daily administrative tasks and employee management directly from their mobile devices.
+The mobile application allows client managers to perform their daily HR operations. The screens are presented in order of the application's logical navigation and workflow.
 
-As shown in Figure \ref{fig:mobile_login_home}, the application opens with a clean login screen where users input their credentials .\\ After successful authentication , they select their company profile (if they have more than one) and then will be redirected to the main home dashboard , which displays summary metrics and reminders.
+\paragraph{Authentication and Onboarding Flow} 
+
+As shown in Figure \ref{fig:mobile_auth_flow}, the application begins with the Login screen. Forgot Password requests are managed via the Password Forget screen, an OTP password reset flow, and account confirmation dialogs.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_01.png}
         \caption{Login Screen}
         \label{fig:m_login}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/pass_forget_app.png}
+        \caption{Password Forget}
+        \label{fig:m_password_forget}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/otp_password_reset.png}
+        \caption{Password Reset OTP}
+        \label{fig:m_otp_reset}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/otp_login_confirmation.png}
+        \caption{Confirmation Dialog}
+        \label{fig:m_login_otp}
+    \end{subfigure}
+    \caption{Mobile Application - Authentication, Password Reset and OTP Flows}
+    \label{fig:mobile_auth_flow}
+\end{figure}
+
+\paragraph{Company Selection and Main Dashboard}
+Once authenticated, managers associate their session with a specific enterprise. Figure \ref{fig:mobile_dashboard_flow} shows the Company Selector screen and the main analytical Dashboard workspace, which features metric highlights and a pulsating warning alerts panel.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/company_select.png}
-        \caption{Company Selection}
+        \caption{Company Selector}
         \label{fig:m_company_selection}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_03.png}
-        \caption{Dashboard}
+        \caption{Dashboard Overview}
         \label{fig:m_dashboard}
     \end{subfigure}
-    \caption{Mobile Application - Authentication and Dashboard Interfaces}
-    \label{fig:mobile_login_home}
+    \caption{Mobile Application - Company Selection and Dashboard Interfaces}
+    \label{fig:mobile_dashboard_flow}
 \end{figure}
 
-Company managers can track their employees's daily activities and register pointages. As illustrated in Figure \ref{fig:mobile_pointage}, the system provides a clean calendar-based interface where managers can review employee status and log daily attendance with specific notes.
+\paragraph{Pointage \& Attendance Logging}
+The daily attendance tracking flow is shown in Figure \ref{fig:mobile_pointage}. It provides a calendar overview, an employee attendance grid, check-in options with note logs, and absence declaration popups.
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_04.png}
-        \caption{Attendance Calendar view}
+        \caption{Calendar}
         \label{fig:attendance_cal}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_08.png}
-        \caption{Employees attendance list}
-        \label{fig:attendance_list}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_07.png}
+        \caption{Month Picker}
+        \label{fig:attendance_picker}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_08.png}
+        \caption{Check-in List}
+        \label{fig:attendance_list}
+    \end{subfigure}
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_10.png}
-        \caption{Absence declaration form}
+        \caption{Notes Dialog}
+        \label{fig:attendance_notes}
+    \end{subfigure}
+    \hfil
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_09.png}
+        \caption{Absence Form}
         \label{fig:m_abs_form}
     \end{subfigure}
-    \caption{Mobile Application - Daily Activity Attendance Tracking}
+    \caption{Mobile Application - Daily Activity Attendance Tracking Flow}
     \label{fig:mobile_pointage}
 \end{figure}
 
+\paragraph{Leaves and Absences Requests}
 The leaves and absences request subsystem allows managers to declare absences and submit leave requests. Figure \ref{fig:mobile_leaves} shows the interface where requests are registered along with justifications and descriptive notes.
 
 \begin{figure}[H]
@@ -140,471 +196,725 @@ The leaves and absences request subsystem allows managers to declare absences an
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_06.png}
-        \caption{Leaves list view}
+        \caption{Leaves List View}
         \label{fig:m_leaves_list}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_07_1.png}
-        \caption{Absence declaration form}
-        \label{fig:m_leaves_request_form}
+        \caption{Leave Declaration Form}
+        \label{fig:m_leaves_form}
     \end{subfigure}
     \caption{Mobile Application - Leaves and Absences Management}
     \label{fig:mobile_leaves}
 \end{figure}
 
-The communication interface integrates real-time chat and document sharing. clients can exchange messages and view all uploaded files in a dedicated file history with the possibility of categorization, as displayed in Figure \ref{fig:mobile_chat}.
+\paragraph{Support Chat and Media Attachment Drawer}
+Real-time chat and document sharing interfaces allow direct communication with HMI Stars managers. As displayed in Figure \ref{fig:mobile_chat}, this includes the support chat, a list of shared files, and real-time scanned document attachment previews.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.48\textwidth}
+
+    \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{project_images/App_light_and_english/flutter_13.png}
-        \caption{Real-time chat screen}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_11.png}
+        \caption{Contacts}
+        \label{fig:m_contacts}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/chat.png}
+        \caption{Chat}
         \label{fig:m_chat}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[b]{0.24\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{project_images/App_light_and_english/flutter_15.png}
-        \caption{Shared documents panel}
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_13.png}
+        \caption{Attachment Preview}
+        \label{fig:m_attachment_preview}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_15.png}
+        \caption{Shared Files}
         \label{fig:m_docs}
     \end{subfigure}
-    \caption{Mobile Application - Chats and Document Sharing}
+
+    \caption{Mobile Application - Chats, Contacts, and Shared Document Panels}
     \label{fig:mobile_chat}
 \end{figure}
 
-The employee management module allows company managers to view, add, edit, and archive employees directly from the mobile application. As shown in Figure \ref{fig:mobile_employees}, the employee directory supports both grid and list view modes with a search function. Managers can toggle between active and archived employees using dedicated tabs, and add new employees through a registration form.
+\paragraph{Employee Directory Views}
+The employee management module allows company managers to view active and archived employees directly from the mobile application. Figure \ref{fig:mobile_employee_views} shows the employee directory in both grid and list view modes.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.41\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_20.png}
-        \caption{Employees Grid View}
+        \includegraphics[width=0.7\textwidth]{project_images/App_light_and_english/flutter_20.png}
+        \caption{Grid View}
         \label{fig:m_emp_grid}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.41\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_25.png}
-        \caption{Employees List View}
-        \label{fig:m_emp_list_view}
+        \includegraphics[width=0.7\textwidth]{project_images/App_light_and_english/flutter_25.png}
+        \caption{List View}
+        \label{fig:m_emp_list}
     \end{subfigure}
-    \hfill
+    \caption{Mobile Application - Employee Directory Views}
+    \label{fig:mobile_employee_views}
+\end{figure}
+
+\paragraph{Employee Profile Operations}
+To add, consult, or edit employee records, managers use the dedicated profiling interfaces. Figure \ref{fig:mobile_employee_ops} shows the new employee registration form, the detailed profile file, and the profile editing interface.
+
+\begin{figure}[H]
+    \centering
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_24.png}
         \caption{New Employee Form}
         \label{fig:m_new_emp}
     \end{subfigure}
-    \caption{Mobile Application - Employee Management Module}
-    \label{fig:mobile_employees}
-\end{figure}
-
-Each employee card provides quick action buttons for editing, archiving, or deleting the record. Tapping on a card opens the full employee profile, which displays personal information, identity data, and social security details. The edit mode allows managers to update any field and change the employee photo, as illustrated in Figure \ref{fig:mobile_emp_profile}.
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_21.png}
-        \caption{Employee Profile View}
-        \label{fig:m_emp_view}
+        \caption{Employee Profile}
+        \label{fig:m_emp_profile}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_22.png}
-        \caption{Employee Edit Mode}
+        \caption{Profile Editor}
         \label{fig:m_emp_edit}
     \end{subfigure}
-    \caption{Mobile Application - Employee Profile and Edit Interfaces}
-    \label{fig:mobile_emp_profile}
+    \caption{Mobile Application - Employee Registration, Detailed Profiling, and Editing Forms}
+    \label{fig:mobile_employee_ops}
 \end{figure}
 
-The settings screen provides company profile management and application personalization options. As shown in Figure \ref{fig:mobile_settings}, managers can update their company logo, switch between light and dark themes, change the interface language between French and English, and edit the company's general and legal information, such as its SIREN, SIRET, and APE codes.
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_26.png}
-        \caption{Appearance and Language Settings}
-        \label{fig:m_settings_top}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_27.png}
-        \caption{Company Information Settings}
-        \label{fig:m_settings_bottom}
-    \end{subfigure}
-    \caption{Mobile Application -- Settings and Company Profile Management}
-    \label{fig:mobile_settings}
-\end{figure}
-
-\subsubsection{Web Application Interfaces}
-The web application allows HMI Stars managers and administrative staff to manage client companies, monitor employee data, review documents, and communicate with clients in real-time.
-
-The main dashboard provides a summary of the information available on the platform. As shown in Figure \ref{fig:w_dash}, it displays key information about client companies, along with important actions and reminders that help managers monitor daily activities and stay organized.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_01.png}
-    \caption{Web Administration Dashboard Interface}
-    \label{fig:w_dash}
-\end{figure}
-
-To access specific client portfolios, managers use the client directory screen. As illustrated in Figure \ref{fig:w_comp}, this view organizes all affiliated companies into a clean grid of company cards. Each card displays key metadata, allowing the manager to open any company's workspace with a single click.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_02.png}
-    \caption{Client Companies Grid Directory}
-    \label{fig:w_comp}
-\end{figure}
-
-To add a new client company to the platform, managers use a dedicated form. As shown in Figure \ref{fig:w_create_company}, this interface collects the essential company information, such as the legal name, registration number (SIRET), address, and contact details, in order to create the company profile and organize its data securely.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_03.png}
-    \caption{Client Company Creation and Registration Form}
-    \label{fig:w_create_company}
-\end{figure}
-
-Within a selected company's workspace, managers can view and manage employee information. Figure \ref{fig:w_emp_list} shows the employee directory interface, which lists all active employees for that specific company.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_04.png}
-    \caption{Client Company Employees Directory List}
-    \label{fig:w_emp_list}
-\end{figure}
-
-For detailed HR management, managers can open individual profile cards. As shown in Figure \ref{fig:w_emp_card}, the detailed information card displays comprehensive employee profiles—including personal details, civil status, contracts, and identity registry files—with options to edit and update these records directly.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_05.png}
-    \caption{Detailed Employee Information Card}
-    \label{fig:w_emp_card}
-\end{figure}
-
-For direct communication, the web platform features a dedicated real-time chat workspace. As displayed in Figure \ref{fig:w_chat}, this interface allows administrators to converse instantly with different client managers, providing direct support and coordinating administrative requests.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{project_images/Plat_night_and_english/flutter_06.png}
-    \caption{Centralized Web Chat Workspace}
-    \label{fig:w_chat}
-\end{figure}
-
-Alongside chat, the shared file archive panel provides a central space for document management. As shown in Figure \ref{fig:w_docs}, this archive lists all uploaded documents from the client, categorized by type (such as VAT or KBIS), and enables managers to preview, filter, and download files directly.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{project_images/Plat_night_and_english/flutter_07.png}
-    \caption{Shared Files and Document Archive Interface}
-    \label{fig:w_docs}
-\end{figure}
-
-For adding new employees to a client company, the platform provides a comprehensive registration form. As shown in Figure \ref{fig:w_add_emp}, this form collects identity, contact, contractual, and attachment data in a structured layout, with mandatory field validation and support for uploading scanned documents (ID, health card, proof of address, signed contract).
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_08.png}
-    \caption{Web Platform - New Employee Registration Form}
-    \label{fig:w_add_emp}
-\end{figure}
-
-To access individual employee records, managers click on an employee row to open a detailed information dialog. As illustrated in Figure \ref{fig:w_emp_detail}, this dialog presents the employee's civil status, identity numbers, contact information, and employment details in a clean, scrollable view with an edit option.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_09.png}
-    \caption{Web Platform - Employee Details Dialog}
-    \label{fig:w_emp_detail}
-\end{figure}
-
-The platform also supports exporting individual employee attendance records. As shown in Figure \ref{fig:w_export}, managers can select a specific month and year to generate an attendance report for download, enabling external payroll processing and administrative follow-up.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_10.png}
-    \caption{Web Platform - Employee Attendance Export Dialog}
-    \label{fig:w_export}
-\end{figure}
-
-To manage departing or inactive employees, the company workspace includes an Employee Archives tab. As displayed in Figure \ref{fig:w_archives}, this view lists all employees who have left the company, retaining their records for administrative traceability and compliance.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_11.png}
-    \caption{Web Platform - Archived Employees List}
-    \label{fig:w_archives}
-\end{figure}
-
-The web platform mirrors the mobile application's warning system with a dedicated Warnings tab. As shown in Figure \ref{fig:w_warnings}, managers can browse warning categories (Warnings, Summons, Information), view available templates, and issue formal letters directly from the company workspace.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{project_images/Plat_night_and_english/flutter_12.png}
-    \caption{Web Platform - Warnings and Templates Categories}
-    \label{fig:w_warnings}
-\end{figure}
-
-Finally, the Notes and Reminders feature allows consultants to attach internal notes to any client company. As illustrated in Figure \ref{fig:w_notes}, each note includes a title, content, and an optional reminder flag. Notes marked as reminders appear on the dashboard, helping managers keep track of pending actions and important deadlines.
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_13.png}
-        \caption{Notes and Reminders List}
-        \label{fig:w_notes_list}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_14.png}
-        \caption{Add Note Dialog}
-        \label{fig:w_notes_add}
-    \end{subfigure}
-    \caption{Web Platform - Notes and Reminders Management}
-    \label{fig:w_notes}
-\end{figure}
-
-\subsubsection{Advanced Security and Authentication Workflows}
-To provide a secure and user-friendly experience, we updated the authentication system by replacing traditional email magic links with a native, in-app 6-digit One-Time Password (OTP) verification flow. When a client manager registers or tries to log in with an unconfirmed email, the system catches the authentication exception and prompts them with a verification dialog to input their OTP. The dialog automatically triggers a fresh OTP dispatch upon opening and includes a ``Resend Code'' button governed by a 60-second cooldown timer, preventing abuse while ensuring the user can always obtain a valid code. Similarly, during password recovery, the user enters their email, receives a code, verifies it in-app, and resets their password without encountering browser redirection loops. 
-
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/otp_password_reset.png}
-        \caption{Forgot Password OTP Screen}
-        \label{fig:m_otp_verification}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/otp_login_confirmation.png}
-        \caption{Account Confirmation Dialog}
-        \label{fig:m_login_otp}
-    \end{subfigure}
-    \caption{Bilingual OTP Verification and Login Confirmation Interfaces}
-    \label{fig:otp_security_flow}
-\end{figure}
-
-\subsubsection{Bilingual Email Templates and Multi-Channel Notification Subsystem}
-
-To guarantee a professional and cohesive user experience, we customized the automated email notification templates dispatched by the Supabase authentication service. Rather than sending plain default system emails, we designed premium responsive HTML email templates. These templates follow a unified bilingual layout containing French content at the top and English content below, ensuring accessibility for all users. Each template incorporates the HMI Stars visual identity through the integration of the company logo, structured content cards, and the signature gold-brown accent color.
-
-\paragraph{Confirm Sign Up Email}
-The registration process is secured through a six-digit One-Time Password (OTP) sent to the user's email address. The customized confirmation email uses the subject \textit{Confirmez votre inscription | Confirm Sign Up} and presents the verification code within a clearly highlighted card component.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.65\textwidth]{project_images/mails_preview/confirm_acc_mail.png}
-\caption{Customized Confirm Sign Up Email Template}
-\label{fig:mail_confirm}
-\end{figure}
-
-\paragraph{Reset Password Email}
-To facilitate secure account recovery, a dedicated password reset template is used to deliver verification OTPs. The email is sent with the subject \textit{Réinitialisation de votre mot de passe | Reset Password} and follows the same bilingual design standards adopted throughout the platform.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.65\textwidth]{project_images/mails_preview/password_reset_mail.png}
-\caption{Customized Reset Password Email Template}
-\label{fig:mail_reset}
-\end{figure}
-
-\paragraph{Email Change OTP Verification}
-When a user requests to change their email address, Supabase initiates a security workflow sending an OTP verification code. The customized template delivers this verification code, ensuring the request is authenticated.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.65\textwidth]{project_images/mails_preview/mail_otp_change_mail.png}
-\caption{Customized Email Change OTP Verification Template}
-\label{fig:mail_otp_change}
-\end{figure}
-
-\paragraph{Email Change Confirmation}
-After validating the verification code, a final confirmation email is dispatched to the user to confirm the update. The customized template details the successful change using the subject \textit{Confirmez le changement d'email | Confirm Email Change}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.65\textwidth]{project_images/mails_preview/mail_change_mail.png}
-\caption{Customized Email Change Confirmation Template}
-\label{fig:mail_change}
-\end{figure}
-
-\paragraph{Password Change Notice}
-For transparency and security, any updates to the account password trigger an immediate email notification confirming the action, helping prevent undetected account compromises.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.65\textwidth]{project_images/mails_preview/pass_change_mail.png}
-\caption{Customized Password Change Notification Template}
-\label{fig:mail_pass_change}
-\end{figure}
-
-\paragraph{Phone Number Change Notice}
-Modifications to the registered phone number trigger an automated notification email containing the details of the change to maintain a reliable audit trail.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.65\textwidth]{project_images/mails_preview/nmbr_change_mail.png}
-\caption{Customized Phone Number Change Notification Template}
-\label{fig:mail_nmbr_change}
-\end{figure}
-
-
-
-Complementing the email alerts, we implemented a dual-mode notification architecture for in-app events:
-
-\begin{itemize}
-
-\item \textbf{FCM Push Notifications}: Real-time push alerts are routed via Firebase Cloud Messaging (FCM). When administrative updates are triggered, the server resolves the device token stored in the database (\texttt{entreprises.jeton\_notification}) and delivers notification packets instantly, even when the mobile application is running in the background. This mechanism ensures that users remain informed about important events such as new messages, reminders, attendance updates, or administrative requests.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.45\textwidth]{project_images/phone_notif.png}
-\caption{Firebase Cloud Messaging (FCM) Push Notification}
-\label{fig:fcm_notification}
-\end{figure}
-
-\item \textbf{Red/Green Toast Notification Engine}: For foreground user feedback, the interface features a custom toast notification manager (\texttt{ToastUtils.show}). Positioned non-intrusively in the bottom-right corner of the desktop viewport, it displays state changes such as successful database synchronizations, completed operations, validation errors, or failed requests. The component uses a color-coded visual system, displaying green notifications for successful actions and red notifications for errors or warnings. Each toast is animated using a smooth bounce slide-in transition driven by a cubic bezier curve (\textit{Curves.easeOutBack}).
-
-\begin{figure}[H]
-\centering
-\begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{project_images/green_notif.png}
-    \caption{Success Toast Notification}
-    \label{fig:toast_success}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{project_images/red_notif.png}
-    \caption{Error Toast Notification}
-    \label{fig:toast_error}
-\end{subfigure}
-\caption{Custom Foreground Toast Notification System}
-\label{fig:toast_notifications}
-\end{figure}
-
-\end{itemize}
-
-
-\subsubsection{Interactive Document Scanner Subsystem}
-To make document uploads easier, we integrated an interactive mobile document scanner. This tool allows client managers to snap photos of physical paper records (such as receipts, tax declarations, or KBIS extracts) and crop them using a boundary-detection overlay. 
-
-To prevent high-resolution photos from causing performance lags or Application Not Responding (ANR) states, the application downscales camera images natively to a maximum width of 1200 pixels and height of 1600 pixels at 85\% quality. This optimization speeds up the perspective cropping calculations, completing them in less than a second. We also configured the scanner to use fullscreen immersive mode during active cropping. This aligns the cropping coordinates perfectly with the device screen size, preventing the bottom area of cropped documents from being cut off.
+\paragraph{Interactive Document Scanner}
+To streamline file transmissions, the mobile client embeds an interactive camera-based scanner. Figure \ref{fig:m_scanner_steps} demonstrates the scanner step-by-step: choosing the source, taking a picture, adjusting perspective crop, applying filters, and previewing the document.
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_01_1.png}
-        \caption{Mode Selection}
-        \label{fig:scanner_step1}
+        \caption{Mode Choice}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_02_1.png}
-        \caption{Media Source Choice}
-        \label{fig:scanner_step2}
+        \caption{Camera View}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_03_1.png}
-        \caption{Perspective Cropping}
-        \label{fig:scanner_step3}
+        \caption{Cropping stage}
     \end{subfigure}
-    
     \vspace{0.3cm}
-    
+
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_04_1.png}
-        \caption{Quality Filtering}
-        \label{fig:scanner_step4}
+        \caption{Filters Grid}
     \end{subfigure}
-    \hspace{0.5cm}
+    \hfil
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_05_1.png}
-        \caption{Preview and Send}
-        \label{fig:scanner_step5}
+        \caption{Confirm Send}
     \end{subfigure}
-    \caption{Interactive Document Scanner Workflow}
-    \label{fig:document_scanner_view}
+    \caption{Mobile Application - Step-by-Step Interactive Document Scanner Flow}
+    \label{fig:m_scanner_steps}
 \end{figure}
 
-\subsubsection{Disciplinary Warnings and Document Templates Subsystem}
-We developed a complete templates system to help managers create and issue formal warning letters, summons, or information notices. The feature uses a clean, full-screen layout divided into four logical layers: selecting a warning category, browsing templates (such as warning sheets or meeting invitations), reading details in a dedicated viewer, and modifying template content in an editor. 
 
-The templates are stored in a Supabase table, letting administrators update legal templates remotely without rebuilding the mobile app. When issuing a letter, the manager selects recipients from the active employee directory. The app then compiles the addresses and opens the default email client with pre-filled subject and body text, simplifying the process.
+\paragraph{Disciplinary Warnings Categories and Templates}
+Client managers can issue formal letters directly to employees by choosing from predefined categories and templates. Figure \ref{fig:m_warnings_cats_templates} shows the warning category selection screen and the list of available templates under the chosen category.
+
+ \vspace{1cm}
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_16.png}
+        \includegraphics[width=1\textwidth]{project_images/App_light_and_english/flutter_16.png}
         \caption{Warning Categories}
-        \label{fig:warn_cats}
+        \label{fig:m_warn_cats}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_17.png}
+        \includegraphics[width=1\textwidth]{project_images/App_light_and_english/flutter_17.png}
         \caption{Templates List}
-        \label{fig:warn_list}
+        \label{fig:m_warn_list}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_19.png}
-        \caption{Letter Viewer}
-        \label{fig:warn_viewer}
-    \end{subfigure}
-    \caption{Warning Categories, Templates List, and Letter Viewer Interfaces}
-    \label{fig:warnings_templates}
+    \caption{Mobile Application - Warnings Categories and Templates List}
+    \label{fig:m_warnings_cats_templates}
 \end{figure}
 
-\subsubsection{Command-Driven Dashboard and Alert Highlighting}
-The mobile home screen was designed to give users a clear overview of their daily activities. It displays useful information such as the number of active employees and pending attendance records for the day. A dedicated \textbf{“RAPPELS”} section highlights important reminders and actions that require attention, helping managers stay organized and keep track of their tasks efficiently.
+\paragraph{Warning Template Management}
+Managers can customize their letter directory by adding new warnings or deleting outdated ones. Figure \ref{fig:m_warnings_management} displays the warning template builder form and the template deletion confirmation dialog.
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{project_images/App_light_and_english/flutter_18.png}
+        \caption{Add Template Editor}
+        \label{fig:m_warn_add}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{project_images/App_light_and_english/delete_av.png}
+        \caption{Delete Confirmation}
+        \label{fig:m_warn_delete}
+    \end{subfigure}
+    \caption{Mobile Application - Warning Template Creation and Deletion}
+    \label{fig:m_warnings_management}
+\end{figure}
+
+\paragraph{Modifying, Viewing, and Sending Warnings}
+Once a template is ready, managers can modify its content, preview the letter, select employee recipients, and send the dispatch via Gmail. Figure \ref{fig:m_warnings_send_flow} shows the edit form, the letter preview screen, the recipient selector dialog, and the pre-filled Gmail interface.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.33\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/modify_av.png}
+        \caption{Modify Template}
+        \label{fig:m_warn_modify}
+    \end{subfigure}
+    \hfil
+    \begin{subfigure}[b]{0.33\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_19.png}
+        \caption{Letter Preview}
+        \label{fig:m_warn_preview}
+    \end{subfigure}
+    \hfil
+    \begin{subfigure}[b]{0.33\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/send_av.png}
+        \caption{Recipient Selector}
+        \label{fig:m_warn_select_recipients}
+    \end{subfigure}
+    \hfil
+    \begin{subfigure}[b]{0.33\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_light_and_english/mail_av.png}
+        \caption{Gmail Redirect}
+        \label{fig:m_warn_gmail}
+    \end{subfigure}
+    \caption{Modifying, Viewing, Selecting Recipients, and Sending Warnings}
+    \label{fig:m_warnings_send_flow}
+\end{figure}
+
+\paragraph{App Settings and Configurations}
+Finally, the settings view (Figure \ref{fig:m_settings_flow}) allows users to modify profile parameters, toggle languages (FR/EN) and themes (Light/Dark), and update corporate legal structures.
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_03.png}
-        \caption{Dashboard Overview}
-        \label{fig:m_dashboard_overview}
+        \includegraphics[width=1\textwidth]{project_images/App_light_and_english/flutter_26.png}
+        \caption{Account Preferences}
     \end{subfigure}
-    \caption{Command-Driven Dashboard and Alert Highlighting Cards}
-    \label{fig:dashboard_highlights}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{project_images/App_light_and_english/flutter_27.png}
+        \caption{Company Corporate Data}
+    \end{subfigure}
+    \caption{Mobile Application - Settings and Personalization Interfaces}
+    \label{fig:m_settings_flow}
+\end{figure}
+
+\paragraph{Mobile Application Dark Mode Theme Options}
+To ensure high usability under low-light environments and satisfy user preferences, the mobile application supports a fully integrated Dark Mode theme option. Figure \ref{fig:mobile_dark_mode} illustrates the login interface, main dashboard, and settings screens rendered in Dark Mode.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_dark_and_french/flutter_01.png}
+        \caption{Login Screen}
+        \label{fig:m_dark_login}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_dark_and_french/flutter_03.png}
+        \caption{Dashboard Overview}
+        \label{fig:m_dark_dashboard}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/App_dark_and_french/flutter_26.png}
+        \caption{Settings Screen}
+        \label{fig:m_dark_settings}
+    \end{subfigure}
+    \caption{Mobile Application - Dark Mode Theme Interfaces}
+    \label{fig:mobile_dark_mode}
+\end{figure}
+
+
+
+\subsubsection{Web Application Interfaces}
+The web application provides a comprehensive administrative interface for HMI Stars managers. It is presented in order of the web platform's navigation flow.
+
+\paragraph{Authentication, Password Recovery, and OTP Flow}
+Figure \ref{fig:web_auth_flow} shows the authentication system. It includes the Login page, Password Recovery requests, verification OTP codes, current password validations.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.80\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_01_1.png}
+        \caption{Login Interface}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.80\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_02_1.png}
+        \caption{Password Recovery Form}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.80\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_03_1.png}
+        \caption{OTP Recovery Dialogue}
+    \end{subfigure}
+    \caption{Web Platform - Authentication, Recovery, and OTP Dialogs}
+    \label{fig:web_auth_flow}
+\end{figure}
+
+\paragraph{Platform Dashboard}
+The dashboard displays aggregated charts representing key metrics such as employee counts, leave request ratios, and active companies, as shown in Figure \ref{fig:w_dash}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_01.png}
+    \caption{Dashboard Interface}
+    \label{fig:w_dash}
+\end{figure}
+
+\paragraph{Client Companies Directory}
+Managers browse client portfolios using the Company Directory grid, as shown in Figure \ref{fig:web_companies_directory}. They can also create and register new enterprises using the registration form, as illustrated in Figure \ref{fig:web_company_creation}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_02.png}
+    \caption{Web Platform - Client Companies Directory}
+    \label{fig:web_companies_directory}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_04.png}
+    \caption{Web Platform - Company Registration Form}
+    \label{fig:web_company_creation}
+\end{figure}
+
+\paragraph{Company Detailed Workspace Tab System}
+Clicking on a company card opens its detailed workspace, which is organized into five tabs. Figure \ref{fig:web_company_workspace} shows the details panel, while Figure \ref{fig:web_company_modifier} presents its edit form.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_06.png}
+    \caption{Web Platform - Detailed Company Workspace}
+    \label{fig:web_company_workspace}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_31.png}
+    \caption{Web Platform - Company Information Modifier Form}
+    \label{fig:web_company_modifier}
+\end{figure}
+
+\paragraph{Company Employees Tab \& Registry}
+The Employees tab manages active contracts, displaying a comprehensive list of all employees within the selected company (Figure \ref{fig:web_employee_registry}). From this registry interface, managers can see detailed profiles, archive or delete records, or access individual employee cards (Figure \ref{fig:web_profile_card}). Clicking on the details button allows managers to inspect the complete record, while the modify button enables direct edits to the employee's contract and personal data.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_07.png}
+    \caption{Web Platform - Active Employee Registry}
+    \label{fig:web_employee_registry}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_13.png}
+    \caption{Web Platform - Detailed Profile Card}
+    \label{fig:web_profile_card}
+\end{figure}
+
+\paragraph{Employee Creation \& Detailed Inspector Dialogs}
+Registering new staff is handled via a dedicated creation form (Figure \ref{fig:web_new_employee_form}) that captures personal information and contract parameters. Once created, detailed records can be inspected dynamically through an overlay panel (Figure \ref{fig:web_employee_details_dialog}) which aggregates contract logs and personal details.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_12.png}
+    \caption{Web Platform - New Employee Registration Form}
+    \label{fig:web_new_employee_form}
+\end{figure}
+
+\begin{figure}[H]
+    \vspace{1cm}
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/employee_data_fr.png}
+    \caption{Web Platform - Employee Details Dialog}
+    \label{fig:web_employee_details_dialog}
+\end{figure}
+
+\paragraph{Bilingual Attendance Export}
+Managers can export the registry's lists or retrieve specific attendance tracking sheets for any given month in a fully bilingual layout (French and English) using the attendance export utility dialog (Figure \ref{fig:web_attendance_export_dialog}). This allows administrative personnel to download spreadsheets structured for local payroll systems.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_15.png}
+    \caption{Web Platform - Attendance Export Dialog}
+    \label{fig:web_attendance_export_dialog}
+\end{figure}
+
+\paragraph{Company Employee Archives Tab}
+The Employee Archives tab retains records of departing or terminated employees, as illustrated in Figure \ref{fig:web_archives_tab}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/flutter_08.png}
+    \caption{Web Platform - Workspace Employee Archives Tab}
+    \label{fig:web_archives_tab}
+\end{figure}
+
+\paragraph{Company Warnings Tab}
+The Warnings tab manages legal warning dispatches and default templates. Managers can browse warning categories, pre-made legal notices, and dispatch records from the main warnings workspace dashboard (Figure \ref{fig:web_warnings_workspace}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_09.png}
+    \caption{Web Platform - Warnings Workspace Dashboard}
+    \label{fig:web_warnings_workspace}
+\end{figure}
+
+\paragraph{Custom Template Editor}
+Administrators can customize or create new warning dispatches using the interactive template builder form (Figure \ref{fig:web_warnings_editor}), which allows direct editing of the letter content.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_21.png}
+    \caption{Web Platform - Warnings Custom Editor Form}
+    \label{fig:web_warnings_editor}
+\end{figure}
+
+\paragraph{Recipient Selection \& Dispatch Preview}
+Once the letter is ready, managers select recipients using a search-enabled recipient list dialog (Figure \ref{fig:web_warnings_recipient}). Before dispatching the notice, the system displays a live layout visualization of the generated email letter (Figure \ref{fig:web_warnings_preview}) to verify formatting.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_22.png}
+    \caption{Web Platform - Warnings Recipient Selector Dialog}
+    \label{fig:web_warnings_recipient}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/flutter_24.png}
+    \caption{Web Platform - Warnings Email Letter Preview}
+    \label{fig:web_warnings_preview}
+\end{figure}
+
+\paragraph{Company Notes and Reminders Tab}
+The Notes \& Reminders tab allows consultants to log internal notes. Figure \ref{fig:web_notes_flow} shows the notes board and the note creation dialog.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_13.png}
+        \caption{Company Notes Board}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_14.png}
+        \caption{Add Note Dialog}
+    \end{subfigure}
+    \caption{Web Platform - Workspace Notes and Reminders Tab}
+    \label{fig:web_notes_flow}
+\end{figure}
+
+\paragraph{Interactive Leave Request Supervision}
+Leave requests are managed through a validation dashboard. Figure \ref{fig:web_leaves_supervision} shows the requests list and the details modal.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_18.png}
+        \caption{Leave Requests Dashboard}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_19.png}
+        \caption{Leave Details Panel}
+    \end{subfigure}
+    \caption{Web Platform - Leaves and Absences Supervision Panel}
+    \label{fig:web_leaves_supervision}
+\end{figure}
+
+\paragraph{Central Messaging Workspace}
+The support messaging panel manages real-time interactions with client managers, including the chat interface and the shared document previews, as shown in Figure \ref{fig:web_messaging_workspace}.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_06.png}
+        \caption{Support Messaging Channel}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_07.png}
+        \caption{Shared Files Directory}
+    \end{subfigure}
+    \caption{Web Platform - Real-time Messagerie Workspace}
+    \label{fig:web_messaging_workspace}
+\end{figure}
+
+\paragraph{HR Document Previewer}
+The platform includes an internal PDF previewer for files like KBIS extracts, VAT forms, and RIBs, as displayed in Figure \ref{fig:web_pdf_preview}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/flutter_20.png}
+    \caption{Web Platform - HR Document PDF Preview Dialog}
+    \label{fig:web_pdf_preview}
+\end{figure}
+
+\paragraph{General Supervision Calendar}
+A consolidated calendar view helps administrators track attendance across all client companies, as shown in Figure \ref{fig:web_general_calendar}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/flutter_27.png}
+    \caption{Web Platform - General Supervision Attendance Calendar}
+    \label{fig:web_general_calendar}
+\end{figure}
+
+\paragraph{Settings, User Accounts, and Platform Admin Listings}
+Figure \ref{fig:web_config_flow} shows the platform configuration tools, including the settings page, the platform admin list, and the user invitation dialog.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_15.png}
+        \caption{Preferences settings}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_16.png}
+        \caption{Platform Admin Accounts}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_17.png}
+        \caption{Invitation / Edit Dialog}
+    \end{subfigure}
+    \caption{Web Platform - Settings and Accounts Configurations}
+    \label{fig:web_config_flow}
+\end{figure}
+
+\paragraph{Web Platform Dark Mode Theme Options}
+Similar to the mobile client, the web administration platform supports an alternative Dark Mode theme to reduce eye strain and provide a premium, modern aesthetic for administrative staff. Figure \ref{fig:web_dark_mode} shows the web login page, main analytical dashboard, and preferences configuration screen rendered in Dark Mode.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_01.png}
+        \caption{Login Interface}
+        \label{fig:w_dark_login}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_02.png}
+        \caption{Analytical Dashboard}
+        \label{fig:w_dark_dash}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_night_and_english/flutter_16.png}
+        \caption{Preferences Settings}
+        \label{fig:w_dark_settings}
+    \end{subfigure}
+    \caption{Web Administration Platform - Dark Mode Theme Interfaces}
+    \label{fig:web_dark_mode}
+\end{figure}
+
+
+\paragraph{Platform Utilities}
+Figure \ref{fig:web_utilities_flow} shows other utilities, including notification centers, toast popups, automatic alert configuration panels, and manager association dialogs.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_23.png}
+        \caption{Notification Center Drawer}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_28.png}
+        \caption{Standard success Toast}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_29.png}
+        \caption{Automatic alerts setup}
+    \end{subfigure}
+    
+    \vspace{0.3cm}
+    
+    \begin{subfigure}[b]{0.85\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_30.png}
+        \caption{Associate Managers dialogue}
+    \end{subfigure}
+    \caption{Web Platform - Dynamic Utility Dialogs and Toast feedback}
+    \label{fig:web_utilities_flow}
+\end{figure}
+
+\paragraph{Consolidated Reports Export}
+The platform also supports exporting consolidated Excel activity spreadsheets for accounting and bookkeeping, as shown in Figure \ref{fig:web_consolidated_export}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/flutter_31.png}
+    \caption{Web Platform - Consolidated Activity Reports Export Panel}
+    \label{fig:web_consolidated_export}
+\end{figure}
+
+\subsubsection{Bilingual Email Templates and Notification Subsystem}
+The Supabase authentication service sends bilingual responsive HTML templates for transactional emails, as shown in Figure \ref{fig:email_templates}. Each template features both French (at the top) and English (at the bottom) text.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/mails_preview/confirm_acc_mail.png}
+    \caption{Sign Up Confirmation}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/mails_preview/password_reset_mail.png}
+    \caption{Password Reset OTP}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/mails_preview/mail_otp_change_mail.png}
+    \caption{Email Change OTP}
+\end{subfigure}
+
+\vspace{0.3cm}
+
+\begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/mails_preview/mail_change_mail.png}
+    \caption{Email Change Confirm}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/mails_preview/pass_change_mail.png}
+    \caption{Password Update Notice}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{project_images/mails_preview/nmbr_change_mail.png}
+    \caption{Phone Update Notice}
+\end{subfigure}
+\caption{Supabase Authentication Service - Bilingual Responsive Email Templates}
+\label{fig:email_templates}
+\end{figure}
+
+In-app alerts are delivered via Firebase Cloud Messaging (FCM), as shown in Figure \ref{fig:fcm_notif_phone}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{project_images/phone_notif.png}
+\caption{Firebase Cloud Messaging (FCM) Mobile Push Notification}
+\label{fig:fcm_notif_phone}
+\end{figure}
+
+\subsubsection{Exported Output Demonstrations}
+Exported PDF employee files and CSV/Excel attendance files demonstrate the platform's data-generation features, as illustrated in Figure \ref{fig:output_demos}.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=0.85\textwidth]{project_images/employee_data_fr.png}
+    \caption{Bilingual PDF Employee File}
+    \label{fig:out_pdf}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=0.85\textwidth]{project_images/eployee_attendance_file.png}
+    \caption{Attendance Spreadsheet}
+    \label{fig:out_excel}
+\end{subfigure}
+\caption{Application Output Files - PDF Export and Excel Attendance Spreadsheet}
+\label{fig:output_demos}
 \end{figure}
 
 
 \subsection{Utility Evaluation}
-
 The implemented features were thoroughly tested throughout the development process to ensure that they met the functional requirements of HMI Stars Consulting. Special attention was given to document management, employee tracking, attendance management, and communication features. The results confirmed that the system successfully supports the company's daily administrative operations in a centralized and efficient manner.
 
 \subsection{Usability Evaluation}
-
 Several tests were carried out to verify the usability and reliability of the application on both web and mobile platforms. The user interfaces were refined to provide a simple and intuitive experience, while real-time features such as messaging and notifications were validated to ensure smooth interactions. Authentication, navigation, and data synchronization processes were also tested to guarantee a stable and seamless user experience.
 
 \section{Conclusion}
 The testing and evaluation phases confirmed that the HMI Stars ecosystem is stable, secure, and fully meets all initial project requirements. The mobile application successfully delivers employee management, attendance tracking, leave requests, real-time messaging, document sharing with scanning capabilities, and disciplinary warning templates. The web platform provides a comprehensive administration workspace with company management, employee registries, document archives, warning systems, notes and reminders, and attendance export capabilities. Both components support bilingual interfaces (French and English) and adaptive themes (light and dark), ensuring accessibility and comfort for all users. The transition phase successfully configured and launched all components within their designated execution environments, confirming readiness for production deployment.
-

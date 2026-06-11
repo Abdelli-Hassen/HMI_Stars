@@ -110,15 +110,20 @@ void showTemplateSendDialog(
                       );
                       return;
                     }
+                    String emailBody = template.contenu;
+                    final lines = emailBody.split('\n');
+                    if (lines.isNotEmpty && lines.first.trim().toLowerCase().startsWith('objet')) {
+                      lines.removeAt(0);
+                      while (lines.isNotEmpty && lines.first.trim().isEmpty) {
+                        lines.removeAt(0);
+                      }
+                      emailBody = lines.join('\n');
+                    }
 
-                    final Uri emailUri = Uri(
-                      scheme: 'mailto',
-                      path: emails,
-                      queryParameters: {
-                        'subject': template.titre,
-                        'body': template.contenu,
-                      },
-                    );
+                    final String url = 'mailto:$emails'
+                        '?subject=${Uri.encodeComponent(template.titre)}'
+                        '&body=${Uri.encodeComponent(emailBody).replaceAll('+', '%20')}';
+                    final Uri emailUri = Uri.parse(url);
 
                     Navigator.pop(ctx);
 

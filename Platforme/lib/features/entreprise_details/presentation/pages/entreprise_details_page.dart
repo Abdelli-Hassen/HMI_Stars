@@ -1148,25 +1148,27 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                       .where((s) => selected.contains(s.id) && s.email.isNotEmpty)
                       .map((s) => s.email)
                       .join(',');
-                  Navigator.pop(ctx);
                   if (emails.isEmpty) {
+                    Navigator.pop(ctx);
                     ToastUtils.show(context, context.tr('Aucun email trouvé pour les salariés sélectionnés.', 'No email found for selected employees.'), isError: true);
                     return;
                   }
                   
                   final encodedTo = Uri.encodeComponent(emails);
-                  final encodedSubject = Uri.encodeComponent(modele.titre);
-                  final encodedBody = Uri.encodeComponent(modele.contenu);
+                  final encodedSubject = Uri.encodeComponent(modele.titre).replaceAll('+', '%20');
+                  final encodedBody = Uri.encodeComponent(modele.contenu).replaceAll('+', '%20');
                   final gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=$encodedTo&su=$encodedSubject&body=$encodedBody';
                   final uri = Uri.parse(gmailUrl);
 
-                  try {
-                    await url_launcher.launchUrl(uri, mode: url_launcher.LaunchMode.externalApplication);
-                  } catch (_) {
+                  // Launch URL synchronously before popping the navigator to bypass web browser popup blocker.
+                  url_launcher.launchUrl(uri, mode: url_launcher.LaunchMode.platformDefault).catchError((_) {
                     if (context.mounted) {
                       ToastUtils.show(context, context.tr('Impossible d\'ouvrir Gmail.', 'Could not open Gmail.'), isError: true);
                     }
-                  }
+                    return false;
+                  });
+
+                  Navigator.pop(ctx);
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
                 child: Text(context.tr('Envoyer (${selected.length})', 'Send (${selected.length})')),

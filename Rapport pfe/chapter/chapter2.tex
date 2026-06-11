@@ -181,12 +181,12 @@ The code is modularized into feature folders following clean architecture guidel
 \textbf{3. Client Management Subsystem :} Employees list, attendance forms, and leave requests.\\
 \textbf{4. Messaging Subsystem :} Real-time chat widget, WebSocket listeners, and file upload services.
 
-\subsection{Design Pattern \& Architectural Layers}
-The codebase of both the mobile and web client applications is structured around a \\ decoupled \textbf{Model-View-Controller (MVC)} design pattern to separate business logic from the user interface presentation:\\
-\textbf{Model Layer}: Contains Dart entity models mapping our database records. They manage JSON serialization and deserialization (`fromJson`/`toJson` factories).\\
-\textbf{View Layer}: Renders UI screens using responsive Flutter widgets. Views observe state changes and rebuild when notified.\\
-\textbf{Controller/State Layer (AppState)}: Exposes actions, processes asynchronous transactions, and dispatches data change signals to UI consumers.
+\subsubsection{Design Pattern \& Architectural Layers}
+The codebase of both the mobile and web client applications is structured around a \\ decoupled \textbf{Model-View-Controller (MVC)} design pattern to separate business logic from the user interface presentation: \\
 
+\textbf{Model Layer}: Contains Dart entity models mapping our database records. They manage JSON serialization and deserialization (`fromJson`/`toJson` factories). \\
+\textbf{View Layer}: Renders UI screens using responsive Flutter widgets. Views observe state changes and rebuild when notified. \\
+\textbf{Controller/State Layer (AppState)}: Exposes actions, processes asynchronous transactions, and dispatches data change signals to UI consumers.
 \subsection{Deployment of the Computerized System}
 During development and testing, the components were deployed and compiled as follows:
 \\
