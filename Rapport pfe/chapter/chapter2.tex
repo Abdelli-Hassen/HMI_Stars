@@ -7,8 +7,10 @@ It details the functional analysis through use case modeling, followed by system
 
 \section{Phase of Inception}
 
+During the Inception phase, the development process separates into two parallel tracks following the 2TUP methodology. The \textbf{Functional Track} focuses on eliciting user requirements, modeling use cases, and drafting user interface prototypes to define the system's behavioral scope. Concurrently, the \textbf{Technical Track} analyzes initial technology constraints (such as selecting Flutter and Supabase, as detailed in Chapter 1) to prepare the architectural foundations. The subsections below detail the activities and deliverables of the Functional Track for this phase.
+
 \subsection{Use Case Model Development}
-During the inception phase, we defined the system actors and their corresponding use cases. Since the solution is composed of two distinct interfaces: a mobile application and a web application : both connected to a shared database, the functional requirements were represented using three use case diagrams: a general system overview, a mobile-oriented diagram, and a web-oriented diagram.
+During the inception phase, we defined the system actors and their corresponding use cases. Since the solution is composed of two distinct interfaces: a mobile application and a web application: both connected to a shared database, the functional requirements were represented using three use case diagrams: a general system overview, a mobile-oriented diagram, and a web-oriented diagram.
 
 
 \subsubsection{Global Use Case Diagram}
@@ -273,7 +275,10 @@ Figure \ref{fig:mobile_wireframe} presents the mobile dashboard interface mockup
 
 \section{Phase of Elaboration}
 
+The Elaboration phase represents the parallel progression and refinement of both tracks. The \textbf{Technical Track} establishes the system's non-functional parameters, architectural style, and overall deployment topology (see Subsections \ref{subsec:arch_analysis} and \ref{subsec:arch_design}). Simultaneously, the \textbf{Functional Track} focuses on detailing dynamic behavior and class relationships through sequence diagrams and class diagrams (see Subsections \ref{subsec:uc_analysis} and \ref{subsec:uc_design}). This dual approach ensures that the functional requirements are fully supported by a robust, secure technical framework.
+
 \subsection{Architectural Analysis}
+\label{subsec:arch_analysis}
 During the elaboration phase, we analyzed the structural constraints that shape the system architecture. The HMI Stars ecosystem must support cross-platform mobile and web-based administration while ensuring strict database-level data isolation between client companies.
 
 \subsubsection{Non-Functional Requirements}
@@ -315,6 +320,7 @@ The chosen BaaS architecture offers several advantages for this project: zero se
 
 
 \subsection{Use Case Analysis}
+\label{subsec:uc_analysis}
 We model the dynamic interactions of use cases using UML sequence diagrams to show the workflow between frontend components, the routing system, the database tables, and actors.
 
 \subsubsection{Password Recovery \& Authentication Sequence}
@@ -355,6 +361,7 @@ To secure client manager accounts from unauthorized takeover during email update
 \end{figure}
 
 \subsection{Architectural Design}
+\label{subsec:arch_design}
 The architectural design defines the subsystems. We adopted a Monorepo client-server pattern. Both client applications (Web and Mobile) communicate with Supabase via REST APIs and WebSockets, as detailed in the system architecture and data flow diagram (Figure \ref{fig:architecture_design}).
 
 \begin{figure}[H]
@@ -365,6 +372,7 @@ The architectural design defines the subsystems. We adopted a Monorepo client-se
 \end{figure}
 
 \subsection{Use Case Design}
+\label{subsec:uc_design}
 The use case design maps objects to the logical class diagram. Figure \ref{fig:class_diag} shows the model class relationships matching the database schema.
 \begin{figure}[H]
     \centering
@@ -373,6 +381,8 @@ The use case design maps objects to the logical class diagram. Figure \ref{fig:c
     \label{fig:class_diag}
 \end{figure}
 \section{Phase of Construction}
+
+During the Construction phase, the Functional and Technical tracks of the 2TUP methodology converge. The logical models, use case flows, and user interface layouts defined in the Functional Track are systematically mapped onto the physical database schemas, modular code subsystems, and application frameworks established in the Technical Track. The subsections below describe this convergence, detailing how the database tables are physically implemented, how security isolation (RLS) is applied, how subsystems are modularized, and how the use cases are realized.
 
 \subsection{Database Mapping}
 The logical classes are mapped to physical PostgreSQL tables.\\
