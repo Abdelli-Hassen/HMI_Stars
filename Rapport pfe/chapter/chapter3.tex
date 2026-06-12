@@ -1,15 +1,15 @@
-\chapter{System Realization}
+\chapter{System realization}
 
 \section{Introduction}
 In this final chapter, we detail the implementation, deployment, and validation of the HMI Stars platform. We describe the transition phase, compare the initial specifications against our actual implementation, define the execution environment, and evaluate both system functionality and overall usability.
 
 We also highlight how the mobile client application and the web administration dashboard support dynamic appearance modes (switching between light and dark themes) and fully localized interfaces (supporting French and English language options) across all screens and user components.
 
-\section{Phase of Transition}
+\section{Phase of transition}
 During the transition phase, we packaged and configured the entire system for deployment, local testing, and production hosting. We verified the web administration panel on a local development server to simulate internal workflows, and deployed the production version to the cloud using the \textbf{Vercel} hosting platform for remote availability. Simultaneously, we compiled the mobile client application into an optimized Android Package (APK) for testing on physical devices and emulators. Both client frontends communicate directly with the remote Supabase cloud database.
 
 
-\section{Confrontation Specification vs. Realization}
+\section{Confrontation specification vs. realization}
 To verify project completeness, we cross-reference our initial functional specifications with the implemented features. Table \ref{tab:confrontation_mobile} and Table \ref{tab:confrontation_web} summarize the implementation status of the requirements defined for the mobile application and the web platform, respectively.
 
 \begin{table}[H]
@@ -76,7 +76,7 @@ WEB-11 & Automated OCR Document Classification & Metadata structure complete; te
 \end{tabular}
 \end{table}
 
-\section{Execution Environment}
+\section{Execution environment}
 We evaluated and tested the system across multiple operational platforms:
 \begin{itemize}
     \item \textbf{Web Administration Portal (Admin Client):} Executed and tested using Microsoft Edge and Google Chrome web browsers.
@@ -84,14 +84,14 @@ We evaluated and tested the system across multiple operational platforms:
     \item \textbf{Backend Infrastructure:} Powered by a cloud-hosted Supabase project.
 \end{itemize}
 
-\section{Application Testing}
+\section{Application testing}
 
-\subsection{Demonstration of Implemented Features}
+\subsection{Demonstration of implemented features}
 In this section, we present the functional user interfaces of the completed HMI Stars ecosystem. The platform comprises two main frontend environments: a mobile application designed for client managers and a web application tailored for the consulting firm's administrators.
 
 Every interface supports real-time switching between French and English locales, as well as light and dark visual themes. To maintain structural consistency throughout this report, we present the interface screenshots using the default light theme unless specifically demonstrating dark mode capabilities.
 
-\subsubsection{Mobile Application Interfaces}
+\subsubsection{Mobile application interfaces}
 The mobile application enables client managers to execute their daily human resource operations. We present these screens following the logical navigation paths and user workflow of the application.
 
 \paragraph{Authentication and Onboarding Flow} 
@@ -471,7 +471,7 @@ To accommodate low-light usage and improve user comfort, we integrated a compreh
 
 
 
-\subsubsection{Web Application Interfaces}
+\subsubsection{Web application interfaces}
 The web application provides HMI Stars administrators with a comprehensive workspace for managing clients. We present these interfaces in accordance with the application's sidebar navigation structure.
 
 \paragraph{Authentication, Password Recovery, and OTP Flow}
@@ -781,7 +781,7 @@ Paralleling the mobile client application, the web administration panel supports
     \label{fig:web_dark_mode}
 \end{figure}
 
-\subsubsection{Bilingual Email Templates and Notification Subsystem}
+\subsubsection{Bilingual email templates and notification subsystem}
 The Supabase authentication service dispatches responsive HTML transactional email templates. As shown in Figure \ref{fig:email_templates}, these messages are fully bilingual, displaying French text in the upper section and English translations in the lower portion.
 
 \begin{figure}[H]
@@ -836,7 +836,7 @@ We deliver in-app push notifications using the Firebase Cloud Messaging (FCM) se
 \label{fig:fcm_notif_phone}
 \end{figure}
 
-\subsection{Functional Testing}
+\subsection{Functional testing}
 We conducted systematic functional testing to verify that every implemented feature meets its corresponding specification. Table \ref{tab:test_cases} presents the principal test cases executed across both the mobile application and the web administration platform.
 
 \begin{table}[H]
@@ -888,7 +888,7 @@ TC-18 & Offline attendance logging (no network connection) & Records cached loca
 
 All 18 test cases passed successfully across both platforms, confirming that the implemented system satisfies the functional and robustness requirements defined during the inception phase.
 
-\subsection{Usability Evaluation}
+\subsection{Usability evaluation}
 To assess the overall quality of the user experience, usability was evaluated through an informal user testing session. The session involved 10 participants (6 client-side managers testing the mobile application and 4 administration-side users testing the web platform) who were asked to perform a series of standard tasks—such as logging attendance, uploading documents, creating warning letters, and sending messages—without any external assistance. Observations were recorded, and the usability was rated as 'Good', 'Average', or 'Poor' based on five key criteria. Table \ref{tab:usability_eval} summarizes the evaluation results.
 
 \begin{table}[H]
@@ -914,7 +914,7 @@ To assess the overall quality of the user experience, usability was evaluated th
 
 The evaluation confirms that both interfaces deliver a fluid and intuitive user experience. The bilingual support and adaptive theming further contribute to accessibility across diverse user environments.
 
-\subsection{Utility and Business Value Evaluation}
+\subsection{Utility and business value evaluation}
 While usability focuses on the ease of interacting with the interface, utility measures the usefulness of the system and its ability to solve the core business problems identified during the inception phase. To demonstrate the practical utility of the HMI Stars platform, we evaluated how the digitized solution replaces the previous manual workflows and assessed its impact on operational efficiency.
 
 Table \ref{tab:utility_eval} outlines the key utility areas, comparing the prior manual processes with the capabilities of our developed platform.

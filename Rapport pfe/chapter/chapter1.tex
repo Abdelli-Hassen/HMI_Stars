@@ -1,13 +1,13 @@
 \chapter{General project presentation}
 
 \section{Introduction}
-This chapter introduces the graduation project and its general context. It first presents the internship environment and the organizational structure of the host company, HMI Stars Consulting. It then outlines the main problem related to manual administrative workflows and introduces the proposed digital solution. Finally, it compares existing ERP solutions such as Odoo, ERPNext, and Dolibarr to support the choice of technologies and system architecture.
+This chapter introduces the graduation project and its general context. It first presents the internship environment and the organizational structure of the host company, HMI Stars Consulting. It then outlines the main problem related to manual administrative workflows and introduces the proposed digital solution. Finally, it compares existing ERP solutions such as Odoo \cite{OdooSite}, ERPNext \cite{ERPNextSite}, and Dolibarr \cite{DolibarrSite} to support the choice of technologies and system architecture.
 
 
 \section{Company presentation}
 The internship was conducted remotely at \textbf{HMI Stars Consulting}, a consulting company specialized in project management, company registration, and administrative support. The company assists clients with legal and administrative procedures, including social declarations, employment contract management, payroll processing, and communication with public authorities.
 
-HMI Stars Consulting \ref{fig:HMI Stars logo} works with small and medium-sized enterprises (SMEs) based in France. To ensure proper follow-up, it relies on administrative staff, including secretaries and administrators, who work closely with client company managers.
+HMI Stars Consulting works with small and medium-sized enterprises (SMEs) based in France, as illustrated in Figure \ref{fig:HMI Stars logo}. To ensure proper follow-up, it relies on administrative staff, including secretaries and administrators, who work closely with client company managers.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.35\linewidth]{images/hmi_stars.jpeg}
@@ -15,7 +15,7 @@ HMI Stars Consulting \ref{fig:HMI Stars logo} works with small and medium-sized 
     \label{fig:HMI Stars logo}
 \end{figure}
 
-\section{Preliminary Study}
+\section{Preliminary study}
 
 \subsection{Study of the existing}
 
@@ -97,42 +97,28 @@ To address the limitations identified above—specifically Odoo's high complexit
 \begin{enumerate}
     \item \textbf{A Web Application Platform:} Resolves the issues of complex or outdated interfaces (as seen in Odoo and Dolibarr) by providing HMI Stars administrators with a clean, modern, and reactive web dashboard. It streamlines company registration, organizes client files and enables immediate response to client inquiries.
     \item \textbf{A Cross-Platform Mobile Application:} Addresses the lack of intuitive mobile access for client companies. It provides client managers with a simplified, mobile-first tool to manage employee registries, record absences, track daily attendance, and upload documents directly from their mobile devices.
-    \item \textbf{A Real-Time Backend Server:} Directly solves the lack of real-time synchronization and instant feedback identified in both ERPNext and Dolibarr. Powered by Supabase, it manages instant messaging and file sharing via WebSocket streams, while ensuring absolute data isolation between client companies using PostgreSQL Row Level Security (RLS) policies.
+    \item \textbf{A Real-Time Backend Server:} Directly solves the lack of real-time synchronization and instant feedback identified in both ERPNext and Dolibarr. Powered by Supabase \cite{SupabaseDocs}, it manages instant messaging and file sharing via WebSocket streams, while ensuring absolute data isolation between client companies using PostgreSQL \cite{PostgresDocs} Row Level Security (RLS) policies.
 \end{enumerate}
 
-\subsubsection{Technology Choices}
-The technical track of the project required selecting a cross-platform frontend framework and a backend-as-a-service platform. Table \ref{tab:tech_choices} summarizes the comparison criteria that guided our decisions.
+\subsubsection{Technology choices}
+The technical track of the project required selecting a cross-platform frontend framework and a backend-as-a-service platform. 
 
-\begin{table}[H]
-\centering
-\caption{Technology comparison for frontend framework and backend platform}
-\label{tab:tech_choices}
-\begin{tabular}{|l|p{5.5cm}|p{5.5cm}|}
-\hline
-\textbf{Criteria} & \textbf{Frontend Framework} & \textbf{Backend Platform} \\
-\hline
-\textbf{Options evaluated} & Flutter (Dart) vs. React Native (JavaScript) & Supabase (PostgreSQL) vs. Firebase (NoSQL) \\
-\hline
-\textbf{Single codebase} & Flutter compiles natively for Android, iOS, and Web from one Dart codebase & React Native requires separate web tooling (React Native Web) \\
-\hline
-\textbf{Data model} & -- & Supabase uses relational PostgreSQL tables with SQL joins; Firebase uses NoSQL document collections \\
-\hline
-\textbf{Row-level security} & -- & Supabase offers native PostgreSQL RLS policies; Firebase relies on Firestore security rules \\
-\hline
-\textbf{Real-time engine} & -- & Both provide real-time listeners; Supabase uses PostgreSQL change notifications over WebSockets \\
-\hline
-\textbf{Open-source} & Both are open-source & Supabase is fully open-source and self-hostable; Firebase is proprietary \\
-\hline
-\end{tabular}
-\end{table}
+For the frontend framework, we compared \textbf{Flutter} \cite{FlutterDocs} (Dart) and \textbf{React Native} (JavaScript). While both are open-source and support cross-platform development, Flutter enables compiling natively for Android, iOS, and Web from a single Dart codebase. Conversely, React Native often requires separate configuration and extra tooling (such as React Native Web) to ensure compatibility on web platforms, which increases development complexity for our dual-interface system.
+
+For the backend platform, we compared \textbf{Supabase} (PostgreSQL) and \textbf{Firebase} (NoSQL). The comparison focused on three key aspects:
+\begin{itemize}
+    \item \textbf{Data model}: Supabase uses relational PostgreSQL tables with SQL foreign key constraints and joins, which naturally fits our structured business data. Firebase \cite{FirebaseDocs} uses a NoSQL document-based structure that is less suited for relational mappings.
+    \item \textbf{Security}: Supabase offers native PostgreSQL Row Level Security (RLS) policies to enforce data isolation at the database level. Firebase relies on Firestore rules which are evaluated at the API boundary.
+    \item \textbf{Real-time capability and open-source nature}: Both offer real-time synchronization, but Supabase is fully open-source and self-hostable, whereas Firebase is proprietary.
+\end{itemize}
 
 We selected \textbf{Flutter} because it enables the development of both mobile and web applications from a single codebase, reducing development time and ensuring consistency across platforms. We chose \textbf{Supabase} because its PostgreSQL database is well suited for managing structured data such as companies, employees, contracts, and attendance records. In addition, its built-in security features help ensure that each company can only access its own data.
 \vspace{-0.5cm}
-\section{Methodological Choices and Work Organization}
+\section{Methodological choices and work organization}
 
-\subsection{The Unified Process (2TUP)}
+\subsection{The unified process (2TUP)}
 
-We chose the \textbf{2TUP (Two Track Unified Process)} methodology for the development of this project. This approach separates the development process into two parallel tracks: a \textbf{functional track}, focused on capturing business requirements, modeling use cases, and specifying system behavior; and a \textbf{technical track}, focused on selecting technologies, defining the architecture, and designing the database and deployment infrastructure. The two tracks converge during the Construction phase, where the functional specifications and technical decisions are merged into a working implementation.
+We chose the \textbf{2TUP (Two Track Unified Process)} methodology \cite{Rocher2003} for the development of this project. This approach separates the development process into two parallel tracks: a \textbf{functional track}, focused on capturing business requirements, modeling use cases, and specifying system behavior; and a \textbf{technical track}, focused on selecting technologies, defining the architecture, and designing the database and deployment infrastructure. The two tracks converge during the Construction phase, where the functional specifications and technical decisions are merged into a working implementation.
 
 Table \ref{tab:2tup_tracks} shows how the two tracks are distributed across the report chapters and sections.
 
@@ -156,9 +142,9 @@ Transition (Ch. 3) & Functional test cases, usability evaluation & Execution env
 \end{table}
 
 \vspace{-0.5cm}
-\subsubsection{Unified Modeling Language (UML)}
-UML is used as the standard modeling language to specify, visualize, and document the different elements of the system throughout the functional development process.
-\subsection{Work Organization}
+\subsubsection{Unified modeling language (UML)}
+UML \cite{UMLSpec} is used as the standard modeling language to specify, visualize, and document the different elements of the system throughout the functional development process.
+\subsection{Work organization}
 The project timeline is organized around the four iterative phases of the Unified Process. Each phase targets specific deliverables and maps to a subset of the prioritized use cases. Table \ref{tab:iteration_schedule} presents the iteration followed during the development of the HMI Stars system.
 
 \begin{table}[H]
