@@ -1,4 +1,4 @@
-\chapter{System Design Development}
+\chapter{System design development}
 
 \vspace{-1cm}
 \section{Introduction}
@@ -38,7 +38,7 @@ It focuses on client company registration, employee record access, data export, 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{diagrams/platform_usecase.png}
+    \includegraphics[width=0.85\textwidth]{diagrams/platform_usecase.png}
     \caption{WebApp Use Case Diagram}
     \label{fig:use_case_web}
 \end{figure}
@@ -384,7 +384,7 @@ The use case design maps objects to the logical class diagram. Figure \ref{fig:c
 The class diagram structures the data entities and defines how they interact to support the system's business logic:
 \begin{itemize}
     \item \textbf{Company--Employee Relationship:} The association between \textit{Entreprise} and \textit{Salarie} is a $1..*$ relationship. A registered company can employ one or many staff members, whereas each employee is linked to exactly one company. This link serves as the primary boundary for data ownership.
-    \item \textbf{Message Structure & Attributes:} The \textit{Message} class contains a foreign key to the \textit{Entreprise} (\texttt{company\_id}) and an \texttt{isSentByUser} boolean attribute. Referencing \texttt{company\_id} allows the system to group support conversations by company workspace rather than individual users. The \texttt{isSentByUser} flag determines the origin of the message (sent by the client on mobile vs. sent by the administrator on the web portal), which facilitates real-time chat UI rendering.
+    \item \textbf{Message Structure \& Attributes:} The \textit{Message} class contains a foreign key to the \textit{Entreprise} (\texttt{company\_id}) and an \texttt{isSentByUser} boolean attribute. Referencing \texttt{company\_id} allows the system to group support conversations by company workspace rather than individual users. The \texttt{isSentByUser} flag determines the origin of the message (sent by the client on mobile vs. sent by the administrator on the web portal), which facilitates real-time chat UI rendering.
     \item \textbf{Row Level Security (RLS) Mapping:} All user-specific classes—including \textit{Salarie}, \textit{Pointage}, \textit{Conge}, and \textit{Message}—are bound to the \textit{Entreprise} class. When a client authenticates, Supabase reads their JWT (JSON Web Token) to extract their associated company ID. The database-level RLS policies then use these foreign key relations to restrict queries, ensuring that a user can only perform CRUD operations on records belonging to their company.
 \end{itemize}
 \section{Phase of Construction}

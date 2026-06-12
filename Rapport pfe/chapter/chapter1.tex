@@ -1,12 +1,13 @@
-\chapter{General Project Presentation}
+\chapter{General project presentation}
 
 \section{Introduction}
-This first chapter introduces the context of the graduation project. It describes the internship environment and the structure of the host organization, and clarifies the problem that the project aims to solve. It also presents the chosen conceptual approach. Finally, it reviews existing solutions to help justify and support the technical decisions made.
+This chapter introduces the graduation project and its general context. It first presents the internship environment and the organizational structure of the host company, HMI Stars Consulting. It then outlines the main problem related to manual administrative workflows and introduces the proposed digital solution. Finally, it compares existing ERP solutions such as Odoo, ERPNext, and Dolibarr to support the choice of technologies and system architecture.
+
 
 \section{Company presentation}
-The internship was conducted remotely at \textbf{HMI Stars Consulting}, a consulting company specialized in project management, company registration, and social and tax administrative support.
-The company offers services such as helping clients draft legal statutes and manage daily administrative tasks, including social declarations, employment contract tracking, salary processing, and communication with public authorities.
-HMI Stars Consulting works with small and medium-sized enterprises (SMEs) based in France. To ensure proper follow-up, it relies on administrative staff, including secretaries and administrators, who work closely with client company managers.
+The internship was conducted remotely at \textbf{HMI Stars Consulting}, a consulting company specialized in project management, company registration, and administrative support. The company assists clients with legal and administrative procedures, including social declarations, employment contract management, payroll processing, and communication with public authorities.
+
+HMI Stars Consulting \ref{fig:HMI Stars logo} works with small and medium-sized enterprises (SMEs) based in France. To ensure proper follow-up, it relies on administrative staff, including secretaries and administrators, who work closely with client company managers.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.35\linewidth]{images/hmi_stars.jpeg}
@@ -22,7 +23,7 @@ HMI Stars Consulting works with small and medium-sized enterprises (SMEs) based 
 To find a solution to our problem, we conducted research on existing systems. We chose three platforms that offer business administration, client portals, and document management capabilities:
 \begin{itemize}
     \item \textbf{Odoo (Community Edition)}:
-    Odoo is an open-source business software suite offering a range of integrated applications for various business needs. It includes modules for accounting, customer relationship management (CRM), human resources, and document sharing. It allows client companies to upload records through web forms, although customizing portal views and real-time interaction flows requires advanced technical setups.
+    Odoo is an open-source business software suite offering a range of integrated applications for various business needs. It includes modules for accounting, customer relationship management (CRM), human resources, and document sharing. It allows client companies to upload records through web forms, although customizing portal views and real-time interaction flows requires advanced technical setups. The system's branding is shown in Figure \ref{fig:Odoo Logo}.
     \begin{figure}[H]
         \centering
         \includegraphics[width=1\linewidth]{images/odoo.png}
@@ -32,7 +33,7 @@ To find a solution to our problem, we conducted research on existing systems. We
     
     \item \textbf{ERPNext}:
     ERPNext is an open-source Enterprise Resource Planning (ERP) platform built on the Frappe framework. It is designed for small and medium-sized enterprises and includes features such as client portals, employee directory management, expense tracking, and support ticket systems.
-    However, its messaging system does not provide real-time synchronization by default, and it does not include a dedicated mobile application for clients.
+    However, its messaging system does not provide real-time synchronization by default, and it does not include a dedicated mobile application for clients. The platform's standard logos are represented in Figure \ref{fig:erp Logo} and Figure \ref{fig:erp_ext Logo}.
         \begin{figure}[H]
         \centering
         \includegraphics[width=1\linewidth]{images/erp.png}
@@ -46,7 +47,7 @@ To find a solution to our problem, we conducted research on existing systems. We
         \label{fig:erp_ext Logo}
     \end{figure}
     \item \textbf{Dolibarr ERP \& CRM}:
-    Dolibarr is a comprehensive web-based ERP and CRM tool aimed at small companies and freelancers. It offers billing, stock management, administrative records storage, and employee tracking features. It provides self-service client portals, but it is built on legacy web architectures and lacks a modern, reactive real-time mobile application for client-agency daily chat exchanges.
+    Dolibarr is a comprehensive web-based ERP and CRM tool aimed at small companies and freelancers. It offers billing, stock management, administrative records storage, and employee tracking features. It provides self-service client portals, but it is built on legacy web architectures and lacks a modern, reactive real-time mobile application for client-agency daily chat exchanges (logo shown in Figure \ref{fig:Dolibarr Logo}).
     \begin{figure}[H]
         \centering
         \includegraphics[width=1\linewidth]{images/dolibarr.jpg}
@@ -91,10 +92,10 @@ Based on the comparison of the existing systems, we note the following limitatio
     \item \textbf{Dolibarr}: Dolibarr is lightweight and free, but its interface is outdated and relies on legacy web technologies. It does not provide reactive, real-time feedback for document processing states or instant support messaging.
 \end{itemize}
 
-\subsubsection{Proposed solution}
+\subsection{Proposed solution}
 To address the limitations identified above—specifically Odoo's high complexity and lack of tailorable mobile client interfaces, ERPNext's absence of real-time messaging, and Dolibarr's outdated interface with no instant feedback on document states—we designed and developed a tailored application ecosystem called \textbf{HMI Stars}. The system is architected to solve these specific challenges through three integrated components:
 \begin{enumerate}
-    \item \textbf{A Web Application Platform:} Resolves the issues of complex or outdated interfaces (as seen in Odoo and Dolibarr) by providing HMI Stars administrators with a clean, modern, and reactive web dashboard. It streamlines company registration, organizes client files by category (KBIS, VAT, RIB, bank statements), and enables immediate response to client inquiries.
+    \item \textbf{A Web Application Platform:} Resolves the issues of complex or outdated interfaces (as seen in Odoo and Dolibarr) by providing HMI Stars administrators with a clean, modern, and reactive web dashboard. It streamlines company registration, organizes client files and enables immediate response to client inquiries.
     \item \textbf{A Cross-Platform Mobile Application:} Addresses the lack of intuitive mobile access for client companies. It provides client managers with a simplified, mobile-first tool to manage employee registries, record absences, track daily attendance, and upload documents directly from their mobile devices.
     \item \textbf{A Real-Time Backend Server:} Directly solves the lack of real-time synchronization and instant feedback identified in both ERPNext and Dolibarr. Powered by Supabase, it manages instant messaging and file sharing via WebSocket streams, while ensuring absolute data isolation between client companies using PostgreSQL Row Level Security (RLS) policies.
 \end{enumerate}
@@ -125,8 +126,8 @@ The technical track of the project required selecting a cross-platform frontend 
 \end{tabular}
 \end{table}
 
-We selected \textbf{Flutter} because it provides true cross-platform compilation from a single Dart codebase for mobile and web, which aligns with our requirement to build both a client mobile application and an administration web platform from a shared code structure. We selected \textbf{Supabase} over Firebase because the project's data model (companies, employees, contracts, attendance records) fits naturally into relational PostgreSQL tables with foreign key constraints and SQL joins. Additionally, Supabase's native Row Level Security (RLS) policies allow us to enforce strict per-company data isolation directly at the database level without additional application-layer logic.
-
+We selected \textbf{Flutter} because it enables the development of both mobile and web applications from a single codebase, reducing development time and ensuring consistency across platforms. We chose \textbf{Supabase} because its PostgreSQL database is well suited for managing structured data such as companies, employees, contracts, and attendance records. In addition, its built-in security features help ensure that each company can only access its own data.
+\vspace{-0.5cm}
 \section{Methodological Choices and Work Organization}
 
 \subsection{The Unified Process (2TUP)}
@@ -154,17 +155,17 @@ Transition (Ch. 3) & Functional test cases, usability evaluation & Execution env
 \end{tabular}
 \end{table}
 
+\vspace{-0.5cm}
 \subsubsection{Unified Modeling Language (UML)}
 UML is used as the standard modeling language to specify, visualize, and document the different elements of the system throughout the functional development process.
-
 \subsection{Work Organization}
-The project timeline is organized around the four iterative phases of the Unified Process. Each phase targets specific deliverables and maps to a subset of the prioritized use cases. Table \ref{tab:iteration_schedule} presents the iteration schedule followed during the development of the HMI Stars system.
+The project timeline is organized around the four iterative phases of the Unified Process. Each phase targets specific deliverables and maps to a subset of the prioritized use cases. Table \ref{tab:iteration_schedule} presents the iteration followed during the development of the HMI Stars system.
 
 \begin{table}[H]
 \centering
 \caption{Project iteration schedule}
 \label{tab:iteration_schedule}
-\begin{tabular}{|l|l|p{4.5cm}|p{4cm}|}
+\begin{tabular}{|l|l|p{5cm}|p{4cm}|}
 \hline
 \textbf{Phase} & \textbf{Duration} & \textbf{Key Deliverables} & \textbf{Use Cases Addressed} \\
 \hline
