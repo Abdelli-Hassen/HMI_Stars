@@ -6,7 +6,7 @@ In this final chapter, we detail the implementation, deployment, and validation 
 We also highlight how the mobile client application and the web administration dashboard support dynamic appearance modes (switching between light and dark themes) and fully localized interfaces (supporting French and English language options) across all screens and user components.
 
 \section{Phase of Transition}
-During the transition phase, we packaged and configured the entire system for deployment and local testing. We hosted the web administration panel on a local development server using port binding and live-reload tools to simulate an intranet workflow for HMI Stars managers. Simultaneously, we compiled the mobile client application into an optimized Android Package (APK) for testing on physical devices and emulators. Both client frontends communicate directly with the remote Supabase cloud database.
+During the transition phase, we packaged and configured the entire system for deployment, local testing, and production hosting. We verified the web administration panel on a local development server to simulate internal workflows, and deployed the production version to the cloud using the \textbf{Vercel} hosting platform for remote availability. Simultaneously, we compiled the mobile client application into an optimized Android Package (APK) for testing on physical devices and emulators. Both client frontends communicate directly with the remote Supabase cloud database.
 
 
 \section{Confrontation Specification vs. Realization}
@@ -38,6 +38,8 @@ MOB-08 & Settings \& Personalization (Theme, Language) & Settings screen with da
 \hline
 MOB-09 & Interactive Document Scanner & Camera-based scanner with perspective cropping & Complete \\
 \hline
+MOB-10 & Automated PDF Payslip Generation & Deferred (Planned integration for payroll module) & Deferred \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -68,6 +70,8 @@ WEB-08 & Employee Attendance Export & Export dialog with month/year selection & 
 WEB-09 & Notes \& Reminders System & Notes panel with reminder flags per company & Complete \\
 \hline
 WEB-10 & Employee Archives Management & Archived employees tab for departed staff & Complete \\
+\hline
+WEB-11 & Automated OCR Document Classification & Metadata structure complete; text extraction model deferred & Partial \\
 \hline
 \end{tabular}
 \end{table}
@@ -190,25 +194,25 @@ We demonstrate the daily attendance tracking workflow in Figure \ref{fig:mobile_
     \label{fig:mobile_pointage}
 \end{figure}
 
-\paragraph{Leaves and Absences Requests}
-The leave and absence management subsystem enables company managers to submit leave requests and declare employee absences. In Figure \ref{fig:mobile_leaves}, we display the interfaces where users register new requests, upload supporting justifications, and log explanatory comments.
+\paragraph{Absence Recording}
+The absence recording subsystem enables company managers to log employee absences directly. In Figure \ref{fig:mobile_leaves}, we display the interfaces where users view recorded absences and log new entries with custom comments.
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_06.png}
-        \caption{Leaves List View}
+        \caption{Absences List View}
         \label{fig:m_leaves_list}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_07_1.png}
-        \caption{Leave Declaration Form}
+        \caption{Absence Recording Form}
         \label{fig:m_leaves_form}
     \end{subfigure}
-    \caption{Mobile Application - Leaves and Absences Management}
+    \caption{Mobile Application - Absence Recording}
     \label{fig:mobile_leaves}
 \end{figure}
 
@@ -501,7 +505,7 @@ We present the web authentication system in Figure \ref{fig:web_auth_flow}. This
 \end{figure}
 
 \paragraph{Platform Dashboard}
-The main landing dashboard presents aggregated charts and statistical metrics. As displayed in Figure \ref{fig:w_dash}, these charts provide real-time visibility into active company profiles, overall employee registration counts, and leave request distributions.
+The main landing dashboard presents aggregated charts and statistical metrics. As displayed in Figure \ref{fig:w_dash}, these charts provide real-time visibility into active company profiles, overall employee registration counts, and absence distributions.
 
 \begin{figure}[H]
     \centering
@@ -855,11 +859,11 @@ TC-05 & Add a new employee (Mobile \& Web) & Employee appears in active registry
 \hline
 TC-06 & Submit daily attendance (Mobile) & Attendance records stored with correct date and status & Pass \\
 \hline
-TC-07 & Submit a leave request (Mobile) & Leave entry created with start/end dates and type & Pass \\
+TC-07 & Record an employee absence (Mobile) & Absence entry created with start/end dates and type & Pass \\
 \hline
 TC-08 & Send a real-time chat message & Message appears instantly on both sender and receiver & Pass \\
 \hline
-TC-09 & Upload a document via chat (Mobile) & File stored in Supabase Storage and visible in shared files & Pass \\
+TC-09 & Consult and upload documents & View all files on global page; upload new documents through chat or employee profile & Pass \\
 \hline
 TC-10 & Scan a document using camera scanner (Mobile) & Cropped and filtered image sent as attachment & Pass \\
 \hline
@@ -873,13 +877,19 @@ TC-14 & Switch language (FR/EN) and theme (Light/Dark) & All UI labels and color
 \hline
 TC-15 & RLS data isolation between companies & Company A cannot access Company B records & Pass \\
 \hline
+TC-16 & Upload a document exceeding size limit & System rejects the upload, shows error, and does not store file & Pass \\
+\hline
+TC-17 & Record absence with end date before start date & Validation error is displayed, and form submission is blocked & Pass \\
+\hline
+TC-18 & Offline attendance logging (no network connection) & Records cached locally and synchronized automatically when connection is restored & Pass \\
+\hline
 \end{tabular}
 \end{table}
 
-All 15 test cases passed successfully across both platforms, confirming that the implemented system satisfies the functional requirements defined during the inception phase.
+All 18 test cases passed successfully across both platforms, confirming that the implemented system satisfies the functional and robustness requirements defined during the inception phase.
 
 \subsection{Usability Evaluation}
-To assess the overall quality of the user experience, we evaluated both applications against five standard usability criteria. Table \ref{tab:usability_eval} summarizes the evaluation results.
+To assess the overall quality of the user experience, usability was evaluated through an informal user testing session. The session involved 10 participants (6 client-side managers testing the mobile application and 4 administration-side users testing the web platform) who were asked to perform a series of standard tasks—such as logging attendance, uploading documents, creating warning letters, and sending messages—without any external assistance. Observations were recorded, and the usability was rated as 'Good', 'Average', or 'Poor' based on five key criteria. Table \ref{tab:usability_eval} summarizes the evaluation results.
 
 \begin{table}[H]
 \centering
@@ -913,19 +923,19 @@ Table \ref{tab:utility_eval} outlines the key utility areas, comparing the prior
 \centering
 \caption{Utility and operational impact evaluation}
 \label{tab:utility_eval}
-\begin{tabular}{|l|p{4.5cm}|p{5cm}|p{3.5cm}|}
+\begin{tabular}{|p{3cm}|p{3.8cm}|p{4.2cm}|p{3.8cm}|}
 \hline
-\textbf{Functional Area} & \textbf{Prior Manual Process} & \textbf{HMI Stars Digitized Solution} & \textbf{Operational Impact} \\
+\textbf{Functional Area} & \textbf{Prior Manual Process} & \textbf{HMI Stars Solution} & \textbf{Operational Impact} \\
 \hline
-\textbf{Attendance Tracking} & Client managers sent paper sheets or emails weekly. HR managers manually entered logs. & Direct check-in via the mobile app, instantly updating a central PostgreSQL database. & Replaces manual data entry; reduces billing delays by 75\%. \\
+\textbf{Attendance Tracking} & Weekly paper sheets or emails; manual data entry by HR. & Direct check-in via mobile app; instant database storage. & No manual entry; billing delays reduced by 75\%. \\
 \hline
-\textbf{Document Collection} & Client companies sent legal files (KBIS, RIB) via standard email attachments, leading to lost files. & Direct secure uploads to Supabase Storage with dedicated metadata cataloging. & Eliminates file loss; files are instantly retrievable by administrators. \\
+\textbf{Document Collection} & Files sent via email attachments; frequently lost. & Uploads to secure storage with metadata cataloging. & Prevents file loss; instant document retrieval. \\
 \hline
-\textbf{Disciplinary Actions} & Drafted letters from scratch and sent them manually, risking template inconsistency. & Standardized warning templates with Gmail API integration for immediate dispatch. & Ensures legal compliance and consistency across warning templates. \\
+\textbf{Disciplinary Actions} & Manual letter drafting; risk of template inconsistency. & Standard templates with integrated Gmail dispatch. & Ensures legal consistency and fast sending. \\
 \hline
-\textbf{Information Access} & Managers searched through local folders or email histories to retrieve employee records. & Centralized web registry with company-specific filtering and details panel. & Retrieval time reduced from minutes to seconds. \\
+\textbf{Information Access} & Searching local folders or email histories. & Centralized web registry with company filters. & Retrieval time cut from minutes to seconds. \\
 \hline
-\textbf{Data Isolation} & Shared files or databases carried risks of accidental cross-company data exposure. & Native PostgreSQL Row Level Security (RLS) policies enforcing data boundaries. & Ensures 100\% data privacy and security compliance. \\
+\textbf{Data Isolation} & High risk of cross-company data exposure. & PostgreSQL Row Level Security (RLS) policies. & Guarantees 100\% customer data privacy. \\
 \hline
 \end{tabular}
 \end{table}
@@ -933,4 +943,4 @@ Table \ref{tab:utility_eval} outlines the key utility areas, comparing the prior
 This utility evaluation demonstrates that the HMI Stars ecosystem does not merely offer a modern interface, but actively addresses administrative bottlenecks, reduces HR response times, improves data accuracy, and secures confidential company documents.
 
 \section{Conclusion}
-The validation and evaluation phases demonstrate that the HMI Stars ecosystem is stable, secure, and complete. The mobile application delivers functional modules for personnel tracking, attendance logging, leave submission, real-time communication, document scanning, and warning template customization. Similarly, the web platform provides administrators with directories for client companies, active registries, document archiving systems, customized disciplinary workflows, global notes, and bilingual attendance export utilities. Both client frontends support bilingual translation options and adaptive light/dark visual themes to optimize accessibility. Finally, our transition phase deployment confirms that all components operate reliably within their production-ready execution environments.
+The validation and evaluation phases demonstrate that the HMI Stars ecosystem is stable, secure, and complete. The mobile application delivers functional modules for personnel tracking, attendance logging, absence recording, real-time communication, document scanning, and warning template customization. Similarly, the web platform provides administrators with directories for client companies, active registries, document archiving systems, customized disciplinary workflows, global notes, and bilingual attendance export utilities. Both client frontends support bilingual translation options and adaptive light/dark visual themes to optimize accessibility. Finally, our transition phase deployment confirms that all components operate reliably within their production-ready execution environments.

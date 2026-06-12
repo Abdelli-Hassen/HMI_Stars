@@ -1,5 +1,6 @@
 \chapter{System Design Development}
 
+\vspace{-1cm}
 \section{Introduction}
 
 This chapter presents the design development of the HMI Stars system. It describes how the solution was structured and specified using the Unified Process, covering the Inception, Elaboration, and Construction phases.
@@ -7,23 +8,23 @@ It details the functional analysis through use case modeling, followed by system
 
 \section{Phase of Inception}
 
-During the Inception phase, the development process separates into two parallel tracks following the 2TUP methodology. The \textbf{Functional Track} focuses on eliciting user requirements, modeling use cases, and drafting user interface prototypes to define the system's behavioral scope. Concurrently, the \textbf{Technical Track} analyzes initial technology constraints (such as selecting Flutter and Supabase, as detailed in Chapter 1) to prepare the architectural foundations. The subsections below detail the activities and deliverables of the Functional Track for this phase.
+During the Inception phase, the development process separates into two parallel tracks following the 2TUP methodology. The \textbf{Functional Track} focuses on identifying user requirements, modeling use cases, and drafting user interface prototypes to define the system's behavioral scope. Concurrently, the \textbf{Technical Track} analyzes initial technology constraints (such as selecting Flutter and Supabase, as detailed in Chapter 1) to prepare the architectural foundations. The subsections below detail the activities and deliverables of the Functional Track for this phase.
 
 \subsection{Use Case Model Development}
 During the inception phase, we defined the system actors and their corresponding use cases. Since the solution is composed of two distinct interfaces: a mobile application and a web application: both connected to a shared database, the functional requirements were represented using three use case diagrams: a general system overview, a mobile-oriented diagram, and a web-oriented diagram.
 
 
 \subsubsection{Global Use Case Diagram}
-Figure 2.1 presents the global use case diagram, showing how the Client and HMI Stars Manager interact with the overall ecosystem.
+Figure \ref{fig:use_case_design} presents the global use case diagram, showing how the Client and HMI Stars Manager interact with the overall ecosystem.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\textwidth]{diagrams/usecase.png}
+    \includegraphics[width=0.85\textwidth]{diagrams/usecase.png}
     \caption{Global Use Case Diagram}
     \label{fig:use_case_design}
 \end{figure}
 
 \subsubsection{Mobile Client Application Use Case Diagram}
-Figure 2.2 illustrates the functional scope of the mobile application dedicated to client company managers, focusing on personnel tracking, pointage logging, leave requests, document uploads, and real-time chat.
+Figure \ref{fig:use_case_mobile} illustrates the functional scope of the mobile application dedicated to client company managers, focusing on personnel tracking, pointage logging, absence recording, document uploads, and real-time chat.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{diagrams/app_usecase.png}
@@ -32,7 +33,7 @@ Figure 2.2 illustrates the functional scope of the mobile application dedicated 
 \end{figure}
 
 \subsubsection{web application Use Case Diagram}
-Figure 2.3 shows the functional scope of the web application used by HMI Stars managers and administrative staff. \\
+Figure \ref{fig:use_case_web} shows the functional scope of the web application used by HMI Stars managers and administrative staff. \\
 It focuses on client company registration, employee record access, data export, task scheduling, role management, and real-time messaging.
 
 \begin{figure}[H]
@@ -43,7 +44,7 @@ It focuses on client company registration, employee record access, data export, 
 \end{figure}
 
 \subsection{Definition of Priorities}
-To plan the construction phase, functional use cases were prioritized based on business value and technical risk, as shown in Table 2.1.
+To plan the construction phase, functional use cases were prioritized based on business value and technical risk, as shown in Table \ref{tab:priorities}.
 
 \begin{table}[H]
 \centering
@@ -59,11 +60,11 @@ UC-02: Manage Employees & High & Medium & Iteration 1 \\
 \hline
 UC-03: Submit Attendance (Pointage) & High & High & Iteration 2 \\
 \hline
-UC-04: Submit Leave Request & Medium & Medium & Iteration 2 \\
+UC-04: Record Absence & Medium & Medium & Iteration 2 \\
 \hline
 UC-05: Real-time Chat & High & High & Iteration 3 \\
 \hline
-UC-06: Upload Documents & High & Low & Iteration 3 \\
+UC-06: Consult and Upload Documents & High & Low & Iteration 3 \\
 \hline
 UC-07: Manage Warnings \& Templates & Medium & Medium & Iteration 4 \\
 \hline
@@ -125,7 +126,7 @@ The following tables provide the formal textual description for each prioritized
 \hline
 \textbf{Precondition} & The client is authenticated and has active employees registered under their company. \\
 \hline
-\textbf{Main Flow} & 1. The client navigates to the ``Pointage'' section.\newline 2. The system loads the list of active employees.\newline 3. The client selects a date from the calendar.\newline 4. The client marks the attendance status (present/absent) for each employee.\newline 5. The client clicks ``Save''.\newline 6. The system records the attendance in the PostgreSQL database. \\
+\textbf{Main Flow} & 1. The client navigates to the Attendance section.\newline 2. The system loads the list of active employees.\newline 3. The client selects a date from the calendar.\newline 4. The client marks the attendance status (present/absent) for each employee.\newline 5. The system records the attendance in the PostgreSQL database. \\
 \hline
 \textbf{Alternative Flow} & If the network is unavailable, the system caches the records locally and synchronizes them once connection is restored. \\
 \hline
@@ -136,7 +137,7 @@ The following tables provide the formal textual description for each prioritized
 
 \begin{table}[H]
 \centering
-\caption{UC-04: Submit Leave Request}
+\caption{UC-04: Record Absence}
 \label{tab:uc04}
 \begin{tabular}{|l|p{10cm}|}
 \hline
@@ -144,11 +145,11 @@ The following tables provide the formal textual description for each prioritized
 \hline
 \textbf{Precondition} & The client is authenticated and has active employees. \\
 \hline
-\textbf{Main Flow} & 1. The client navigates to the leave request section.\newline 2. The client selects an employee, a leave type, and start/end dates.\newline 3. The client optionally adds a comment and submits the request.\newline 4. The system stores the leave entry in the database. \\
+\textbf{Main Flow} & 1. The client navigates to the absence recording section.\newline 2. The client selects an employee, type of absence, and start/end dates.\newline 3. The client optionally adds a comment and submits the record.\newline 4. The system stores the absence record in the database. \\
 \hline
-\textbf{Alternative Flow} & If required fields are missing, the system displays a validation error and prevents submission. \\
+\textbf{Alternative Flow} & If required fields are missing, the system displays a validation error and prevents saving. \\
 \hline
-\textbf{Postcondition} & The leave request is recorded and appears in the leave history list. \\
+\textbf{Postcondition} & The absence record is saved and appears in the absence history list. \\
 \hline
 \end{tabular}
 \end{table}
@@ -174,7 +175,7 @@ The following tables provide the formal textual description for each prioritized
 
 \begin{table}[H]
 \centering
-\caption{UC-06: Upload Documents}
+\caption{UC-06: Consult and Upload Documents}
 \label{tab:uc06}
 \begin{tabular}{|l|p{10cm}|}
 \hline
@@ -182,11 +183,11 @@ The following tables provide the formal textual description for each prioritized
 \hline
 \textbf{Precondition} & The user is authenticated and associated with a company. \\
 \hline
-\textbf{Main Flow} & 1. The user navigates to the documents section.\newline 2. The user selects a document category (KBIS, VAT, RIB, etc.).\newline 3. The user uploads a file from the device.\newline 4. The system stores the file in Supabase Storage and creates a metadata record. \\
+\textbf{Main Flow} & 1. The user navigates to the global documents section to view all uploaded files (KBIS, VAT, RIB, etc.).\newline 2. To upload a new document, the user either navigates to the support chat and attaches a file, or navigates to an employee's profile to upload employee-specific documents.\newline 3. The system stores the file in Supabase Storage and updates the database metadata.\newline 4. The newly uploaded document appears in the global documents view. \\
 \hline
-\textbf{Alternative Flow} & If the file exceeds the size limit or has an unsupported format, the system rejects the upload with an error message. \\
+\textbf{Alternative Flow} & If the file exceeds the size limit or has an unsupported format during upload (via chat or profile), the system displays an error and rejects the upload. \\
 \hline
-\textbf{Postcondition} & The document is stored and visible in the company's document list. \\
+\textbf{Postcondition} & The document is stored in Supabase Storage, and the metadata is updated and visible in the global documents list. \\
 \hline
 \end{tabular}
 \end{table}
@@ -250,7 +251,7 @@ The following tables provide the formal textual description for each prioritized
 
 
 \subsection{User Interface Prototypes}
-To validate the initial user flows and interaction concepts before starting implementation, we drafted low-fidelity interface mockups. We focused on designing structured dashboards for both client-side and administration-side interfaces to coordinate information access.
+Before development began, we designed prototype to test and validate the key user flows and interface ideas. We focused on designing structured dashboards for both client-side and administration-side interfaces to coordinate information access.
 
 Figure \ref{fig:mobile_wireframe} presents the mobile dashboard interface mockup, detailing the top welcome header, the key human resource metric cards, and the warning alert notification area. Figure \ref{fig:web_wireframe} illustrates the web administration portal dashboard prototype, highlighting the sidebar navigation on the left, top menu bar controls, and the central analytics charts workspace on the right.
 
@@ -269,13 +270,13 @@ Figure \ref{fig:mobile_wireframe} presents the mobile dashboard interface mockup
         \caption{Web Dashboard Workspace Wireframe}
         \label{fig:web_wireframe}
     \end{subfigure}
-    \caption{Low-Fidelity User Interface Prototypes}
+    \caption{User Interface Prototypes}
     \label{fig:ui_wireframes}
 \end{figure}
 
 \section{Phase of Elaboration}
 
-The Elaboration phase represents the parallel progression and refinement of both tracks. The \textbf{Technical Track} establishes the system's non-functional parameters, architectural style, and overall deployment topology (see Subsections \ref{subsec:arch_analysis} and \ref{subsec:arch_design}). Simultaneously, the \textbf{Functional Track} focuses on detailing dynamic behavior and class relationships through sequence diagrams and class diagrams (see Subsections \ref{subsec:uc_analysis} and \ref{subsec:uc_design}). This dual approach ensures that the functional requirements are fully supported by a robust, secure technical framework.
+The Elaboration phase represents the parallel progression and refinement of both tracks. The \textbf{Technical Track} establishes the system's non-functional parameters, architectural style, and overall deployment. Simultaneously, the \textbf{Functional Track} focuses on detailing dynamic behavior and class relationships through sequence diagrams and class diagrams. This dual approach ensures that the functional requirements are fully supported by a robust, secure technical framework.
 
 \subsection{Architectural Analysis}
 \label{subsec:arch_analysis}
@@ -310,10 +311,9 @@ Table \ref{tab:nfr} identifies the key non-functional requirements that guided t
 \subsubsection{Architectural Style}
 We adopted a \textbf{client-server architecture} with a shared Backend-as-a-Service (BaaS) layer. In this approach, both the mobile application and the web platform act as independent frontend clients that communicate with a centralized Supabase backend through REST API calls and real-time WebSocket subscriptions.
 
-We considered two alternative architectural approaches before selecting this model:
+We considered an alternative for architectural approaches before selecting this model:
 \begin{itemize}
     \item \textbf{Custom REST API (Node.js / Express):} This approach would require building and maintaining a dedicated backend server, handling authentication, session management, and API routing manually. We rejected it because the project scope did not justify the added infrastructure complexity, and Supabase provides all required services (auth, database, storage, real-time) out of the box.
-    \item \textbf{Microservices architecture:} Splitting the backend into independent services (auth service, chat service, document service) would improve scalability but introduce significant operational overhead (service discovery, inter-service communication, deployment orchestration). Given the small team size and the consulting firm's user volume, this level of distribution was unnecessary.
 \end{itemize}
 
 The chosen BaaS architecture offers several advantages for this project: zero server-side code for standard CRUD operations, built-in authentication with email/OTP support, native PostgreSQL RLS for data isolation, and a managed real-time engine — all reducing development time while maintaining production-grade security.
@@ -332,12 +332,12 @@ The sequence diagram in Figure \ref{fig:sequence_auth_design} details the passwo
     \label{fig:sequence_auth_design}
 \end{figure}
 
-\subsubsection{Leave Request Submission Sequence}
-Figure \ref{fig:sequence_leave_design} shows the sequence of submitting a leave request, highlighting how the Client submits it, how Row Level Security policies validate the transaction, and how it is registered in the database.
+\subsubsection{Absence Recording Sequence}
+Figure \ref{fig:sequence_leave_design} shows the sequence of recording an employee absence, highlighting how the Client submits the absence record directly, how Row Level Security policies validate the transaction, and how it is registered in the database.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{diagrams/leave_sequence_diagram.png}
-    \caption{Sequence Diagram - Leave Request Submission Flow}
+    \caption{Sequence Diagram - Absence Recording Flow}
     \label{fig:sequence_leave_design}
 \end{figure}
 
@@ -380,6 +380,13 @@ The use case design maps objects to the logical class diagram. Figure \ref{fig:c
     \caption{Logical Class Diagram of the System}
     \label{fig:class_diag}
 \end{figure}
+
+The class diagram structures the data entities and defines how they interact to support the system's business logic:
+\begin{itemize}
+    \item \textbf{Company--Employee Relationship:} The association between \textit{Entreprise} and \textit{Salarie} is a $1..*$ relationship. A registered company can employ one or many staff members, whereas each employee is linked to exactly one company. This link serves as the primary boundary for data ownership.
+    \item \textbf{Message Structure & Attributes:} The \textit{Message} class contains a foreign key to the \textit{Entreprise} (\texttt{company\_id}) and an \texttt{isSentByUser} boolean attribute. Referencing \texttt{company\_id} allows the system to group support conversations by company workspace rather than individual users. The \texttt{isSentByUser} flag determines the origin of the message (sent by the client on mobile vs. sent by the administrator on the web portal), which facilitates real-time chat UI rendering.
+    \item \textbf{Row Level Security (RLS) Mapping:} All user-specific classes—including \textit{Salarie}, \textit{Pointage}, \textit{Conge}, and \textit{Message}—are bound to the \textit{Entreprise} class. When a client authenticates, Supabase reads their JWT (JSON Web Token) to extract their associated company ID. The database-level RLS policies then use these foreign key relations to restrict queries, ensuring that a user can only perform CRUD operations on records belonging to their company.
+\end{itemize}
 \section{Phase of Construction}
 
 During the Construction phase, the Functional and Technical tracks of the 2TUP methodology converge. The logical models, use case flows, and user interface layouts defined in the Functional Track are systematically mapped onto the physical database schemas, modular code subsystems, and application frameworks established in the Technical Track. The subsections below describe this convergence, detailing how the database tables are physically implemented, how security isolation (RLS) is applied, how subsystems are modularized, and how the use cases are realized.
@@ -389,7 +396,7 @@ The logical classes are mapped to physical PostgreSQL tables.\\
 \textbf{entreprises} : Stores client company registration data, legal details (SIRET, SIREN, legal form, capital), contact information, and logo URLs.\\
 \textbf{salaries} : Contains employee registry files including personal credentials (social security number, birth details) and contract statuses.\\
 \textbf{pointages} : Records daily attendance and check-in logs for registered company employees.\\
-\textbf{conges} : Stores leave and absence requests (start/end dates, type of leave, comment, and status).\\
+\textbf{conges} : Stores direct employee absence records (start/end dates, type of absence, comment, and status).\\
 \textbf{messages} : Stores real-time chat messages and file transfers exchanged between HMI managers and company clients.\\
 \textbf{fichiers} : Catalogs uploaded administrative and accounting documents (Extrait KBIS, VAT declarations, RIB, bank statements).\\
 \textbf{utilisateurs\_plateforme} : Manages profile metadata and roles (Admin, Moderator, Secretary) for HMI Stars platform staff.\\
@@ -432,23 +439,26 @@ Web Browser & Microsoft Edge / Chrome & Running and testing the web administrati
 The code is modularized into feature folders following clean architecture guidelines:
 \textbf{1. Core Subsystem :} Theme configurations, routing services, and Supabase client helpers.\\
 \textbf{2. Auth Feature Subsystem :}  Sign-in, sign-up, and password recovery controllers.
-\textbf{3. Client Management Subsystem :} Employees list, attendance forms, and leave requests.\\
+\textbf{3. Client Management Subsystem :} Employees list, attendance forms, and absence records.\\
 \textbf{4. Messaging Subsystem :} Real-time chat widget, WebSocket listeners, and file upload services.
 
 \subsubsection{Design Pattern \& Architectural Layers}
-The codebase of both the mobile and web client applications is structured around a \\ decoupled \textbf{Model-View-Controller (MVC)} design pattern to separate business logic from the user interface presentation: \\
+The codebase of both the mobile and web client applications is structured around a decoupled \textbf{Model-View-Controller (MVC)} design pattern to separate business logic from the user interface presentation:
 
-\textbf{Model Layer}: Contains Dart entity models mapping our database records. They manage JSON serialization and deserialization (`fromJson`/`toJson` factories). \\
-\textbf{View Layer}: Renders UI screens using responsive Flutter widgets. Views observe state changes and rebuild when notified. \\
-\textbf{Controller/State Layer (AppState)}: Exposes actions, processes asynchronous transactions, and dispatches data change signals to UI consumers.
+\begin{itemize}
+    \item \textbf{Model Layer}: Contains Dart entity models mapping our database records. They manage JSON serialization and deserialization (\texttt{fromJson}/\texttt{toJson} factories). For example, the \texttt{Pointage} model represents an attendance record with fields for \texttt{id}, \texttt{date}, \texttt{status} (present/absent), and \texttt{employee\_id}.
+    \item \textbf{View Layer}: Renders UI screens using responsive Flutter widgets. Views observe state changes and rebuild when notified. For example, the \texttt{PointageScreen} (View) displays the interactive calendar and employee check-in list, letting the client manager interact with the interface.
+    \item \textbf{Controller/State Layer (AppState)}: Exposes actions, processes asynchronous transactions, and dispatches data change signals to UI consumers. For example, when a user saves attendance, the \texttt{PointageScreen} triggers a method in the \texttt{PointageController} (Controller), which calls the database service to insert the new record into the \texttt{pointages} table.
+\end{itemize}
+
 \subsection{Deployment of the Computerized System}
-During development and testing, the components were deployed and compiled as follows:
+The deployment structure is designed to support both local development/testing and production cloud execution:
 \\
-\textbf{Web Application} : Deployed and run locally on a Web Server for administration.
+\textbf{Web Application} : Configured for local execution during development and deployed on the cloud via \textbf{Vercel} for production, ensuring global accessibility for administrators.
 \\
-\textbf{Mobile Client App} : Compiled and deployed as an Android package (APK).
+\textbf{Mobile Client App} : Compiled and deployed as an Android package (APK) for mobile client managers.
 \\
-\textbf{Database \& API} : Connected to the cloud-hosted Supabase backend instance.
+\textbf{Database \& API} : Hosted on the cloud using the managed \textbf{Supabase} backend platform (incorporating the PostgreSQL database, cloud storage, and real-time engine).
 
 \subsection{Use Case Implementation}
 We adopted an iterative, bottom-up development cycle to translate our system use cases into functional software. Each iteration started with defining Dart model classes to secure consistency, followed by constructing the service adapters to hook database API queries and Supabase CRUD logic. Finally, we developed the responsive user interfaces and visual views, binding them directly to the state controllers. This modular approach allowed us to isolate and validate database Row Level Security rules, state management triggers, and offline caching routines before compiling the final client user interface layouts.

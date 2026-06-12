@@ -1,7 +1,7 @@
 \chapter{General Project Presentation}
 
 \section{Introduction}
-This introductory chapter establishes the foundational context of this graduation project. We begin by introducing the host organization, HMI Stars Consulting, outlining its operational structure and the administrative consulting ecosystem in which it operates. We then detail the core problem statement, highlighting the challenges of manual workflows in client-consultant coordination, followed by the proposed digital solution. Finally, this chapter outlines our methodological framework—the Two-Track Unified Process (2TUP)—and presents a comparative analysis of existing enterprise resource planning (ERP) platforms to substantiate our subsequent architectural and technology selections.
+This first chapter introduces the context of the graduation project. It describes the internship environment and the structure of the host organization, and clarifies the problem that the project aims to solve. It also presents the chosen conceptual approach. Finally, it reviews existing solutions to help justify and support the technical decisions made.
 
 \section{Company presentation}
 The internship was conducted remotely at \textbf{HMI Stars Consulting}, a consulting company specialized in project management, company registration, and social and tax administrative support.
@@ -57,7 +57,7 @@ To find a solution to our problem, we conducted research on existing systems. We
 \vspace{-0.8cm}
 
 \subsubsection{Comparison of the existing}
-We studied the three systems from different aspects indicated in the table below:
+We studied the three systems from different aspects indicated in Table \ref{tab:comparison_existing}:
 \begin{table}[H]
 \centering
 \caption{Comparison between Odoo, ERPNext and Dolibarr}
@@ -92,11 +92,11 @@ Based on the comparison of the existing systems, we note the following limitatio
 \end{itemize}
 
 \subsubsection{Proposed solution}
-To address the needs of HMI Stars Consulting and overcome the limitations of existing ERP solutions, we designed and developed a customized application ecosystem called \textbf{HMI Stars}.The solution consists of three main components:
+To address the limitations identified above—specifically Odoo's high complexity and lack of tailorable mobile client interfaces, ERPNext's absence of real-time messaging, and Dolibarr's outdated interface with no instant feedback on document states—we designed and developed a tailored application ecosystem called \textbf{HMI Stars}. The system is architected to solve these specific challenges through three integrated components:
 \begin{enumerate}
-    \item \textbf{A Web Application Platform:} Dedicated to HMI Stars Consulting managers, allowing them to register client companies, review uploaded files (categorized by type: KBIS, VAT, RIB, bank statements ...), and reply to client inquiries.
-    \item \textbf{A Cross-Platform Mobile Application:} Dedicated to client managers, providing tools to manage their employees, log daily attendance, submit leave and absence requests, and upload documents.
-    \item \textbf{A Real-Time Backend Server:} Powered by Supabase, handling instant synchronization of messages and files while guaranteeing strict data isolation using PostgreSQL Row Level Security (RLS).
+    \item \textbf{A Web Application Platform:} Resolves the issues of complex or outdated interfaces (as seen in Odoo and Dolibarr) by providing HMI Stars administrators with a clean, modern, and reactive web dashboard. It streamlines company registration, organizes client files by category (KBIS, VAT, RIB, bank statements), and enables immediate response to client inquiries.
+    \item \textbf{A Cross-Platform Mobile Application:} Addresses the lack of intuitive mobile access for client companies. It provides client managers with a simplified, mobile-first tool to manage employee registries, record absences, track daily attendance, and upload documents directly from their mobile devices.
+    \item \textbf{A Real-Time Backend Server:} Directly solves the lack of real-time synchronization and instant feedback identified in both ERPNext and Dolibarr. Powered by Supabase, it manages instant messaging and file sharing via WebSocket streams, while ensuring absolute data isolation between client companies using PostgreSQL Row Level Security (RLS) policies.
 \end{enumerate}
 
 \subsubsection{Technology Choices}
@@ -154,16 +154,9 @@ Transition (Ch. 3) & Functional test cases, usability evaluation & Execution env
 \end{tabular}
 \end{table}
 
-Although the report presents both tracks within the same chapters for readability, each section addresses either the functional or the technical perspective. This adaptation was chosen because the project involves a small development team, where separating the tracks into entirely distinct documents would introduce unnecessary redundancy without adding clarity.
-
 \subsubsection{Unified Modeling Language (UML)}
 UML is used as the standard modeling language to specify, visualize, and document the different elements of the system throughout the functional development process.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.3\linewidth]{images/uml.png}
-    \caption{UML}
-    \label{fig:UML}
-\end{figure}
+
 \subsection{Work Organization}
 The project timeline is organized around the four iterative phases of the Unified Process. Each phase targets specific deliverables and maps to a subset of the prioritized use cases. Table \ref{tab:iteration_schedule} presents the iteration schedule followed during the development of the HMI Stars system.
 
@@ -177,13 +170,13 @@ The project timeline is organized around the four iterative phases of the Unifie
 \hline
 Inception & 2 weeks & Requirements analysis, actor identification, use case diagrams, priority table & -- \\
 \hline
-Elaboration & 3 weeks & Architectural analysis, sequence diagrams, class diagram, database schema design & -- \\
+Elaboration & 2 weeks & Architectural analysis, sequence diagrams, class diagram, database schema design & -- \\
 \hline
 Construction -- Iter. 1 & 3 weeks & Authentication module, employee CRUD, database mapping with RLS & UC-01, UC-02 \\
 \hline
-Construction -- Iter. 2 & 3 weeks & Attendance logging, leave request submission, offline caching & UC-03, UC-04 \\
+Construction -- Iter. 2 & 2 weeks & Attendance logging, absence recording, offline caching & UC-03, UC-04 \\
 \hline
-Construction -- Iter. 3 & 3 weeks & Real-time chat, file upload, document management & UC-05, UC-06 \\
+Construction -- Iter. 3 & 2 weeks & Real-time chat, document consultation and upload & UC-05, UC-06 \\
 \hline
 Construction -- Iter. 4 & 2 weeks & Warning templates, settings, document scanner, push notifications & UC-07, UC-08, UC-09 \\
 \hline
