@@ -32,13 +32,7 @@ MOB-05 & Simplified Client Dashboard & Main Home Dashboard & Complete \\
 \hline
 MOB-06 & Employee Directory Management (CRUD) & Employee Grid/List views, Profile, Edit, Archive & Complete \\
 \hline
-MOB-07 & Disciplinary Warnings \& Templates & Warning categories, template editor, email dispatch & Complete \\
-\hline
-MOB-08 & Settings \& Personalization (Theme, Language) & Settings screen with dark/light mode, FR/EN toggle & Complete \\
-\hline
-MOB-09 & Interactive Document Scanner & Camera-based scanner with perspective cropping & Complete \\
-\hline
-MOB-10 & Automated PDF Payslip Generation & Deferred (Planned integration for payroll module) & Deferred \\
+MOB-07 & Settings \& Personalization (Theme, Language) & Settings screen with dark/light mode, FR/EN toggle & Complete \\
 \hline
 \end{tabular}
 \end{table}
@@ -65,13 +59,7 @@ WEB-06 & Analytical Business Dashboard & Web Dashboard & Complete \\
 \hline
 WEB-07 & Multilingual Support \& Role-Based Access Controls & Multilingual translation framework (FR/EN) & Complete \\
 \hline
-WEB-08 & Employee Attendance Export & Export dialog with month/year selection & Complete \\
-\hline
-WEB-09 & Notes \& Reminders System & Notes panel with reminder flags per company & Complete \\
-\hline
-WEB-10 & Employee Archives Management & Archived employees tab for departed staff & Complete \\
-\hline
-WEB-11 & Automated OCR Document Classification & Metadata structure complete; text extraction model deferred & Partial \\
+WEB-8 & Employee Archives Management & Archived employees tab for departed staff & Complete \\
 \hline
 \end{tabular}
 \end{table}
@@ -297,7 +285,7 @@ We present the workflow for registering, reviewing, and updating employee files 
         \caption{Profile Editor}
         \label{fig:m_emp_edit}
     \end{subfigure}
-    \caption{Mobile Application - Employee Registration, Detailed Profiling, and Editing Forms}
+    \caption{Mobile Application - Employee's Registration, Profile, and Editing Forms}
     \label{fig:mobile_employee_ops}
 \end{figure}
 
@@ -593,6 +581,16 @@ We provide a bilingual (French and English) attendance export utility shown in F
     \label{fig:web_attendance_export_dialog}
 \end{figure}
 
+\paragraph{Exported Attendance Sheet}
+Once the export is processed, the system generates a structured spreadsheet detailing the monthly attendance record for each employee. As shown in Figure \ref{fig:web_exported_attendance_sheet}, this file includes employee names, calendar days with check-in/check-out states (such as present, absent, or half-days), and summary columns for total worked and absent days.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{project_images/eployee_attendance_file.png}
+    \caption{Web Platform - Exported Attendance Sheet (Excel/CSV File)}
+    \label{fig:web_exported_attendance_sheet}
+\end{figure}
+
 \paragraph{Company Employee Archives Tab}
 The Employee Archives tab, presented in Figure \ref{fig:web_archives_tab}, catalogs historical records of terminated or departed staff members for administrative reference.
 
@@ -742,28 +740,24 @@ The system provides a consolidated workspace for managing administrative notes a
     \label{fig:web_global_reminders}
 \end{figure}
 \vspace{-1cm}
-\paragraph{Platform Settings and User Management}
-Figure \ref{fig:web_config_flow} shows the settings and user administration interfaces. Through these panels, users configure individual profile settings, and administrators control staff accounts, including assigning system roles and deleting users.
+\paragraph{User Settings Configuration}
+The system provides a dedicated settings workspace, as illustrated in Figure \ref{fig:web_user_settings}. Through this interface, users can update their profile information, adjust account credentials, and personalize display settings.
 
 \begin{figure}[H]
     \centering
+    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/settings.png}
+    \caption{Web Platform - User Settings Configuration}
+    \label{fig:web_user_settings}
+\end{figure}
 
-    \begin{subfigure}[b]{0.80\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/settings.png}
-        \caption{User Settings Configuration}
-    \end{subfigure}
+\paragraph{Platform Accounts Management}
+Figure \ref{fig:web_accounts_management} shows the account supervision panel. Through this workspace, administrators control access permissions, manage staff directories, assign distinct system roles, and execute user account deletions.
 
-    \vspace{0.3cm}
-
-    \begin{subfigure}[b]{0.80\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/acc_page.png}
-        \caption{Platform Accounts Management (Role Control and Deletion)}
-    \end{subfigure}
-
-    \caption{Web Platform - Settings and User Account Administration}
-    \label{fig:web_config_flow}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/acc_page.png}
+    \caption{Web Platform - Platform Accounts Management (Role Control and Deletion)}
+    \label{fig:web_accounts_management}
 \end{figure}
 
 \paragraph{Web Platform Dark Mode Theme Options}
