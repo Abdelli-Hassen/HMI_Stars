@@ -1,5 +1,5 @@
 \chapter{General project presentation}
-
+\vspace{-0.5cm}
 \section{Introduction}
 This chapter introduces the graduation project and its general context. It first presents the internship environment and the organizational structure of the host company, HMI Stars Consulting. It then outlines the main problem related to manual administrative workflows and introduces the proposed digital solution. Finally, it compares existing ERP solutions such as Odoo \cite{OdooSite}, ERPNext \cite{ERPNextSite}, and Dolibarr \cite{DolibarrSite} to support the choice of technologies and system architecture.
 
@@ -7,7 +7,7 @@ This chapter introduces the graduation project and its general context. It first
 \section{Company presentation}
 The internship was conducted remotely at \textbf{HMI Stars Consulting}, a consulting company specialized in project management, company registration, and administrative support. The company assists clients with legal and administrative procedures, including social declarations, employment contract management, payroll processing, and communication with public authorities.
 
-HMI Stars Consulting works with small and medium-sized enterprises (SMEs) based in France, as illustrated in Figure \ref{fig:HMI Stars logo}. To ensure proper follow-up, it relies on administrative staff, including secretaries and administrators, who work closely with client company managers.
+HMI Stars Consulting \ref{fig:HMI Stars logo} works with small and medium-sized enterprises (SMEs) based in France. To ensure proper follow-up, it relies on administrative staff, including secretaries and administrators, who work closely with client company managers.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.35\linewidth]{images/hmi_stars.jpeg}
@@ -101,18 +101,19 @@ To address the limitations identified above—specifically Odoo's high complexit
 \end{enumerate}
 
 \subsubsection{Technology choices}
-The technical track of the project required selecting a cross-platform frontend framework and a backend-as-a-service platform. 
+The technical track of the project required choosing a cross-platform frontend framework and a backend-as-a-service solution.
 
-For the frontend framework, we compared \textbf{Flutter} \cite{FlutterDocs} (Dart) and \textbf{React Native} (JavaScript). While both are open-source and support cross-platform development, Flutter enables compiling natively for Android, iOS, and Web from a single Dart codebase. Conversely, React Native often requires separate configuration and extra tooling (such as React Native Web) to ensure compatibility on web platforms, which increases development complexity for our dual-interface system.
+For the frontend, we compared \textbf{Flutter} \cite{FlutterDocs} (Dart) and \textbf{React Native} (JavaScript). Both are open-source and support cross-platform development. However, Flutter allows us to build Android, iOS, and Web applications from a single codebase, ensuring consistency across all platforms. React Native, on the other hand, often requires extra configuration and additional tools (such as React Native Web) to properly support web deployment, which adds more complexity to the project.
 
-For the backend platform, we compared \textbf{Supabase} (PostgreSQL) and \textbf{Firebase} (NoSQL). The comparison focused on three key aspects:
+For the backend, we compared \textbf{Supabase} (PostgreSQL) and \textbf{Firebase} (NoSQL). The comparison was based on three main points:
 \begin{itemize}
-    \item \textbf{Data model}: Supabase uses relational PostgreSQL tables with SQL foreign key constraints and joins, which naturally fits our structured business data. Firebase \cite{FirebaseDocs} uses a NoSQL document-based structure that is less suited for relational mappings.
-    \item \textbf{Security}: Supabase offers native PostgreSQL Row Level Security (RLS) policies to enforce data isolation at the database level. Firebase relies on Firestore rules which are evaluated at the API boundary.
-    \item \textbf{Real-time capability and open-source nature}: Both offer real-time synchronization, but Supabase is fully open-source and self-hostable, whereas Firebase is proprietary.
+    \item \textbf{Data model}: Supabase uses relational PostgreSQL tables with foreign keys and SQL joins, which fits well with our structured business data. Firebase \cite{FirebaseDocs} uses a NoSQL document model, which is less adapted to relational data.
+    \item \textbf{Security}: Supabase provides Row Level Security (RLS), allowing us to control access directly at the database level. Firebase relies on security rules handled at the API layer.
+    \item \textbf{Real-time and openness}: Both support real-time features, but Supabase is fully open-source and can be self-hosted, while Firebase is a closed-source managed platform.
 \end{itemize}
 
-We selected \textbf{Flutter} because it enables the development of both mobile and web applications from a single codebase, reducing development time and ensuring consistency across platforms. We chose \textbf{Supabase} because its PostgreSQL database is well suited for managing structured data such as companies, employees, contracts, and attendance records. In addition, its built-in security features help ensure that each company can only access its own data.
+Based on this comparison, we chose \textbf{Flutter} because it lets us build mobile and web apps from a single codebase while keeping a consistent user experience. We selected \textbf{Supabase} because its relational structure matches our data model and its security system helps us ensure proper data isolation between companies.
+
 \vspace{-0.5cm}
 \section{Methodological choices and work organization}
 

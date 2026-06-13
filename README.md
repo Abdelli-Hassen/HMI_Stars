@@ -1,92 +1,49 @@
-..# 🌟 HMI Stars - Enterprise Messaging Ecosystem
+#  HMI Stars — Enterprise Management & Communication Ecosystem
 
-![HMI Stars Banner](https://img.shields.io/badge/Status-Restored_&_Secured-brightgreen?style=for-the-badge)
-![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+Welcome to the **HMI Stars** project! This repository contains a unified, multi-platform ecosystem designed to streamline communication and administrative management between **HMI Stars** (as a service provider) and its **client companies**. 
 
-## 🛠️ Project Status: RESTORED & SECURED (May 14, 2026)
+Rather than building separate backends, the entire system is structured as a **Flutter Monorepo** backed by a shared, secure **Supabase** backend.
 
-The project has undergone a full environment restoration and security hardening cycle.
 
-### Key Restorations
-- **SQL Schema**: `database_schema.sql` and `platform_migration.sql` have been reconstructed from the live Supabase instance.
-- **Configurations**: Live `supabase_config.dart` files have been restored for both Platform and Mobile apps.
-- **Dependencies**: All Flutter dependencies have been re-initialized (`flutter pub get`).
 
-### Security Posture
-- **Secret Management**: All production secrets are stored in `supabase_config.dart` files, which are explicitly **excluded from Git**.
-- **Templates**: `.example` files are provided for safe GitHub sharing and local setup.
-- **Monorepo Hygiene**: Redundant build artifacts and temporary logs have been purged.
+## The Core Idea
 
----
+The HMI Stars ecosystem is designed to solve a classic enterprise challenge: how can a service provider efficiently manage multiple client companies, coordinate their personnel request/absence tracking, and maintain real-time communication?
 
-HMI Stars is a high-performance, real-time messaging ecosystem designed for enterprise communication. It bridges the gap between administrators and mobile users with a unified backend powered by **Supabase**.
+The solution consists of two tailored user experiences connected to a single source of truth:
 
----
+1. **The Web Administration Platform (`/Platforme`)**
+   * **Target Audience**: HMI Stars staff (Admins, Moderators, Secretaries).
+   * **Purpose**: A desktop-optimized hub to onboard client companies, manage employee databases, review leave/absence records, configure contracts (CDI, CDD), and chat directly with client managers.
 
-## 🏗️ Architecture
+2. **The Mobile Client Application (`/hmistarsmobile`)**
+   * **Target Audience**: Client Company Managers (directors/managers of the companies HMI Stars serves).
+   * **Purpose**: A mobile-first dashboard to submit and track absence/leave requests for their teams, manage their company's employee list, and chat in real-time with the HMI Stars agency support.
 
-This repository is organized as a monorepo containing two main projects:
 
-| Component | Path | Description |
-| :--- | :--- | :--- |
-| **Admin Platform** | `/Platforme` | Web-based dashboard for administrators to manage enterprises and respond to messages. |
-| **Mobile App** | `/hmistarsmobile` | Flutter mobile application for clients to interact with the platform. |
 
-### Core Tech Stack
-- **Frontend**: Flutter (Web & Mobile)
-- **Backend**: Supabase (PostgreSQL, Realtime, Auth, Storage)
-- **State Management**: Provider
-- **Design**: Premium Glassmorphism & Modern UI/UX
+##  Technological Stack & How it Works
 
----
+To keep development clean, fast, and maintainable, we chose a modern, serverless-first architecture:
 
-## 🚀 Key Features
+* **Cross-Platform Frontend (Flutter & Dart)**: Used for both the Web administration platform and the mobile application. This enables shared logic, a cohesive UI style, and high-performance components across web and mobile.
+* **Backend-as-a-Service (Supabase)**:
+  * **PostgreSQL Database**: Holds all relational data, including `companies`, `employees`, `absences`, and `messages`.
+  * **Row Level Security (RLS)**: Crucial for enterprise privacy. RLS policies ensure that a client manager from Company A can only view, create, or update data belonging to Company A. HMI Stars administrators retain global access.
+  * **Supabase Realtime (WebSockets)**: Powers the live chat system and instant status updates. When a manager submits an absence or sends a message, PostgreSQL changes are immediately broadcasted to the web platform.
+  * **OTP-Driven Security (Supabase Auth)**: Account recoveries and email updates are fully secured via one-time passwords (OTP) sent directly to user mailboxes.
+  * **Supabase Storage**: Manages secure file uploads, profile photos, and document attachments.
 
-- **Real-time Messaging**: Instant synchronization across all devices using PostgreSQL streams.
-- **Enterprise Management**: Automated client account creation and data isolation.
-- **Smart UI**: Unread message indicators, automatic read tracking, and intuitive conversation sorting.
-- **Performance**: Lazy loading for message history and optimized data fetching.
 
----
 
-## 🛠️ Setup & Installation
+##  General Workflow
 
-### Prerequisites
-- Flutter SDK (Latest Stable)
-- Supabase Project Credentials
+* **Onboarding**: An HMI Stars Administrator creates a new client company profile on the Web Platform. They set up the primary Client Manager's credentials.
+* **Staff Coordination**: The Client Manager logs into the Mobile App. From there, they can add employees, declare absences (illness, leave), and upload supporting documents.
+* **Real-time Collaboration**: If there is an issue or a custom request, the Client Manager and HMI Stars staff can instantly chat via the integrated messaging system.
+* **Security & Verification**: Any sensitive changes, such as resetting a forgotten password or updating an account email, trigger secure OTP verification emails (available in both French and English).
 
-### Getting Started
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/hmi_stars.git
-   ```
 
-2. **Configure Environment**:
-   Ensure you have your Supabase URL and Anon Key. Update the initialization in `main.dart` for both projects.
+*Developed with for HMI Stars.*
 
-3. **Install Dependencies**:
-   Navigate to each folder and run:
-   ```bash
-   flutter pub get
-   ```
-
-4. **Run the projects**:
-   - **Admin Platform**: `flutter run -d chrome` (from `/Platforme`)
-   - **Mobile App**: `flutter run` (from `/hmistarsmobile`)
-
----
-
-## 🛡️ Security
-- **Row Level Security (RLS)**: Enforced at the database level to ensure enterprises only access their own data.
-- **Admin Roles**: Managed via service role keys for critical operations like user creation.
-
----
-
-## 📝 License
-Proprietary - All Rights Reserved.
-
----
-
-*Developed with ❤️ for HMI Stars.*
