@@ -187,6 +187,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
     }
     final allNotes = provider.allNotes;
     final filteredNotes = _getFilteredNotes(allNotes);
+    final String? targetNoteId = ModalRoute.of(context)?.settings.arguments as String?;
     return MainShell(
       currentRoute: AppRoutes.notesRappels,
       title: context.tr('Notes & Rappels', 'Notes & Reminders'),
@@ -542,6 +543,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                           runSpacing: 16,
                           children: filteredNotes.map((note) => _NoteCard(
                             data: note,
+                            isHighlighted: note.id == targetNoteId,
                             onPin: () async {
                               try {
                                 final updated = note.copyWith(isPinned: !note.isPinned);
@@ -558,22 +560,41 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                             },
                             onEdit: () => _editNote(note),
                             onDelete: () async {
-                              try {
-                                await provider.supprimerNote(note.id, note.entrepriseId);
-                                if (context.mounted) {
-                                  ToastUtils.show(
-                                    context,
-                                    context.tr('Note supprimée.', 'Note deleted.'),
-                                    isError: false,
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ToastUtils.show(
-                                    context,
-                                    'Erreur: $e',
-                                    isError: true,
-                                  );
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: cs.surfaceContainerLowest,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  title: Text(context.tr('Confirmer la suppression', 'Confirm deletion'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+                                  content: Text(context.tr('Supprimer la note "${note.titre}" ?', 'Delete note "${note.titre}"?'), style: AppTextStyles.bodyMedium),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler', 'Cancel'))),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                      child: Text(context.tr('Supprimer', 'Delete')),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true && context.mounted) {
+                                try {
+                                  await provider.supprimerNote(note.id, note.entrepriseId);
+                                  if (context.mounted) {
+                                    ToastUtils.show(
+                                      context,
+                                      context.tr('Note supprimée.', 'Note deleted.'),
+                                      isError: false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ToastUtils.show(
+                                      context,
+                                      'Erreur: $e',
+                                      isError: true,
+                                    );
+                                  }
                                 }
                               }
                             },
@@ -740,7 +761,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
           return AlertDialog(
             backgroundColor: cs.surfaceContainerLowest,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Text('Modifier la note', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+            title: Text(context.tr('Modifier la note', 'Edit Note'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
             content: SizedBox(
               width: 440,
               child: SingleChildScrollView(
@@ -748,7 +769,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Titre', style: AppTextStyles.labelSmall.copyWith(color: cs.onSurfaceVariant)),
+                    Text(context.tr('Titre', 'Title'), style: AppTextStyles.labelSmall.copyWith(color: cs.onSurfaceVariant)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: titleCtrl,
@@ -759,7 +780,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                       style: AppTextStyles.bodyMedium,
                     ),
                     const SizedBox(height: 16),
-                    Text('Contenu', style: AppTextStyles.labelSmall.copyWith(color: cs.onSurfaceVariant)),
+                    Text(context.tr('Contenu', 'Content'), style: AppTextStyles.labelSmall.copyWith(color: cs.onSurfaceVariant)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: contentCtrl,
@@ -877,7 +898,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Annuler', style: AppTextStyles.labelMedium.copyWith(color: cs.outline)),
+                child: Text(context.tr('Annuler', 'Cancel'), style: AppTextStyles.labelMedium.copyWith(color: cs.outline)),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -925,7 +946,7 @@ class _NotesRappelsPageState extends State<NotesRappelsPage> {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('Enregistrer'),
+                child: Text(context.tr('Enregistrer', 'Save')),
               ),
             ],
           );
@@ -957,15 +978,78 @@ class _NoteCard extends StatefulWidget {
   final VoidCallback onPin;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool isHighlighted;
 
-  const _NoteCard({required this.data, required this.onPin, required this.onEdit, required this.onDelete});
+  const _NoteCard({
+    required this.data,
+    required this.onPin,
+    required this.onEdit,
+    required this.onDelete,
+    this.isHighlighted = false,
+  });
 
   @override
   State<_NoteCard> createState() => _NoteCardState();
 }
 
-class _NoteCardState extends State<_NoteCard> {
+class _NoteCardState extends State<_NoteCard> with TickerProviderStateMixin {
   bool _hovered = false;
+  AnimationController? _highlightController;
+  Animation<double>? _highlightAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _highlightController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    _highlightAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.2).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.2, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.2).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.2, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)),
+        weight: 25,
+      ),
+    ]).animate(_highlightController!);
+
+    if (widget.isHighlighted) {
+      _highlightController?.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _NoteCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isHighlighted && !oldWidget.isHighlighted) {
+      _highlightController?.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _highlightController?.dispose();
+    super.dispose();
+  }
 
   Color _getColorForTag(BuildContext context, String tag) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -985,32 +1069,53 @@ class _NoteCardState extends State<_NoteCard> {
     final d = widget.data;
     final color = _getColorForTag(context, d.tag);
     final dateStr = '${d.dateCreation.day}/${d.dateCreation.month}/${d.dateCreation.year}';
+    final anim = _highlightAnimation ?? const AlwaysStoppedAnimation<double>(0.0);
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        width: 280,
-        padding: const EdgeInsets.all(20),
-        transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _hovered ? color.withValues(alpha: 0.4) : cs.outlineVariant.withValues(alpha: 0.5),
-            width: _hovered ? 1.5 : 1,
-          ),
-          boxShadow: [
+      child: AnimatedBuilder(
+        animation: anim,
+        builder: (context, child) {
+          final animValue = anim.value;
+          final borderGlowColor = Color.lerp(
+            _hovered ? color : color.withValues(alpha: 0.5),
+            AppColors.primary,
+            animValue,
+          )!;
+          final borderWidth = _hovered ? 1.5 : 1.0 + (animValue * 1.5);
+          final shadows = [
             BoxShadow(
-              color: _hovered ? color.withValues(alpha: 0.25) : cs.onSurface.withValues(alpha: 0.04),
-              blurRadius: _hovered ? 20 : 4,
-              spreadRadius: _hovered ? 3 : 0,
+              color: Color.lerp(
+                _hovered ? color.withValues(alpha: 0.25) : cs.onSurface.withValues(alpha: 0.04),
+                AppColors.primary.withValues(alpha: 0.65),
+                animValue,
+              )!,
+              blurRadius: _hovered ? 20.0 : 4.0 + (animValue * 16.0),
+              spreadRadius: _hovered ? 3.0 : (animValue * 2.0),
               offset: _hovered ? const Offset(0, 8) : const Offset(0, 2),
             ),
-          ],
-        ),
+          ];
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            width: 280,
+            padding: const EdgeInsets.all(20),
+            transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: borderGlowColor,
+                width: borderWidth,
+              ),
+              boxShadow: shadows,
+            ),
+            child: child,
+          );
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

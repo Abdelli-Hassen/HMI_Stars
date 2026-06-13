@@ -122,7 +122,15 @@ class MessagerieProvider extends ChangeNotifier {
   List<String> _favorisIds = [];
 
   // --- Getters -------------------------------------------------------------
-  String? get _currentUserId => SupabaseConfig.client.auth.currentUser?.id;
+  String? _overrideUserId;
+  String? get _currentUserId => _overrideUserId ?? SupabaseConfig.client.auth.currentUser?.id;
+
+  void setOverrideUserId(String? uid) {
+    _overrideUserId = uid;
+    _entrepriseSelectionneeId = null;
+    _messagesActuels = [];
+    notifyListeners();
+  }
   List<ApercuConversation> get conversations => _conversations;
   List<MessagePlateforme> get messagesActuels => _messagesActuels;
   List<UtilisateurPlateforme> get platformUsers => _platformUsers;

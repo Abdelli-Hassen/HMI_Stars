@@ -20,6 +20,8 @@ class AuthProvider extends ChangeNotifier {
   bool _emailNonConfirme = false;
   String? _emailEnAttente;
   String _tempLanguage = 'Français (FR)';
+  UtilisateurPlateforme? _adminUtilisateur;
+  User? _adminUser;
 
   String get tempLanguage => _tempLanguage;
 
@@ -552,6 +554,42 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('[AuthProvider] Error updating profile: $e');
+    }
+  }
+
+  bool get isImpersonating => _adminUtilisateur != null;
+
+  void impersonateUser(UtilisateurPlateforme targetUser) {
+    if (!isAdmin && !isImpersonating) return;
+    if (_adminUtilisateur == null) {
+      _adminUtilisateur = _utilisateur;
+      _adminUser = _user;
+    }
+    _utilisateur = targetUser;
+    
+    // Workaround: Trigger Supabase Auth / Table update that logs this event or triggers notification
+    _dataService.mettreAJourUtilisateur(
+      targetUser.copyWith(
+        preferences: {
+          ...targetUser.preferences,
+          'last_accessed_by_admin': DateTime.now().toIso8601String(),
+        },
+      ),
+    ).catchError((e) {
+      debugPrint('[AuthProvider] Error updating target user meta: $e');
+      return targetUser;
+    });
+
+    notifyListeners();
+  }
+
+  void stopImpersonating() {
+    if (_adminUtilisateur != null) {
+      _utilisateur = _adminUtilisateur;
+      _user = _adminUser;
+      _adminUtilisateur = null;
+      _adminUser = null;
+      notifyListeners();
     }
   }
 

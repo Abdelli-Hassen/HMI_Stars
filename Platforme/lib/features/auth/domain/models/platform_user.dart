@@ -27,7 +27,6 @@ class UtilisateurPlateforme {
     required this.misAJourLe,
   });
 
-  /// Libellé du rôle lisible pour l'interface.
   String get libelleRole {
     switch (role) {
       case 'admin':

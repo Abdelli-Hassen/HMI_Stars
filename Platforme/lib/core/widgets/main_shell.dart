@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/messagerie/presentation/providers/messagerie_provider.dart';
+import '../utils/translation_extension.dart';
 import 'app_sidebar.dart';
 import 'app_top_bar.dart';
 
@@ -22,6 +26,54 @@ class MainShell extends StatelessWidget {
     this.topBarTabs,
   });
 
+  Widget _buildImpersonationBanner(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    if (!auth.isImpersonating) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      color: cs.errorContainer,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.admin_panel_settings_rounded, color: cs.onErrorContainer, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '${context.tr("Mode impersonation actif : connecté en tant que", "Impersonation mode active: logged in as")} ${auth.userName} (${auth.libelleRole})',
+                style: TextStyle(
+                  color: cs.onErrorContainer,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              auth.stopImpersonating();
+              Provider.of<MessagerieProvider>(context, listen: false).setOverrideUserId(null);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: cs.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            icon: const Icon(Icons.exit_to_app_rounded, size: 16),
+            label: Text(
+              context.tr('Quitter', 'Exit'),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -36,6 +88,7 @@ class MainShell extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
+                _buildImpersonationBanner(context),
                 AppTopBar(
                   title: title,
                   subtitle: subtitle,

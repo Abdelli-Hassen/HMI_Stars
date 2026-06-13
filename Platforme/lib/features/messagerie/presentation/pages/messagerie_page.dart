@@ -138,10 +138,101 @@ class _MessageriePageState extends State<MessageriePage> {
         return;
       }
 
+      if (!mounted) return;
+
+      final bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (dialogCtx) {
+          final isImage = file.name.toLowerCase().endsWith('.png') ||
+              file.name.toLowerCase().endsWith('.jpg') ||
+              file.name.toLowerCase().endsWith('.jpeg') ||
+              file.name.toLowerCase().endsWith('.gif') ||
+              file.name.toLowerCase().endsWith('.webp');
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: cs.surfaceContainerLowest,
+            title: Text(
+              context.tr('Confirmer l\'envoi', 'Confirm Sending'),
+              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isImage && bytes != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.memory(
+                      bytes!,
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    file.name,
+                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${(file.size / 1024).toStringAsFixed(1)} KB',
+                    style: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+                  ),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.insert_drive_file_outlined, size: 48, color: cs.primary),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    file.name,
+                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${(file.size / 1024).toStringAsFixed(1)} KB',
+                    style: AppTextStyles.bodySmall.copyWith(color: cs.outline),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx, false),
+                child: Text(
+                  context.tr('Annuler', 'Cancel'),
+                  style: TextStyle(color: cs.outline),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(dialogCtx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(context.tr('Envoyer', 'Send')),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirm != true) return;
+
       if (mounted) {
         ToastUtils.show(
           context,
-          'Téléversement de ${file.name}...',
+          context.tr('Téléversement de ${file.name}...', 'Uploading ${file.name}...'),
           isError: false,
         );
       }

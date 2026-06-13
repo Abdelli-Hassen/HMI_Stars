@@ -47,14 +47,21 @@ class _StaggeredColumnState extends State<StaggeredColumn>
     return Column(
       crossAxisAlignment: widget.crossAxisAlignment,
       children: List.generate(count, (i) {
-        final startFraction = (i * widget.staggerDelay.inMilliseconds) / totalMs;
-        final endFraction = ((i * widget.staggerDelay.inMilliseconds) + 600) / totalMs;
+        final double startFraction = totalMs > 0
+            ? ((i * widget.staggerDelay.inMilliseconds) / totalMs).clamp(0.0, 1.0)
+            : 0.0;
+        final double endFraction = totalMs > 0
+            ? (((i * widget.staggerDelay.inMilliseconds) + 600) / totalMs).clamp(0.0, 1.0)
+            : 1.0;
+
+        final double begin = startFraction.isNaN ? 0.0 : startFraction;
+        final double end = endFraction.isNaN ? 1.0 : (endFraction < begin ? begin : endFraction);
 
         final animation = CurvedAnimation(
           parent: _controller,
           curve: Interval(
-            startFraction.clamp(0.0, 1.0),
-            endFraction.clamp(0.0, 1.0),
+            begin,
+            end,
             curve: Curves.easeOutCubic,
           ),
         );

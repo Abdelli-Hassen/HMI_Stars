@@ -606,26 +606,64 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                     IconButton(
                       icon: const Icon(Icons.archive_outlined, color: Colors.orange),
                       tooltip: context.tr('Archiver l\'employé', 'Archive employee'),
-                      onPressed: () {
-                        Provider.of<EntrepriseProvider>(context, listen: false).archiverSalarie(salarie.id, salarie.entrepriseId);
-                        ToastUtils.show(
-                          context,
-                          context.tr('Employé archivé avec succès.', 'Employee archived successfully.'),
-                          isError: false,
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: cs.surfaceContainerLowest,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            title: Text(context.tr('Confirmer l\'archivage', 'Confirm archiving'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+                            content: Text(context.tr('Archiver l\'employé "${salarie.nomComplet}" ?', 'Archive employee "${salarie.nomComplet}"?'), style: AppTextStyles.bodyMedium),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler', 'Cancel'))),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                                child: Text(context.tr('Archiver', 'Archive')),
+                              ),
+                            ],
+                          ),
                         );
+                        if (confirm == true && context.mounted) {
+                          Provider.of<EntrepriseProvider>(context, listen: false).archiverSalarie(salarie.id, salarie.entrepriseId);
+                          ToastUtils.show(
+                            context,
+                            context.tr('Employé archivé avec succès.', 'Employee archived successfully.'),
+                            isError: false,
+                          );
+                        }
                       },
                     ),
                     const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: AppColors.error),
                       tooltip: context.tr('Supprimer l\'employé', 'Delete employee'),
-                      onPressed: () {
-                        Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(salarie.id, salarie.entrepriseId);
-                        ToastUtils.show(
-                          context,
-                          context.tr('Employé supprimé définitivement.', 'Employee deleted permanently.'),
-                          isError: true,
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: cs.surfaceContainerLowest,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            title: Text(context.tr('Confirmer la suppression', 'Confirm deletion'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+                            content: Text(context.tr('Supprimer définitivement l\'employé "${salarie.nomComplet}" ? Cette action est irréversible.', 'Permanently delete employee "${salarie.nomComplet}"? This action is irreversible.'), style: AppTextStyles.bodyMedium),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler', 'Cancel'))),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                child: Text(context.tr('Supprimer', 'Delete')),
+                              ),
+                            ],
+                          ),
                         );
+                        if (confirm == true && context.mounted) {
+                          Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(salarie.id, salarie.entrepriseId);
+                          ToastUtils.show(
+                            context,
+                            context.tr('Employé supprimé définitivement.', 'Employee deleted permanently.'),
+                            isError: true,
+                          );
+                        }
                       },
                     ),
                   ],
@@ -745,13 +783,32 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: AppColors.error),
                       tooltip: context.tr('Supprimer l\'archive', 'Delete archive'),
-                      onPressed: () {
-                        Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(s.id, s.entrepriseId);
-                        ToastUtils.show(
-                          context,
-                          context.tr('Archive supprimée définitivement.', 'Archive deleted permanently.'),
-                          isError: true,
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: cs.surfaceContainerLowest,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            title: Text(context.tr('Confirmer la suppression', 'Confirm deletion'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+                            content: Text(context.tr('Supprimer définitivement l\'archive de "${s.nomComplet}" ? Cette action est irréversible.', 'Permanently delete archive for "${s.nomComplet}"? This action is irreversible.'), style: AppTextStyles.bodyMedium),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler', 'Cancel'))),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                child: Text(context.tr('Supprimer', 'Delete')),
+                              ),
+                            ],
+                          ),
                         );
+                        if (confirm == true && context.mounted) {
+                          Provider.of<EntrepriseProvider>(context, listen: false).supprimerArchive(s.id, s.entrepriseId);
+                          ToastUtils.show(
+                            context,
+                            context.tr('Archive supprimée définitivement.', 'Archive deleted permanently.'),
+                            isError: true,
+                          );
+                        }
                       },
                     ),
                   ],
@@ -1415,22 +1472,41 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                           icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
                           tooltip: context.tr('Supprimer', 'Delete'),
                           onPressed: () async {
-                            try {
-                              await Provider.of<EntrepriseProvider>(context, listen: false).supprimerNote(note.id, entrepriseId);
-                              if (context.mounted) {
-                                ToastUtils.show(
-                                  context,
-                                  context.tr('Note supprimée.', 'Note deleted.'),
-                                  isError: false,
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ToastUtils.show(
-                                  context,
-                                  context.tr('Erreur: ', 'Error: ') + e.toString(),
-                                  isError: true,
-                                );
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: cs.surfaceContainerLowest,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: Text(context.tr('Confirmer la suppression', 'Confirm deletion'), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700)),
+                                content: Text(context.tr('Supprimer la note "${note.titre}" ?', 'Delete note "${note.titre}"?'), style: AppTextStyles.bodyMedium),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler', 'Cancel'))),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                    child: Text(context.tr('Supprimer', 'Delete')),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true && context.mounted) {
+                              try {
+                                await Provider.of<EntrepriseProvider>(context, listen: false).supprimerNote(note.id, entrepriseId);
+                                if (context.mounted) {
+                                  ToastUtils.show(
+                                    context,
+                                    context.tr('Note supprimée.', 'Note deleted.'),
+                                    isError: false,
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ToastUtils.show(
+                                    context,
+                                    context.tr('Erreur: ', 'Error: ') + e.toString(),
+                                    isError: true,
+                                  );
+                                }
                               }
                             }
                           },

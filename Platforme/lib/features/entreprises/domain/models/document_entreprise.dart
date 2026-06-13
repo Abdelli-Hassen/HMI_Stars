@@ -46,6 +46,19 @@ class DocumentEntreprise {
         return 'Relevés bancaires';
       case 'chiffre_affaires':
         return 'Fichiers comptables';
+      case 'kbis':
+        return 'Juridique';
+      case 'tva':
+        return 'Fiscalité';
+      case 'siret':
+        return 'Juridique';
+      case 'rib':
+        return 'Relevés bancaires';
+      case 'statuts':
+        return 'Juridique';
+      case 'media':
+        return 'Médias & Photos';
+      case 'autre':
       default:
         return 'Autres documents';
     }

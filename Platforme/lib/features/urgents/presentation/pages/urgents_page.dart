@@ -8,6 +8,8 @@ import '../../../../core/widgets/app_top_bar.dart' show formatRelativeTime;
 import '../../../../core/services/platform_data_service.dart';
 import '../../../entreprises/presentation/providers/entreprise_provider.dart';
 import '../../domain/models/tache_urgente.dart';
+import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
 
 class UrgentsPage extends StatefulWidget {
   const UrgentsPage({super.key});
@@ -20,7 +22,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
   bool _isLoading = true;
   bool _isListView = false;
   String? _targetNoteId;
-  int _activeTab = 0; // 0 = Notes, 1 = Tâches Urgentes
+  int _activeTab = 0; // 0 = Tâches Urgentes, 1 = Notes & Rappels Urgents
   List<TacheUrgente> _taches = [];
 
   @override
@@ -64,7 +66,11 @@ class _UrgentsPageState extends State<UrgentsPage> {
   }
 
   void _navigateToSource(dynamic note) {
-    Navigator.pushNamed(context, AppRoutes.notesRappels);
+    Navigator.pushNamed(
+      context,
+      AppRoutes.notesRappels,
+      arguments: note.id,
+    );
   }
 
   Future<void> _toggleTacheAccomplie(TacheUrgente tache) async {
@@ -75,20 +81,16 @@ class _UrgentsPageState extends State<UrgentsPage> {
       setState(() {
         _taches = _taches.map((t) => t.id == tache.id ? t.copyWith(accomplie: nextVal) : t).toList();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(nextVal ? 'Tâche marquée comme accomplie' : 'Tâche marquée comme non accomplie'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
+      ToastUtils.show(
+        context,
+        nextVal ? context.tr('Tâche marquée comme accomplie', 'Task marked as completed') : context.tr('Tâche marquée comme non accomplie', 'Task marked as incomplete'),
+        isError: false,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erreur lors de la mise à jour de la tâche'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
+      ToastUtils.show(
+        context,
+        context.tr('Erreur lors de la mise à jour de la tâche', 'Error updating task'),
+        isError: true,
       );
     }
   }
@@ -101,7 +103,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
 
     return MainShell(
       currentRoute: AppRoutes.urgents,
-      title: 'Urgences',
+      title: context.tr('Urgences', 'Urgent Tasks'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -115,9 +117,9 @@ class _UrgentsPageState extends State<UrgentsPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Fichiers & Notes Urgentes', style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
+                          Text(context.tr('Fichiers & Notes Urgentes', 'Urgent Files & Notes'), style: AppTextStyles.headlineMedium.copyWith(color: cs.onSurface)),
                           const SizedBox(height: 4),
-                          Text('Vérifiez rapidement les rappels et tâches urgentes reçus des entreprises', 
+                          Text(context.tr('Vérifiez rapidement les rappels et tâches urgentes reçus des entreprises', 'Quickly check urgent reminders and tasks received from companies'), 
                               style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
@@ -130,7 +132,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                               Icons.grid_view_rounded,
                               color: !_isListView ? cs.primary : cs.outline,
                             ),
-                            tooltip: 'Vue en blocs',
+                            tooltip: context.tr('Vue en blocs', 'Grid View'),
                           ),
                           IconButton(
                             onPressed: () => setState(() => _isListView = true),
@@ -138,7 +140,7 @@ class _UrgentsPageState extends State<UrgentsPage> {
                               Icons.view_list_rounded,
                               color: _isListView ? cs.primary : cs.outline,
                             ),
-                            tooltip: 'Vue en liste',
+                            tooltip: context.tr('Vue en liste', 'List View'),
                           ),
                         ],
                       ),
@@ -158,8 +160,8 @@ class _UrgentsPageState extends State<UrgentsPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
                         onPressed: () => setState(() => _activeTab = 0),
-                        icon: const Icon(Icons.note_rounded),
-                        label: Text('Notes & Rappels (${urgentNotes.length})'),
+                        icon: const Icon(Icons.assignment_late_rounded),
+                        label: Text('${context.tr('Tâches Urgentes', 'Urgent Tasks')} (${_taches.length})'),
                       ),
                       const SizedBox(width: 16),
                       ElevatedButton.icon(
@@ -171,8 +173,8 @@ class _UrgentsPageState extends State<UrgentsPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
                         onPressed: () => setState(() => _activeTab = 1),
-                        icon: const Icon(Icons.assignment_late_rounded),
-                        label: Text('Tâches Urgentes (${_taches.length})'),
+                        icon: const Icon(Icons.note_rounded),
+                        label: Text('${context.tr('Notes & Rappels Urgents', 'Urgent Notes & Reminders')} (${urgentNotes.length})'),
                       ),
                     ],
                   ),
@@ -180,8 +182,47 @@ class _UrgentsPageState extends State<UrgentsPage> {
                   const SizedBox(height: 32),
 
                   if (_activeTab == 0) ...[
+                    if (_taches.isEmpty)
+                      _buildEmptyState(cs, context.tr('Aucune tâche urgente pour le moment', 'No urgent tasks for now'))
+                    else if (_isListView)
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _taches.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final tache = _taches[index];
+                          final entreprise = provider.entreprises.where((e) => e.id == tache.entrepriseId).firstOrNull;
+                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
+                          return _TacheUrgenteCard(
+                            tache: tache,
+                            entrepriseNom: nom,
+                            isList: true,
+                            onToggle: () => _toggleTacheAccomplie(tache),
+                          );
+                        },
+                      )
+                    else
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: _taches.map((tache) {
+                          final entreprise = provider.entreprises.where((e) => e.id == tache.entrepriseId).firstOrNull;
+                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
+                          return ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 350),
+                            child: _TacheUrgenteCard(
+                              tache: tache,
+                              entrepriseNom: nom,
+                              isList: false,
+                              onToggle: () => _toggleTacheAccomplie(tache),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                  ] else ...[
                     if (urgentNotes.isEmpty)
-                      _buildEmptyState(cs, 'Aucun rappel urgent pour le moment')
+                      _buildEmptyState(cs, context.tr('Aucun rappel urgent pour le moment', 'No urgent reminders for now'))
                     else if (_isListView)
                       ListView.separated(
                         shrinkWrap: true,
@@ -216,45 +257,6 @@ class _UrgentsPageState extends State<UrgentsPage> {
                               isList: false,
                               onTap: () => _navigateToSource(note),
                               isHighlighted: note.id == _targetNoteId,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                  ] else ...[
-                    if (_taches.isEmpty)
-                      _buildEmptyState(cs, 'Aucune tâche urgente pour le moment')
-                    else if (_isListView)
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _taches.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          final tache = _taches[index];
-                          final entreprise = provider.entreprises.where((e) => e.id == tache.entrepriseId).firstOrNull;
-                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
-                          return _TacheUrgenteCard(
-                            tache: tache,
-                            entrepriseNom: nom,
-                            isList: true,
-                            onToggle: () => _toggleTacheAccomplie(tache),
-                          );
-                        },
-                      )
-                    else
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: _taches.map((tache) {
-                          final entreprise = provider.entreprises.where((e) => e.id == tache.entrepriseId).firstOrNull;
-                          final nom = entreprise?.nom ?? 'Entreprise Inconnue';
-                          return ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 350),
-                            child: _TacheUrgenteCard(
-                              tache: tache,
-                              entrepriseNom: nom,
-                              isList: false,
-                              onToggle: () => _toggleTacheAccomplie(tache),
                             ),
                           );
                         }).toList(),
@@ -483,6 +485,22 @@ class _TacheUrgenteCard extends StatefulWidget {
 class _TacheUrgenteCardState extends State<_TacheUrgenteCard> {
   bool _isHovered = false;
 
+  String _translateDbText(BuildContext context, String text) {
+    if (text.startsWith('Mettre à jour les dossiers salariés')) {
+      return context.tr(
+        'Mettre à jour les dossiers salariés',
+        'Update employee files',
+      );
+    }
+    if (text.startsWith('Veuillez compléter les informations manquantes')) {
+      return context.tr(
+        "Veuillez compléter les informations manquantes (date de naissance, contrat) pour l'ensemble de vos salariés.",
+        "Please complete the missing information (date of birth, contract) for all of your employees."
+      );
+    }
+    return text;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -550,7 +568,7 @@ class _TacheUrgenteCardState extends State<_TacheUrgenteCard> {
                           ),
                         ),
                         Text(
-                          'Échéance: ${widget.tache.dateEcheance.day}/${widget.tache.dateEcheance.month}/${widget.tache.dateEcheance.year}',
+                          '${context.tr('Échéance', 'Deadline')}: ${widget.tache.dateEcheance.day}/${widget.tache.dateEcheance.month}/${widget.tache.dateEcheance.year}',
                           style: AppTextStyles.labelSmall.copyWith(
                             color: widget.tache.accomplie ? cs.outline : AppColors.error,
                           ),
@@ -559,7 +577,7 @@ class _TacheUrgenteCardState extends State<_TacheUrgenteCard> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      widget.tache.titre,
+                      _translateDbText(context, widget.tache.titre),
                       style: AppTextStyles.titleMedium.copyWith(
                         fontWeight: FontWeight.bold,
                         color: widget.tache.accomplie ? cs.outline : cs.onSurface,
@@ -568,7 +586,7 @@ class _TacheUrgenteCardState extends State<_TacheUrgenteCard> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.tache.description,
+                      _translateDbText(context, widget.tache.description),
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: widget.tache.accomplie ? cs.outline : cs.onSurfaceVariant,
                         decoration: widget.tache.accomplie ? TextDecoration.lineThrough : null,

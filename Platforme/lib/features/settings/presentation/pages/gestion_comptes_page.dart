@@ -7,6 +7,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/main_shell.dart';
 import '../../../../core/utils/translation_extension.dart';
+import '../../../../core/utils/toast_utils.dart';
+import '../../../messagerie/presentation/providers/messagerie_provider.dart';
 
 class GestionComptesPage extends StatefulWidget {
   const GestionComptesPage({super.key});
@@ -57,13 +59,14 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     await _loadUsers();
     
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context.tr(
+      ToastUtils.show(
+        context,
+        context.tr(
           'Le rôle de ${user.nom} a été mis à jour.',
           'The role of ${user.nom} has been updated.',
-        )),
-        backgroundColor: AppColors.success,
-      ));
+        ),
+        isError: false,
+      );
     }
   }
 
@@ -71,13 +74,14 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
     final authProvider = context.read<AuthProvider>();
     final currentUserId = authProvider.utilisateur?.id;
     if (user.id == currentUserId) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context.tr(
+      ToastUtils.show(
+        context,
+        context.tr(
           'Vous ne pouvez pas supprimer votre propre compte ici.',
           'You cannot delete your own account here.',
-        )),
-        backgroundColor: AppColors.error,
-      ));
+        ),
+        isError: true,
+      );
       return;
     }
 
@@ -120,18 +124,94 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
         if (!mounted) return;
         await _loadUsers();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(context.tr('Utilisateur supprimé avec succès.', 'User deleted successfully.')),
-            backgroundColor: AppColors.success,
-          ));
+          ToastUtils.show(
+            context,
+            context.tr('Utilisateur supprimé avec succès.', 'User deleted successfully.'),
+            isError: false,
+          );
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(context.tr('Erreur lors de la suppression.', 'Error during deletion.')),
-            backgroundColor: AppColors.error,
-          ));
+          ToastUtils.show(
+            context,
+            context.tr('Erreur lors de la suppression.', 'Error during deletion.'),
+            isError: true,
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _impersonateUser(UtilisateurPlateforme user) async {
+    final authProvider = context.read<AuthProvider>();
+    
+    if (user.id == authProvider.utilisateur?.id) {
+      ToastUtils.show(
+        context,
+        context.tr(
+          'Vous êtes déjà connecté à ce compte.',
+          'You are already logged into this account.',
+        ),
+        isError: false, // shows as normal notification/warning status in custom toast
+      );
+      return;
+    }
+
+    final cs = Theme.of(context).colorScheme;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: cs.surfaceContainerLowest,
+        title: Text(
+          context.tr('Accéder au compte', 'Access Account'),
+          style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface),
+        ),
+        content: Text(
+          context.tr(
+            'Voulez-vous ouvrir la session de ${user.nom} sans mot de passe ? Un e-mail de notification d\'accès sera envoyé à l\'utilisateur.',
+            'Do you want to open the session of ${user.nom} without a password? A notification access email will be sent to the user.',
+          ),
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.tr('Annuler', 'Cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: Colors.white),
+            child: Text(context.tr('Ouvrir', 'Open')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (!mounted) return;
+      try {
+        authProvider.impersonateUser(user);
+        Provider.of<MessagerieProvider>(context, listen: false).setOverrideUserId(user.id);
+        
+        ToastUtils.show(
+          context,
+          context.tr(
+            'Session ouverte en tant que ${user.nom}. Email de notification envoyé.',
+            'Session opened as ${user.nom}. Notification email sent.',
+          ),
+          isError: false,
+        );
+        
+        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+      } catch (e) {
+        if (mounted) {
+          ToastUtils.show(
+            context,
+            '${context.tr('Erreur: ', 'Error: ')}$e',
+            isError: true,
+          );
         }
       }
     }
@@ -211,12 +291,17 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 children: [
-                  CircleAvatar(
+                   CircleAvatar(
                     backgroundColor: cs.primaryContainer,
-                    child: Text(
-                      user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?',
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                    backgroundImage: (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
+                        ? NetworkImage(user.avatarUrl!)
+                        : null,
+                    child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                        ? Text(
+                            user.nom.isNotEmpty ? user.nom[0].toUpperCase() : '?',
+                            style: const TextStyle(color: Colors.white),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -262,6 +347,13 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                     ),
                   ),
                   const SizedBox(width: 16),
+                  // Impersonate Action
+                  IconButton(
+                    icon: Icon(Icons.login_rounded, color: cs.primary),
+                    tooltip: context.tr('Accéder au compte', 'Access account'),
+                    onPressed: () => _impersonateUser(user),
+                  ),
+                  const SizedBox(width: 8),
                   // Delete Action
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: AppColors.error),
