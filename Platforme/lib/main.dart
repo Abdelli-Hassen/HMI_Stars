@@ -102,7 +102,6 @@ class HmiStarsApp extends StatelessWidget {
       child: Consumer2<AuthProvider, ThemeProvider>(
         builder: (context, auth, themeProvider, _) {
           return MaterialApp(
-            key: ValueKey(themeProvider.themeMode),
             navigatorKey: AppRoutes.navigatorKey,
             title: 'HMI Stars',
             debugShowCheckedModeBanner: false,

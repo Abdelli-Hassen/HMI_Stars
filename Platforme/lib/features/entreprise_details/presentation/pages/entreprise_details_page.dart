@@ -1269,7 +1269,7 @@ class _EntrepriseDetailsPageState extends State<EntrepriseDetailsPage> {
                   final uri = Uri.parse(gmailUrl);
 
                   // Launch URL synchronously before popping the navigator to bypass web browser popup blocker.
-                  url_launcher.launchUrl(uri, mode: url_launcher.LaunchMode.platformDefault).catchError((_) {
+                  url_launcher.launchUrl(uri, mode: url_launcher.LaunchMode.externalApplication).catchError((_) {
                     if (context.mounted) {
                       ToastUtils.show(context, context.tr('Impossible d\'ouvrir Gmail.', 'Could not open Gmail.'), isError: true);
                     }

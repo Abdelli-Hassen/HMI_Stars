@@ -403,7 +403,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _authService.updateEmail(newEmail);
-      _status = AuthStatus.unauthenticated;
+      _status = AuthStatus.authenticated;
       notifyListeners();
     } on AuthException catch (e) {
       _status = AuthStatus.error;
@@ -455,7 +455,7 @@ class AuthProvider extends ChangeNotifier {
           try {
             await _authService.verifyEmailChangeOTP(oldEmail, token);
             // Old email verified successfully! Now we need the code for the new email.
-            _status = AuthStatus.unauthenticated;
+            _status = AuthStatus.authenticated;
             notifyListeners();
             return 'need_new_email_verification';
           } catch (_) {
