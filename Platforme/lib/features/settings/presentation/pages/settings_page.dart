@@ -482,6 +482,40 @@ class _SettingsPageState extends State<SettingsPage> {
                       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.primary, width: 1.5)),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              setStateDialog(() => isLoading = true);
+                              try {
+                                final auth = Provider.of<AuthProvider>(context, listen: false);
+                                await auth.updateEmail(emailCtrl.text.trim());
+                                setStateDialog(() => isLoading = false);
+                                if (context.mounted) {
+                                  ToastUtils.show(
+                                    context,
+                                    context.tr('Code de confirmation renvoyé !', 'Confirmation code resent!'),
+                                  );
+                                }
+                              } catch (e) {
+                                setStateDialog(() => isLoading = false);
+                                if (context.mounted) {
+                                  ToastUtils.show(
+                                    context,
+                                    _formatFriendlyError(e),
+                                    isError: true,
+                                  );
+                                }
+                              }
+                            },
+                      child: Text(
+                        context.tr('Renvoyer le code', 'Resend Code'),
+                        style: TextStyle(color: cs.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
                 ],
               ],
             ),

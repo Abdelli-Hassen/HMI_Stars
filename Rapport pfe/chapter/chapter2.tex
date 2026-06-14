@@ -273,7 +273,7 @@ Figure \ref{fig:mobile_wireframe} presents the mobile dashboard interface mockup
     \caption{User Interface Prototypes}
     \label{fig:ui_wireframes}
 \end{figure}
-
+\vspace{-0.5cm}
 \section{Phase of elaboration}
 
 The Elaboration phase represents the parallel progression and refinement of both tracks. The \textbf{Technical Track} establishes the system's non-functional parameters, architectural style, and overall deployment. Simultaneously, the \textbf{Functional Track} focuses on detailing dynamic behavior and class relationships through sequence diagrams and class diagrams. This dual approach ensures that the functional requirements are fully supported by a robust, secure technical framework.
@@ -313,7 +313,7 @@ We adopted a \textbf{client-server architecture} with a shared Backend-as-a-Serv
 
 We considered an alternative for architectural approaches before selecting this model:
 \begin{itemize}
-    \item \textbf{Custom REST API (Node.js / Express):} This approach would require building and maintaining a dedicated backend server, handling authentication, session management, and API routing manually. We rejected it because the project scope did not justify the added infrastructure complexity, and Supabase provides all required services (auth, database, storage, real-time) out of the box.
+    \item \textbf{Custom REST API (Node.js / Express):} This approach would require building and maintaining a dedicated backend server, handling authentication, session management, and API routing manually. We rejected it because the project scope did not justify the added infrastructure complexity, and Supabase provides all the required services.
 \end{itemize}
 
 The chosen BaaS architecture offers several advantages for this project: zero server-side code for standard CRUD operations, built-in authentication with email/OTP support, native PostgreSQL RLS for data isolation, and a managed real-time engine — all reducing development time while maintaining production-grade security.

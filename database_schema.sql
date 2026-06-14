@@ -246,7 +246,8 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    INSERT INTO public.utilisateurs_plateforme (id, nom, email, role, telephone, cin, organisation)
+    -- Insert or update the public profile immediately
+    INSERT INTO public.utilisateurs_plateforme (id, nom, email, role, telephone, cin, organisation, email_confirme)
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'nom', split_part(NEW.email, '@', 1), 'Utilisateur'),
@@ -254,9 +255,17 @@ BEGIN
         'secretaire'::role_utilisateur,
         COALESCE(NEW.raw_user_meta_data->>'telephone', ''),
         COALESCE(NEW.raw_user_meta_data->>'cin', ''),
-        COALESCE(NEW.raw_user_meta_data->>'organisation', 'HMI Stars Consulting')
+        COALESCE(NEW.raw_user_meta_data->>'organisation', 'HMI Stars Consulting'),
+        (NEW.email_confirmed_at IS NOT NULL)
     )
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE SET
+        nom = EXCLUDED.nom,
+        email = EXCLUDED.email,
+        telephone = EXCLUDED.telephone,
+        cin = EXCLUDED.cin,
+        organisation = EXCLUDED.organisation,
+        email_confirme = EXCLUDED.email_confirme;
+
     RETURN NEW;
 END;
 $function$;
@@ -279,7 +288,7 @@ CREATE TRIGGER declencheur_maj_utilisateurs
 
 DROP TRIGGER IF EXISTS creation_utilisateur_auth ON auth.users;
 CREATE TRIGGER creation_utilisateur_auth
-    AFTER INSERT ON auth.users
+    AFTER INSERT OR UPDATE ON auth.users
     FOR EACH ROW
     EXECUTE FUNCTION public.creer_profil_plateforme();
 

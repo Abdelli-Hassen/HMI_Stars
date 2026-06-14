@@ -69,15 +69,16 @@ We evaluated and tested the system across multiple operational platforms:
 \begin{itemize}
     \item \textbf{Web Administration Portal (Admin Client):} Executed and tested using Microsoft Edge and Google Chrome web browsers.
     \item \textbf{Mobile Client Application:} Deployed and run on both Android emulators and physical Android devices.
-    \item \textbf{Backend Infrastructure:} Powered by a cloud-hosted Supabase project.
+    \item \textbf{Backend Infrastructure:} Powered locally and by a cloud-hosted Supabase project.
 \end{itemize}
 
 \section{Application testing}
 
 \subsection{Demonstration of implemented features}
-In this section, we present the functional user interfaces of the completed HMI Stars ecosystem. The platform comprises two main frontend environments: a mobile application designed for client managers and a web application tailored for the consulting firm's administrators.
+In this section, we present the main user interfaces of the HMI Stars platform. The system includes two applications: a mobile application for client managers and a web application for administrators.
 
-Every interface supports real-time switching between French and English locales, as well as light and dark visual themes. To maintain structural consistency throughout this report, we present the interface screenshots using the default light theme unless specifically demonstrating dark mode capabilities.
+Both applications support French and English languages, as well as light and dark themes. The screenshots presented in this report use the default light theme.
+
 
 \subsubsection{Mobile application interfaces}
 The mobile application enables client managers to execute their daily human resource operations. We present these screens following the logical navigation paths and user workflow of the application.
@@ -117,7 +118,7 @@ As illustrated in Figure \ref{fig:mobile_auth_flow}, the mobile user experience 
 \end{figure}
 
 \paragraph{Company Selection and Main Dashboard}
-Following successful authentication, managers select their active company profile to initialize the session. Figure \ref{fig:mobile_dashboard_flow} presents the Company Selector screen alongside the main analytical Dashboard workspace. The dashboard aggregates operational statistics, displays key metrics, and features a warning alerts notification panel.
+Following successful authentication, managers select their active company profile to initialize the session. Figure \ref{fig:mobile_dashboard_flow} presents the Company Selector screen alongside the main dashboard which shows reminders. 
 
 \begin{figure}[H]
     \centering
@@ -240,7 +241,7 @@ To facilitate direct communication with HMI Stars administrators, the applicatio
 \end{figure}
 
 \paragraph{Employee Directory Views}
-Through the employee management module, client managers access lists of both active and archived staff members. Figure \ref{fig:mobile_employee_views} illustrates these directory screens, showing how managers toggle between a visual grid layout and a structured list view.
+Through the employee interface, client managers access lists of both active and archived staff members. Figure \ref{fig:mobile_employee_views} illustrates these directory screens, showing how managers toggle between a visual grid layout and a structured list view.
 
 \begin{figure}[H]
     \centering
@@ -289,7 +290,7 @@ We present the workflow for registering, reviewing, and updating employee files 
     \label{fig:mobile_employee_ops}
 \end{figure}
 
-\paragraph{Interactive Document Scanner}
+\paragraph{Document Scanner}
 To simplify document transmission, we built an interactive camera-based scanner directly into the mobile application. Figure \ref{fig:m_scanner_steps} outlines the scanning sequence, including selecting the document source, capturing the image, modifying the perspective boundary crop, applying visual filters, and final file preview before transmission.
 
 \begin{figure}[H]
@@ -303,7 +304,7 @@ To simplify document transmission, we built an interactive camera-based scanner 
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/App_light_and_english/flutter_02_1.png}
-        \caption{Camera View}
+        \caption{Image retrieve choice}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
@@ -352,7 +353,7 @@ Client managers dispatch formal disciplinary notices to employees by selecting f
     \label{fig:m_warnings_cats_templates}
 \end{figure}
 
-\paragraph{Warning Template Management}
+\paragraph{Warnings Management}
 We provide management tools for customizing the directory of disciplinary letters by adding new notices or deleting outdated templates. Figure \ref{fig:m_warnings_management} presents both the template creation form and the deletion confirmation popup.
 
 \begin{figure}[H]
@@ -428,7 +429,7 @@ The configuration section, displayed in Figure \ref{fig:m_settings_flow}, enable
     \label{fig:m_settings_flow}
 \end{figure}
 
-\paragraph{Mobile Application Dark Mode Theme Options}
+\paragraph{Mobile Application Dark Mode}
 To accommodate low-light usage and improve user comfort, we integrated a comprehensive dark mode option throughout the mobile application. Figure \ref{fig:mobile_dark_mode} displays the dark theme styling across the authentication, dashboard, and settings interfaces.
 
 \begin{figure}[H]
@@ -449,7 +450,7 @@ To accommodate low-light usage and improve user comfort, we integrated a compreh
     \hfill
     \begin{subfigure}[b]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{project_images/App_dark_and_french/flutter_26.png}
+        \includegraphics[width=\textwidth]{project_images/App_dark_and_french/flutter_36.png}
         \caption{Settings Screen}
         \label{fig:m_dark_settings}
     \end{subfigure}
@@ -639,11 +640,11 @@ When sending a warning letter, administrators select recipient employees using t
 \end{figure}
 
 \paragraph{Company Notes and Reminders Tab}
-The Notes and Reminders tab allows consultants to keep internal comments for each client company. Figure \ref{fig:web_notes_flow} displays the notes workspace and the corresponding modal creation form.
+The Notes and Reminders tab enables consultants to create and manage internal notes related to each client company. Figure \ref{fig:web_notes_flow} shows the notes interface and the form used to add a new note.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.80\textwidth}
+    \begin{subfigure}[b]{0.75\textwidth}
         \centering
         \includegraphics[width=\textwidth]{project_images/Plat_light_and_french/flutter_10.png}
         \caption{Company Notes Board}
@@ -739,9 +740,9 @@ The system provides a consolidated workspace for managing administrative notes a
     \caption{Web Platform - Global Notes and Reminders Dashboard}
     \label{fig:web_global_reminders}
 \end{figure}
-\vspace{-1cm}
+
 \paragraph{User Settings Configuration}
-The system provides a dedicated settings workspace, as illustrated in Figure \ref{fig:web_user_settings}. Through this interface, users can update their profile information, adjust account credentials, and personalize display settings.
+The system provides a dedicated settings workspace, as shown in Figure \ref{fig:web_user_settings}. Through this interface, users can update their profile information, adjust account credentials, and personalize display settings.
 
 \begin{figure}[H]
     \centering
@@ -750,15 +751,24 @@ The system provides a dedicated settings workspace, as illustrated in Figure \re
     \label{fig:web_user_settings}
 \end{figure}
 
-\paragraph{Platform Accounts Management}
-Figure \ref{fig:web_accounts_management} shows the account supervision panel. Through this workspace, administrators control access permissions, manage staff directories, assign distinct system roles, and execute user account deletions.
+\paragraph{Accounts Management}
+Figure \ref{fig:web_accounts_management} presents the redesigned user account management panel. This interface provides administrators with comprehensive controls to manage and audit user access:
+\begin{itemize}
+    \item \textbf{User Search \& Filter:} A real-time search input enables filtering accounts by name or email address immediately.
+    \item \textbf{Access Toggle Switches:} Interactive switches allow administrators to temporarily enable or disable access for individual accounts.
+    \item \textbf{Role Configuration Dropdowns:} Role selectors (e.g., Admin, Secrétaire) are integrated directly in the list, allowing quick role adjustments.
+    \item \textbf{Impersonation (Login As):} A shortcut button allows administrators to log in as the target user (impersonation mode) for troubleshooting and assistance.
+    \item \textbf{Deletion:} Dedicated action buttons enable permanent deletion of user credentials from the authentication system.
+\end{itemize}
+
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/acc_page.png}
-    \caption{Web Platform - Platform Accounts Management (Role Control and Deletion)}
+    \caption{Web Platform - Platform Accounts Management (Role Control, Toggle Activation, Impersonation and Deletion)}
     \label{fig:web_accounts_management}
 \end{figure}
+
 
 \paragraph{Web Platform Dark Mode Theme Options}
 Paralleling the mobile client application, the web administration panel supports an alternative dark mode display configuration. This reduces visual fatigue and establishes a modern, premium aesthetic for administrative staff. Figure \ref{fig:web_dark_mode} displays the dashboard view rendered under the dark theme.
@@ -837,7 +847,7 @@ We conducted systematic functional testing to verify that every implemented feat
 \centering
 \caption{Functional test case results}
 \label{tab:test_cases}
-\begin{tabular}{|l|p{4.5cm}|p{5cm}|l|}
+\begin{tabular}{|l|p{5cm}|p{5cm}|l|}
 \hline
 \textbf{Test ID} & \textbf{Test Case Description} & \textbf{Expected Result} & \textbf{Status} \\
 \hline

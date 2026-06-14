@@ -243,29 +243,48 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _codeSent = false;
-                                  _otpController.clear();
-                                });
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                context.tr(
-                                  "Renvoyer le code ou changer d'e-mail",
-                                  "Resend code or change email",
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton(
+                                  onPressed: _loading ? null : _sendOTP,
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    context.tr("Renvoyer le code", "Resend Code"),
+                                    style: TextStyle(
+                                      color: cs.primary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                                style: TextStyle(
-                                  color: cs.primary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                                TextButton(
+                                  onPressed: _loading ? null : () {
+                                    setState(() {
+                                      _codeSent = false;
+                                      _otpController.clear();
+                                      _errorMessage = null;
+                                    });
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    context.tr("Modifier l'e-mail", "Edit Email"),
+                                    style: TextStyle(
+                                      color: cs.onSurfaceVariant,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                           const SizedBox(height: 28),

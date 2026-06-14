@@ -21,11 +21,30 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
   List<UtilisateurPlateforme> _allUsers = [];
   List<UtilisateurPlateforme> _filteredUsers = [];
   bool _isLoading = true;
+  AuthProvider? _authProvider;
 
   @override
   void initState() {
     super.initState();
-    _loadUsers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _authProvider = context.read<AuthProvider>();
+        _authProvider!.addListener(_onAuthChanged);
+        _loadUsers();
+      }
+    });
+  }
+
+  void _onAuthChanged() {
+    if (_allUsers.isEmpty && _authProvider != null && _authProvider!.isAuthenticated) {
+      _loadUsers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _authProvider?.removeListener(_onAuthChanged);
+    super.dispose();
   }
 
   Future<void> _loadUsers() async {
@@ -309,7 +328,33 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.nom.isNotEmpty ? user.nom : context.tr('Sans Nom', 'No Name'), style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface)),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          children: [
+                            Text(
+                              user.nom.isNotEmpty ? user.nom : context.tr('Sans Nom', 'No Name'),
+                              style: AppTextStyles.titleSmall.copyWith(color: cs.onSurface),
+                            ),
+                            if (!user.emailConfirme)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(
+                                  context.tr('Non vérifié', 'Unverified'),
+                                  style: TextStyle(
+                                    color: Colors.amber[800] ?? Colors.amber,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                         Text(user.email, style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant)),
                       ],
                     ),
@@ -375,6 +420,78 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                     ),
                   ),
                   const SizedBox(width: 16),
+                  // Confirm Email Action (if not verified)
+                  if (!user.emailConfirme) ...[
+                    IconButton(
+                      icon: const Icon(Icons.mark_email_read_outlined, color: AppColors.success),
+                      tooltip: context.tr('Confirmer l\'e-mail manuellement', 'Confirm email manually'),
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            backgroundColor: cs.surfaceContainerLowest,
+                            title: Text(
+                              context.tr('Confirmer le compte', 'Verify Account'),
+                              style: AppTextStyles.titleMedium.copyWith(color: cs.onSurface),
+                            ),
+                            content: Text(
+                              context.tr(
+                                'Voulez-vous confirmer manuellement l\'adresse e-mail de ${user.nom} (${user.email}) ?',
+                                'Do you want to manually verify the email address of ${user.nom} (${user.email})?',
+                              ),
+                              style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(context.tr('Annuler', 'Cancel')),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.success,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text(context.tr('Confirmer', 'Verify')),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          if (!mounted) return;
+                          setState(() => _isLoading = true);
+                          try {
+                            await context.read<AuthProvider>().confirmUserEmail(user.id);
+                            await _loadUsers();
+                            if (mounted) {
+                              ToastUtils.show(
+                                context,
+                                context.tr(
+                                  'E-mail de ${user.nom} confirmé avec succès.',
+                                  'Email of ${user.nom} successfully confirmed.',
+                                ),
+                                isError: false,
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                              ToastUtils.show(
+                                context,
+                                context.tr(
+                                  'Erreur lors de la confirmation.',
+                                  'Error confirming email.',
+                                ),
+                                isError: true,
+                              );
+                            }
+                          }
+                        }
+                      },
+                    ),
+                  ],
                   // Impersonate Action
                   IconButton(
                     icon: Icon(Icons.login_rounded, color: cs.primary),

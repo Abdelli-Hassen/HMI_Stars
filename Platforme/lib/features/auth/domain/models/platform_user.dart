@@ -13,6 +13,7 @@ class UtilisateurPlateforme {
   final DateTime creeLe;
   final DateTime misAJourLe;
   final bool estApprouve;
+  final bool emailConfirme;
 
   UtilisateurPlateforme({
     required this.id,
@@ -27,6 +28,7 @@ class UtilisateurPlateforme {
     required this.creeLe,
     required this.misAJourLe,
     this.estApprouve = false,
+    this.emailConfirme = false,
   });
 
   String get libelleRole {
@@ -58,6 +60,7 @@ class UtilisateurPlateforme {
           ? DateTime.parse(json['mis_a_jour_le'] as String)
           : DateTime.now(),
       estApprouve: json['est_approuve'] as bool? ?? false,
+      emailConfirme: json['email_confirme'] as bool? ?? false,
     );
   }
 
@@ -71,6 +74,7 @@ class UtilisateurPlateforme {
         'organisation': organisation,
         'preferences': preferences,
         'est_approuve': estApprouve,
+        'email_confirme': emailConfirme,
       };
 
   UtilisateurPlateforme copyWith({
@@ -83,6 +87,7 @@ class UtilisateurPlateforme {
     String? organisation,
     Map<String, dynamic>? preferences,
     bool? estApprouve,
+    bool? emailConfirme,
   }) {
     return UtilisateurPlateforme(
       id: id,
@@ -97,6 +102,7 @@ class UtilisateurPlateforme {
       creeLe: creeLe,
       misAJourLe: DateTime.now(),
       estApprouve: estApprouve ?? this.estApprouve,
+      emailConfirme: emailConfirme ?? this.emailConfirme,
     );
   }
 }

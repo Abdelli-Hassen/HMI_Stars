@@ -262,7 +262,7 @@ class AuthProvider extends ChangeNotifier {
           'Your email address has not been confirmed yet.',
         );
       } else {
-        _errorMessage = e.message;
+        _errorMessage = _friendlyAuthErrorMessage(e);
       }
       notifyListeners();
       return false;
@@ -307,6 +307,8 @@ class AuthProvider extends ChangeNotifier {
       if (response.session == null) {
         // L'utilisateur est créé mais doit vérifier son email
         _status = AuthStatus.unauthenticated;
+        _emailNonConfirme = true;
+        _emailEnAttente = email;
         _errorMessage = _loc(
           'Inscription réussie. Veuillez vérifier votre boîte mail pour confirmer votre compte.',
           'Registration successful. Please check your email to confirm your account.',
@@ -342,7 +344,7 @@ class AuthProvider extends ChangeNotifier {
       return _utilisateur != null;
     } on AuthException catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = e.message;
+      _errorMessage = _friendlyAuthErrorMessage(e);
       notifyListeners();
       return false;
     } catch (e) {
@@ -357,7 +359,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _authService.resetPassword(email);
     } on AuthException catch (e) {
-      _errorMessage = e.message;
+      _errorMessage = _friendlyAuthErrorMessage(e);
       notifyListeners();
     }
   }
@@ -374,7 +376,7 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } on AuthException catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = e.message;
+      _errorMessage = _friendlyAuthErrorMessage(e);
       notifyListeners();
       return false;
     } catch (e) {
@@ -431,7 +433,7 @@ class AuthProvider extends ChangeNotifier {
       return _utilisateur != null;
     } on AuthException catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = e.message;
+      _errorMessage = _friendlyAuthErrorMessage(e);
       notifyListeners();
       return false;
     } catch (e) {
@@ -452,7 +454,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } on AuthException catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = e.message;
+      _errorMessage = _friendlyAuthErrorMessage(e);
       notifyListeners();
       rethrow;
     } catch (e) {
@@ -511,7 +513,7 @@ class AuthProvider extends ChangeNotifier {
       }
     } on AuthException catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = e.message;
+      _errorMessage = _friendlyAuthErrorMessage(e);
       notifyListeners();
       return 'error';
     } catch (e) {
@@ -568,7 +570,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } on AuthException catch (e) {
-      _errorMessage = e.message;
+      _errorMessage = _friendlyAuthErrorMessage(e);
       notifyListeners();
       return false;
     } catch (e) {
@@ -683,6 +685,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Confirme manuellement l'e-mail d'un utilisateur (Admin uniquement).
+  Future<void> confirmUserEmail(String userId) async {
+    if (!isAdmin) return;
+    try {
+      await _dataService.confirmerUtilisateurAdmin(userId);
+    } catch (e) {
+      debugPrint('[AuthProvider] Error confirming user email: $e');
+      rethrow;
+    }
+  }
+
   /// Mettre à jour le téléphone, l'organisation et les préférences.
   Future<void> mettreAJourProfil({
     String? nom,
@@ -724,6 +737,47 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('[AuthProvider] Error uploading avatar: $e');
       return false;
     }
+  }
+
+  String _friendlyAuthErrorMessage(AuthException e) {
+    final msg = e.message.toLowerCase();
+    final code = e.code?.toLowerCase() ?? '';
+    
+    if (code == 'invalid_otp' || 
+        msg.contains('invalid code') || 
+        msg.contains('incorrect code') || 
+        msg.contains('invalid_otp') || 
+        msg.contains('token has expired') || 
+        msg.contains('expired or is invalid') || 
+        msg.contains('token has expired or is invalid')) {
+      return _loc(
+        'Le code de confirmation (OTP) est incorrect ou a expiré.',
+        'The confirmation code (OTP) is incorrect or has expired.',
+      );
+    } else if (code == 'email_exists' || 
+               msg.contains('already been registered') || 
+               msg.contains('email_exists') || 
+               msg.contains('already registered')) {
+      return _loc(
+        'Cette adresse e-mail est déjà associée à un autre compte.',
+        'This email address is already registered to another account.',
+      );
+    } else if (code == 'email_address_invalid' || 
+               msg.contains('invalid email') || 
+               msg.contains('email_address_invalid')) {
+      return _loc(
+        'Veuillez entrer une adresse e-mail valide.',
+        'Please enter a valid email address.',
+      );
+    } else if (msg.contains('invalid login credentials') || 
+               msg.contains('invalid credentials') || 
+               msg.contains('invalid_credentials')) {
+      return _loc(
+        'Identifiants de connexion incorrects.',
+        'Incorrect login credentials.',
+      );
+    }
+    return e.message;
   }
 
   void _navigateToResetPassword() {

@@ -60,6 +60,15 @@ class PlatformDataService {
     }
   }
 
+  Future<void> confirmerUtilisateurAdmin(String uid) async {
+    try {
+      await _client.rpc('confirmer_utilisateur_admin', params: {'user_id': uid});
+    } catch (e) {
+      debugPrint('[DataService] Error confirming user: $e');
+      rethrow;
+    }
+  }
+
   // ─── ENTREPRISES ──────────────────────────────────────────────────────────
 
   Future<List<Entreprise>> fetchEntreprises() async {

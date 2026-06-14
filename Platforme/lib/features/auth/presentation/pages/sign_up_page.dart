@@ -456,19 +456,59 @@ class _SignUpPageState extends State<SignUpPage> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            Center(
-                              child: TextButton(
-                                onPressed: _loading ? null : () {
-                                  setState(() {
-                                    _showOtpStep = false;
-                                    _errorMessage = null;
-                                  });
-                                },
-                                child: Text(
-                                  context.tr("Retour", "Back"),
-                                  style: TextStyle(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton(
+                                  onPressed: _loading ? null : () async {
+                                    setState(() {
+                                      _loading = true;
+                                      _errorMessage = null;
+                                    });
+                                    final sent = await auth.renvoyerConfirmation();
+                                    setState(() {
+                                      _loading = false;
+                                    });
+                                    if (sent) {
+                                      ToastUtils.show(
+                                        context,
+                                        context.tr('Code de confirmation renvoyé !', 'Confirmation code resent!'),
+                                      );
+                                    } else {
+                                      setState(() {
+                                        _errorMessage = auth.errorMessage ?? context.tr('Erreur de renvoi.', 'Failed to resend.');
+                                      });
+                                    }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    context.tr('Renvoyer le code', 'Resend Code'),
+                                    style: TextStyle(color: cs.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                                  ),
                                 ),
-                              ),
+                                TextButton(
+                                  onPressed: _loading ? null : () {
+                                    setState(() {
+                                      _showOtpStep = false;
+                                      _errorMessage = null;
+                                      _otpController.clear();
+                                    });
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    context.tr("Modifier l'e-mail", "Edit Email"),
+                                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                           const SizedBox(height: 24),
