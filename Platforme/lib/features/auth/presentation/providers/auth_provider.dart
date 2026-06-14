@@ -133,9 +133,17 @@ class AuthProvider extends ChangeNotifier {
     }
 
     if (_utilisateur != null) {
-      debugPrint('[AuthProvider] Profile OK: ${_utilisateur!.nom} (${_utilisateur!.libelleRole})');
-      _status = AuthStatus.authenticated;
-      _synchLangue();
+      if (!_utilisateur!.estApprouve) {
+        debugPrint('[AuthProvider] Profile pending approval during init -> signing out');
+        _user = null;
+        _utilisateur = null;
+        _status = AuthStatus.unauthenticated;
+        await _authService.signOut();
+      } else {
+        debugPrint('[AuthProvider] Profile OK: ${_utilisateur!.nom} (${_utilisateur!.libelleRole})');
+        _status = AuthStatus.authenticated;
+        _synchLangue();
+      }
     } else {
       debugPrint('[AuthProvider] No profile found -> access denied');
       _user = null;
@@ -153,8 +161,20 @@ class AuthProvider extends ChangeNotifier {
     try {
       _utilisateur = await _dataService.recupererUtilisateur(_user!.id);
       if (_utilisateur != null) {
-        _status = AuthStatus.authenticated;
-        _synchLangue();
+        if (!_utilisateur!.estApprouve) {
+          debugPrint('[AuthProvider] Profile pending approval -> signing out');
+          _status = AuthStatus.error;
+          _errorMessage = _loc(
+            'Votre compte est en attente d\'approbation par l\'administrateur.',
+            'Your account is pending administrator approval.',
+          );
+          _user = null;
+          _utilisateur = null;
+          await _authService.signOut();
+        } else {
+          _status = AuthStatus.authenticated;
+          _synchLangue();
+        }
       } else {
         debugPrint('[AuthProvider] Profile not found -> signing out');
         _status = AuthStatus.unauthenticated;
@@ -209,6 +229,19 @@ class AuthProvider extends ChangeNotifier {
           'This account is not authorized to access the platform.',
         );
         _user = null;
+        await _authService.signOut();
+        notifyListeners();
+        return false;
+      }
+
+      if (!_utilisateur!.estApprouve) {
+        _status = AuthStatus.error;
+        _errorMessage = _loc(
+          'Votre compte est en attente d\'approbation par l\'administrateur.',
+          'Your account is pending administrator approval.',
+        );
+        _user = null;
+        _utilisateur = null;
         await _authService.signOut();
         notifyListeners();
         return false;
@@ -367,6 +400,18 @@ class AuthProvider extends ChangeNotifier {
       }
 
       if (_utilisateur != null) {
+        if (!_utilisateur!.estApprouve) {
+          _status = AuthStatus.error;
+          _errorMessage = _loc(
+            'Votre compte est en attente d\'approbation par l\'administrateur.',
+            'Your account is pending administrator approval.',
+          );
+          _user = null;
+          _utilisateur = null;
+          await _authService.signOut();
+          notifyListeners();
+          return false;
+        }
         _status = AuthStatus.authenticated;
         _emailNonConfirme = false;
         _emailEnAttente = null;
@@ -611,6 +656,19 @@ class AuthProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('[AuthProvider] Error changing role: $e');
+    }
+  }
+
+  /// Active/Désactive un utilisateur cible (Admin uniquement).
+  Future<void> toggleUserApproval(String userId, bool approved) async {
+    if (!isAdmin) return;
+    try {
+      final user = await _dataService.recupererUtilisateur(userId);
+      if (user != null) {
+        await _dataService.mettreAJourUtilisateur(user.copyWith(estApprouve: approved));
+      }
+    } catch (e) {
+      debugPrint('[AuthProvider] Error toggling approval: $e');
     }
   }
 

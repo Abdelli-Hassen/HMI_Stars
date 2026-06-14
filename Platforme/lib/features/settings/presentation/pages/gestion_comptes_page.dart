@@ -323,6 +323,34 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
                       style: AppTextStyles.bodySmall.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),
+                  // Approval Status Switch
+                  Tooltip(
+                    message: user.estApprouve 
+                        ? context.tr('Compte actif / approuvé', 'Active / approved account') 
+                        : context.tr('Compte suspendu / en attente', 'Suspended / pending account'),
+                    child: Switch(
+                      value: user.estApprouve,
+                      activeThumbColor: AppColors.success,
+                      activeTrackColor: AppColors.success.withValues(alpha: 0.2),
+                      onChanged: user.id == context.read<AuthProvider>().utilisateur?.id 
+                          ? null // Cannot disable approval for yourself
+                          : (val) async {
+                              final auth = context.read<AuthProvider>();
+                              setState(() => _isLoading = true);
+                              await auth.toggleUserApproval(user.id, val);
+                              await _loadUsers();
+                              if (!mounted) return;
+                              ToastUtils.show(
+                                context,
+                                val 
+                                    ? context.tr('Compte approuvé avec succès.', 'Account approved successfully.')
+                                    : context.tr('Compte suspendu.', 'Account suspended.'),
+                                isError: !val,
+                              );
+                            },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
                   // Role Dropdown
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),

@@ -88,6 +88,7 @@ CREATE TABLE public.utilisateurs_plateforme (
     cree_le timestamp with time zone NOT NULL DEFAULT now(),
     mis_a_jour_le timestamp with time zone NOT NULL DEFAULT now(),
     cin text DEFAULT ''::text,
+    est_approuve boolean NOT NULL DEFAULT false,
     CONSTRAINT utilisateurs_plateforme_pkey PRIMARY KEY (id),
     CONSTRAINT utilisateurs_plateforme_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 );

@@ -12,6 +12,7 @@ class UtilisateurPlateforme {
   final Map<String, dynamic> preferences;
   final DateTime creeLe;
   final DateTime misAJourLe;
+  final bool estApprouve;
 
   UtilisateurPlateforme({
     required this.id,
@@ -25,6 +26,7 @@ class UtilisateurPlateforme {
     this.preferences = const {},
     required this.creeLe,
     required this.misAJourLe,
+    this.estApprouve = false,
   });
 
   String get libelleRole {
@@ -55,6 +57,7 @@ class UtilisateurPlateforme {
       misAJourLe: json['mis_a_jour_le'] != null
           ? DateTime.parse(json['mis_a_jour_le'] as String)
           : DateTime.now(),
+      estApprouve: json['est_approuve'] as bool? ?? false,
     );
   }
 
@@ -67,6 +70,7 @@ class UtilisateurPlateforme {
         'avatar_url': avatarUrl,
         'organisation': organisation,
         'preferences': preferences,
+        'est_approuve': estApprouve,
       };
 
   UtilisateurPlateforme copyWith({
@@ -78,6 +82,7 @@ class UtilisateurPlateforme {
     String? avatarUrl,
     String? organisation,
     Map<String, dynamic>? preferences,
+    bool? estApprouve,
   }) {
     return UtilisateurPlateforme(
       id: id,
@@ -91,6 +96,7 @@ class UtilisateurPlateforme {
       preferences: preferences ?? this.preferences,
       creeLe: creeLe,
       misAJourLe: DateTime.now(),
+      estApprouve: estApprouve ?? this.estApprouve,
     );
   }
 }
