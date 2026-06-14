@@ -752,9 +752,11 @@ The system provides a dedicated settings workspace, as shown in Figure \ref{fig:
 \end{figure}
 
 \paragraph{Accounts Management}
-Figure \ref{fig:web_accounts_management} presents the redesigned user account management panel. This interface provides administrators with comprehensive controls to manage and audit user access:
+Figure \ref{fig:web_accounts_management} presents the redesigned user account management panel. This interface provides administrators with comprehensive controls to manage and audit user access, including handling unverified registrations:
 \begin{itemize}
     \item \textbf{User Search \& Filter:} A real-time search input enables filtering accounts by name or email address immediately.
+    \item \textbf{Verification Status Badges:} Accounts whose email address has not yet been validated are marked with a distinct amber "Non vérifié" (Unverified) status badge, allowing admins to track registration progress.
+    \item \textbf{Manual Email Verification:} A dedicated envelope action button enables administrators to manually confirm the user's email address and bypass the OTP verification process when necessary.
     \item \textbf{Access Toggle Switches:} Interactive switches allow administrators to temporarily enable or disable access for individual accounts.
     \item \textbf{Role Configuration Dropdowns:} Role selectors (e.g., Admin, Secrétaire) are integrated directly in the list, allowing quick role adjustments.
     \item \textbf{Impersonation (Login As):} A shortcut button allows administrators to log in as the target user (impersonation mode) for troubleshooting and assistance.
@@ -764,8 +766,8 @@ Figure \ref{fig:web_accounts_management} presents the redesigned user account ma
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{project_images/Plat_light_and_french/acc_page.png}
-    \caption{Web Platform - Platform Accounts Management (Role Control, Toggle Activation, Impersonation and Deletion)}
+    \includegraphics[width=1\textwidth]{project_images/Plat_light_and_french/acc_page.png}
+    \caption{Web Platform - Platform Accounts Management (Verification Status, Manual Confirmation, Role Control, Impersonation and Deletion)}
     \label{fig:web_accounts_management}
 \end{figure}
 
