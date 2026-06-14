@@ -19,10 +19,12 @@ class AuthProvider extends ChangeNotifier {
   UtilisateurPlateforme? _utilisateur;
   bool _emailNonConfirme = false;
   String? _emailEnAttente;
+  bool _isPendingApproval = false;
   String _tempLanguage = 'Français (FR)';
   UtilisateurPlateforme? _adminUtilisateur;
   User? _adminUser;
 
+  bool get isPendingApproval => _isPendingApproval;
   String get tempLanguage => _tempLanguage;
 
   void setTempLanguage(String lang) {
@@ -164,6 +166,7 @@ class AuthProvider extends ChangeNotifier {
         if (!_utilisateur!.estApprouve) {
           debugPrint('[AuthProvider] Profile pending approval -> signing out');
           _status = AuthStatus.error;
+          _isPendingApproval = true;
           _errorMessage = _loc(
             'Votre compte est en attente d\'approbation par l\'administrateur.',
             'Your account is pending administrator approval.',
@@ -197,6 +200,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
+    _isPendingApproval = false;
     notifyListeners();
 
     try {
@@ -236,6 +240,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (!_utilisateur!.estApprouve) {
         _status = AuthStatus.error;
+        _isPendingApproval = true;
         _errorMessage = _loc(
           'Votre compte est en attente d\'approbation par l\'administrateur.',
           'Your account is pending administrator approval.',

@@ -50,7 +50,53 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
     } else if (auth.emailNonConfirme) {
       _afficherDialogueConfirmation(auth);
+    } else if (auth.isPendingApproval) {
+      _afficherDialogueAttenteApprobation();
+    } else {
+      ToastUtils.show(
+        context,
+        auth.errorMessage ?? context.tr('Erreur de connexion.', 'Login failed.'),
+        isError: true,
+      );
     }
+  }
+
+  void _afficherDialogueAttenteApprobation() {
+    final cs = Theme.of(context).colorScheme;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.hourglass_empty_rounded, size: 48, color: Colors.amber),
+        title: Text(
+          context.tr('En attente d\'approbation', 'Pending Approval'),
+          style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w700),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          context.tr(
+            'Votre adresse e-mail a été vérifiée avec succès, mais votre compte est en cours d\'examen par un administrateur.\n\nVous serez notifié par e-mail dès que votre compte sera activé.',
+            'Your email address has been successfully verified, but your account is currently being reviewed by an administrator.\n\nYou will be notified by email as soon as your account is activated.',
+          ),
+          style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: cs.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(context.tr('Compris', 'Understood')),
+            ),
+          ),
+        ],
+      ),
+    );
   }
   void _afficherDialogueConfirmation(AuthProvider auth) {
     final cs = Theme.of(context).colorScheme;

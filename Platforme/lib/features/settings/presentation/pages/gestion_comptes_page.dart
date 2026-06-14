@@ -36,6 +36,7 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
   }
 
   void _onAuthChanged() {
+    if (!mounted) return;
     if (_allUsers.isEmpty && _authProvider != null && _authProvider!.isAuthenticated) {
       _loadUsers();
     }
@@ -50,7 +51,8 @@ class _GestionComptesPageState extends State<GestionComptesPage> {
   Future<void> _loadUsers() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    final users = await context.read<AuthProvider>().fetchAllUsers();
+    final auth = _authProvider ?? context.read<AuthProvider>();
+    final users = await auth.fetchAllUsers();
     if (!mounted) return;
     setState(() {
       _allUsers = users;
