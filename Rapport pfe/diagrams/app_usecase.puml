@@ -1,0 +1,48 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Client (Company Manager)" as client
+
+rectangle "HMI Stars Mobile Client App" {
+  rectangle "Personnel & Work Activities" {
+    usecase "Manage Employees (Add, View, Edit, Delete, Archive/Unarchive)" as UC_ManageEmployees
+    usecase "Log Daily Attendance (Pointages)" as UC_LogAttendance
+    usecase "Record Employee Absence" as UC_RecordAbsence
+    usecase "Issue Employee Warnings" as UC_IssueWarnings
+  }
+  
+  rectangle "Documents & Chat Workspace" {
+    usecase "Upload Accounting & Administrative Documents" as UC_UploadDocs
+    usecase "Send Notices/Warnings to HMI Stars Manager" as UC_SendNotices
+    usecase "Chat in Real-Time with the Firm" as UC_Chat
+  }
+  
+  usecase "Reset Password" as UC_ResetPassword
+  usecase "Manage Account Profile & Settings" as UC_ManageSettings
+  usecase "Authenticate" as UC_Authenticate
+}
+
+client --> UC_ManageEmployees
+client --> UC_LogAttendance
+client --> UC_RecordAbsence
+client --> UC_IssueWarnings
+client --> UC_ResetPassword
+client --> UC_ManageSettings
+client --> UC_UploadDocs
+client --> UC_SendNotices
+client --> UC_Chat
+client --> UC_Authenticate
+
+UC_ManageEmployees ..> UC_Authenticate : <<include>>
+UC_LogAttendance ..> UC_Authenticate : <<include>>
+UC_RecordAbsence ..> UC_Authenticate : <<include>>
+UC_IssueWarnings ..> UC_Authenticate : <<include>>
+UC_ResetPassword ..> UC_Authenticate : <<extend>>
+UC_ManageSettings ..> UC_Authenticate : <<include>>
+UC_UploadDocs ..> UC_Authenticate : <<include>>
+UC_SendNotices ..> UC_Authenticate : <<include>>
+UC_Chat ..> UC_Authenticate : <<include>>
+
+@enduml

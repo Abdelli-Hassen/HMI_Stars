@@ -1,0 +1,73 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Client (Company Manager)" as client
+actor "Manager (HMI Stars)" as mgr
+
+rectangle "HMI Stars Ecosystem" {
+  rectangle "Employee & Absence Management" {
+    usecase "Manage Employees (Add, View, Edit, Delete, Archive/Unarchive)" as UC_ManageEmployees
+    usecase "Log Daily Attendance" as UC_LogAttendance
+    usecase "Record Employee Absence" as UC_RecordAbsence
+    usecase "Issue Employee Warnings" as UC_IssueWarnings
+  }
+  
+  rectangle "Communication & Documents" {
+    usecase "Upload Accounting & Administrative Documents" as UC_UploadDocs
+    usecase "Send Notices/Warnings to HMI Stars Manager" as UC_SendNotices
+    usecase "Chat in Real-Time" as UC_Chat
+    usecase "Send & Receive Client Documents" as UC_SendRecDocs
+    usecase "Schedule Tasks & Reminders for Clients" as UC_ScheduleTasks
+  }
+  
+  rectangle "Company & Firm Management" {
+    usecase "Manage Companies (Create, Categorize, Archive/Unarchive, Delete)" as UC_ManageCompanies
+    usecase "Manage Company Employees & Data (Create, Delete, Edit, Export)" as UC_ManageCompanyEmployees
+    usecase "Manage HMI Stars Users (Secretaries, Admins)" as UC_ManageUsers
+  }
+  
+  usecase "Reset Password" as UC_ResetPassword
+  usecase "Manage Account Profile & Settings" as UC_ManageSettings
+  usecase "Authenticate" as UC_Authenticate
+}
+
+client --> UC_ManageEmployees
+client --> UC_LogAttendance
+client --> UC_RecordAbsence
+client --> UC_IssueWarnings
+client --> UC_ResetPassword
+client --> UC_ManageSettings
+client --> UC_UploadDocs
+client --> UC_SendNotices
+client --> UC_Chat
+client --> UC_Authenticate
+
+mgr --> UC_ResetPassword
+mgr --> UC_ManageSettings
+mgr --> UC_SendNotices
+mgr --> UC_Chat
+mgr --> UC_SendRecDocs
+mgr --> UC_ScheduleTasks
+mgr --> UC_ManageCompanies
+mgr --> UC_ManageCompanyEmployees
+mgr --> UC_ManageUsers
+mgr --> UC_Authenticate
+
+UC_ManageEmployees ..> UC_Authenticate : <<include>>
+UC_LogAttendance ..> UC_Authenticate : <<include>>
+UC_RecordAbsence ..> UC_Authenticate : <<include>>
+UC_IssueWarnings ..> UC_Authenticate : <<include>>
+UC_ResetPassword ..> UC_Authenticate : <<extend>>
+UC_ManageSettings ..> UC_Authenticate : <<include>>
+UC_UploadDocs ..> UC_Authenticate : <<include>>
+UC_SendNotices ..> UC_Authenticate : <<include>>
+UC_Chat ..> UC_Authenticate : <<include>>
+UC_SendRecDocs ..> UC_Authenticate : <<include>>
+UC_ScheduleTasks ..> UC_Authenticate : <<include>>
+UC_ManageCompanies ..> UC_Authenticate : <<include>>
+UC_ManageCompanyEmployees ..> UC_Authenticate : <<include>>
+UC_ManageUsers ..> UC_Authenticate : <<include>>
+
+@enduml

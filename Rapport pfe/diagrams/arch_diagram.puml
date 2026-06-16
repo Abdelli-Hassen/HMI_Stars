@@ -1,0 +1,39 @@
+@startuml
+
+package "User Interface Layer (Flutter Apps)" #lightblue {
+  [Web Admin Dashboard] as webAdmin
+  [Mobile App] as mobileApp
+}
+
+package "Logic & State Management" #lightyellow {
+  [Company Data Provider (Business Data)] as compProvider
+  [Notification Provider (Alerts / Updates)] as notifProvider
+  [Auth Provider (Login / Session)] as authProvider
+}
+
+package "Backend (Supabase Service)" #lightgreen {
+  [API Gateway (Main Entry Point)] as apiGateway
+  database "Database (PostgreSQL)" as postgresDb
+  [File Storage Service] as storageService
+  [Authentication Service] as authService
+  [Realtime Service (Live Updates)] as realtimeService
+}
+
+webAdmin --> compProvider : uses
+webAdmin --> authProvider : uses
+mobileApp --> compProvider : uses
+mobileApp --> authProvider : uses
+
+compProvider --> notifProvider : sends updates
+compProvider --> apiGateway : HTTPS requests
+authProvider --> apiGateway : HTTPS requests
+
+apiGateway --> postgresDb : reads & writes data
+apiGateway --> storageService : stores files
+apiGateway --> authService : handles login
+apiGateway --> realtimeService : live connection
+
+realtimeService --> webAdmin : live updates (WebSocket)
+realtimeService --> mobileApp : live updates (WebSocket)
+
+@enduml

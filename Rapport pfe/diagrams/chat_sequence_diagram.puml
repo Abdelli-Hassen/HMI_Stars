@@ -1,0 +1,29 @@
+@startuml
+title Real-Time Messaging
+
+actor Client as client
+participant "<<interface>>\nChat Screen" as chat #A9C4E9
+participant "<<control>>\nMessage Controller" as msgCtrl #FDB983
+participant "<<entity>>\nMessages" as msgDb #FFE599
+participant "<<service>>\nRealtime Engine" as real #C5E0B4
+participant "<<control>>\nAdmin Controller" as adminCtrl #FDB983
+participant "<<interface>>\nAdmin Dashboard" as adminDash #A9C4E9
+actor Manager as mgr
+
+client -> chat: 1 Open chat screen
+chat -> real: 2 Subscribe to channel(company_id)
+mgr -> adminDash: 3 Open client chat panel
+adminDash -> real: 4 Subscribe to channel(company_id)
+client -> chat: 5 Type message and click Send
+chat -> msgCtrl: 6 sendMessage(content, companyId)
+msgCtrl -> msgDb: 7 INSERT INTO messages(company_id, content, isSentByUser)
+note over msgDb: PostgreSQL RLS verifies write permission
+msgDb --> msgCtrl: 8 Message stored successfully
+msgCtrl --> chat: 9 Send confirmation
+chat --> client: 10 Display message as "Sent"
+msgDb -> real: 11 Replicate write to Realtime engine
+real -> adminCtrl: 12 Broadcast payload over WebSocket
+adminCtrl -> adminDash: 13 Update message list
+adminDash --> mgr: 14 Display new message in real-time
+
+@enduml

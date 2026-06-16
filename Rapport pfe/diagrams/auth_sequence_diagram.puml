@@ -1,0 +1,38 @@
+@startuml
+title Password Recovery & Authentication
+
+actor User as user
+participant "<<interface>>\nForgotPassword\nScreen" as forgot #A9C4E9
+participant "<<control>>\nAuth Service\n(Supabase)" as auth #FDB983
+participant "<<service>>\nSMTP\nMail Server" as smtp #C5E0B4
+participant "<<interface>>\nOTP Verification\nScreen" as otp #A9C4E9
+participant "<<interface>>\nResetPassword\nScreen" as reset #A9C4E9
+participant "<<entity>>\nauth.users\n(PostgreSQL)" as db #FFE599
+
+== Step 1: Request Password Reset ==
+user -> forgot: 1 Enter professional email
+forgot -> auth: 2 resetPasswordForEmail(email, type: OTP)
+auth -> smtp: 3 Send OTP code email
+smtp --> user: 4 Deliver Password Reset OTP to inbox
+
+== Step 2: OTP Verification ==
+user -> otp: 5 Enter OTP code from email
+alt incorrect or expired
+    otp -> auth: 6 verifyOTP(email, token, type: recovery)
+    auth --> otp: 7 Error — invalid or expired OTP
+    otp --> user: 8 Display error, allow retry
+else valid
+    otp -> auth: 9 verifyOTP(email, token, type: recovery)
+    auth --> otp: 10 OTP verified — session initialized
+    otp -> reset: 11 Navigate to password reset screen
+end
+
+== Step 3: Password Update ==
+user -> reset: 12 Enter and confirm new password
+reset -> auth: 13 updatePassword(newPassword)
+auth -> db: 14 UPDATE auth.users SET password = hashed
+db --> auth: 15 Success
+auth --> reset: 16 Password updated confirmation
+reset --> user: 17 Display success dialog
+
+@enduml

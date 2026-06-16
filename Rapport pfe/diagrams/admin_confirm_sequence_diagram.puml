@@ -1,0 +1,22 @@
+@startuml
+title Admin Manual Email Confirmation Flow
+
+actor "Admin" as admin
+participant "<<interface>>\nAccounts Management\nScreen" as screen #A9C4E9
+participant "<<control>>\nAuth Provider" as provider #FDB983
+participant "<<control>>\nAuth Service\n(Supabase)" as auth #FDB983
+database "<<entity>>\nauth.users\n(PostgreSQL)" as authUsers #FFE599
+database "<<entity>>\nutilisateurs_plateforme\n(PostgreSQL)" as profileDb #FFE599
+
+admin -> screen: 1 Click "Confirm Email" button
+screen -> provider: 2 confirmUserEmail(userId)
+provider -> auth: 3 rpc("confirmer_utilisateur_admin", user_id)
+auth -> authUsers: 4 UPDATE auth.users SET email_confirmed_at = now()
+auth -> profileDb: 5 UPDATE public.utilisateurs_plateforme SET email_confirme = true
+authUsers --> auth: 6 Success
+profileDb --> auth: 7 Success
+auth --> provider: 8 Success response
+provider --> screen: 9 Trigger reload/refresh user list
+screen --> admin: 10 Show success notification & update status badge
+
+@enduml

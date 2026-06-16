@@ -351,6 +351,16 @@ Figure \ref{fig:sequence_chat_design} illustrates the instant communication sequ
     \label{fig:sequence_chat_design}
 \end{figure}
 
+\subsubsection{Administrative email confirmation sequence}
+Figure \ref{fig:sequence_admin_confirm} shows the process of manual email confirmation by an administrator. It outlines how the manager selects a user on the accounts management panel, triggers the confirmation service, and calls the database RPC to directly bypass standard verification checks.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/admin_confirm_diagram.png}
+    \caption{Sequence Diagram - Administrative Email Confirmation}
+    \label{fig:sequence_admin_confirm}
+\end{figure}
+
+
 \subsection{Architectural design}
 \label{subsec:arch_design}
 The architectural design defines the subsystems. We adopted a Monorepo client-server pattern. Both client applications (Web and Mobile) communicate with Supabase via REST APIs and WebSockets, as detailed in the system architecture and data flow diagram (Figure \ref{fig:architecture_design}).
@@ -377,6 +387,7 @@ The class diagram structures the data entities and defines how they interact to 
     \item \textbf{Company--Employee Relationship:} The association between \textit{Entreprise} and \textit{Salarie} is a $1..*$ relationship. A registered company can employ one or many staff members, whereas each employee is linked to exactly one company. This link serves as the primary boundary for data ownership.
     \item \textbf{Message Structure \& Attributes:} The \textit{Message} class contains a foreign key to the \textit{Entreprise} (\texttt{company\_id}) and an \texttt{isSentByUser} boolean attribute. Referencing \texttt{company\_id} allows the system to group support conversations by company workspace rather than individual users. The \texttt{isSentByUser} flag determines the origin of the message (sent by the client on mobile vs. sent by the administrator on the web portal), which facilitates real-time chat UI rendering.
     \item \textbf{Row Level Security (RLS) Mapping:} All user-specific classes—including \textit{Salarie}, \textit{Pointage}, \textit{Conge}, and \textit{Message}—are bound to the \textit{Entreprise} class. When a client authenticates, Supabase reads their JWT (JSON Web Token) to extract their associated company ID. The database-level RLS policies then use these foreign key relations to restrict queries, ensuring that a user can only perform CRUD operations on records belonging to their company.
+    \item \textbf{Platform User Verification Flag:} The \textit{PlatformUser} class includes an \texttt{emailConfirme} boolean attribute. This property represents the verification state of administrative staff members, allowing administrators to manually verify and bypass standard authentication gates directly within the accounts registry.
 \end{itemize}
 \section{Phase of construction}
 

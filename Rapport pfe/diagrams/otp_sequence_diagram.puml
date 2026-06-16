@@ -1,0 +1,35 @@
+@startuml
+title Email Change via OTP Verification
+
+actor "Client Manager" as client
+participant "<<interface>>\nSettings\nScreen" as settings #A9C4E9
+participant "<<control>>\nAuth Service\n(Supabase)" as auth #FDB983
+participant "<<service>>\nSMTP\nMail Server" as smtp #C5E0B4
+participant "<<interface>>\nOTP Verification\nScreen" as otp #A9C4E9
+participant "<<entity>>\nauth.users\n(PostgreSQL)" as db #FFE599
+
+== Step 1: Initiate Email Change ==
+client -> settings: 1 Input new email address
+settings -> auth: 2 updateUser(email: newEmail)
+auth -> smtp: 3 Dispatch Email Change OTP to current email
+smtp --> client: 4 Deliver OTP code to current mailbox
+auth --> settings: 5 Return OTP status (needs confirmation)
+settings --> client: 6 Render OTP input screen
+
+== Step 2: OTP Verification ==
+client -> otp: 7 Enter OTP code from email
+alt incorrect or expired
+    otp -> auth: 8 verifyOTP(email, token, type: emailChange)
+    auth --> otp: 9 Error — invalid or expired OTP
+    otp --> client: 10 Display error, allow retry
+else valid
+    otp -> auth: 11 verifyOTP(email, token, type: emailChange)
+    auth -> smtp: 12 Dispatch Email Change Confirm to new email
+    smtp --> client: 13 Deliver confirmation email to new mailbox
+    auth -> db: 14 UPDATE auth.users SET email = newEmail
+    db --> auth: 15 Email updated successfully
+    auth --> otp: 16 Email change complete
+    otp --> client: 17 Show success toast notification
+end
+
+@enduml

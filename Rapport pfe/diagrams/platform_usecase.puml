@@ -1,0 +1,54 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Manager (HMI Stars)" as mgr
+
+rectangle "HMI Stars Web Admin Platform" {
+  rectangle "Client & Company Management" {
+    usecase "Manage Companies (Create, Categorize, Archive/Unarchive, Delete)" as UC_ManageCompanies
+    usecase "Manage Company Employees & Data (Create, Delete, Edit, Export)" as UC_ManageCompanyEmployees
+    usecase "Manage HMI Stars Users & Roles (Secretaries, Admins)" as UC_ManageUsers
+    usecase "Manually Confirm User Email" as UC_ConfirmEmail
+  }
+  
+  rectangle "Operations & Communication" {
+    usecase "Send & Receive Client Documents" as UC_SendRecDocs
+    usecase "Schedule Tasks & Reminders for Clients" as UC_ScheduleTasks
+    usecase "Chat in Real-Time with Clients" as UC_Chat
+    usecase "Review Notices/Warnings Sent by Clients" as UC_ReviewNotices
+  }
+  
+  usecase "Reset Password" as UC_ResetPassword
+  usecase "Manage Account Profile & Settings" as UC_ManageSettings
+  usecase "Authenticate" as UC_Authenticate
+}
+
+mgr --> UC_ManageCompanies
+mgr --> UC_ManageCompanyEmployees
+mgr --> UC_ManageUsers
+mgr --> UC_SendRecDocs
+mgr --> UC_ScheduleTasks
+mgr --> UC_Chat
+mgr --> UC_ReviewNotices
+mgr --> UC_ResetPassword
+mgr --> UC_ManageSettings
+mgr --> UC_Authenticate
+
+UC_ManageCompanies ..> UC_Authenticate : <<include>>
+UC_ManageCompanyEmployees ..> UC_Authenticate : <<include>>
+UC_ManageUsers ..> UC_Authenticate : <<include>>
+UC_ConfirmEmail ..> UC_ManageUsers : <<extend>>
+UC_ConfirmEmail ..> UC_Authenticate : <<include>>
+UC_SendRecDocs ..> UC_Authenticate : <<include>>
+
+' Layout constraint to keep the new use case aligned horizontally
+UC_ManageUsers -[hidden]right-> UC_ConfirmEmail
+UC_ScheduleTasks ..> UC_Authenticate : <<include>>
+UC_Chat ..> UC_Authenticate : <<include>>
+UC_ReviewNotices ..> UC_Authenticate : <<include>>
+UC_ResetPassword ..> UC_Authenticate : <<extend>>
+UC_ManageSettings ..> UC_Authenticate : <<include>>
+
+@enduml

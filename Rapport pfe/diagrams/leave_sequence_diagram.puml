@@ -1,0 +1,33 @@
+@startuml
+title Absence Recording
+
+actor Client as client
+participant "<<interface>>\nAbsence Screen" as absScreen #A9C4E9
+participant "<<control>>\nAbsence Controller" as absCtrl #FDB983
+participant "<<entity>>\nLeave Records" as leaveDb #FFE599
+participant "<<service>>\nRealtime Engine" as real #C5E0B4
+actor Manager as mgr
+
+client -> absScreen: 1 Fill in absence form
+absScreen -> absScreen: 2 Validate required fields
+alt or invalid fields
+    absScreen --> client: 3 Display validation error
+else valid
+    absScreen -> absCtrl: 4 submitAbsence(employeeId, type, startDate, endDate)
+    absCtrl -> leaveDb: 5 INSERT INTO conges(company_id, employee_id, type, dates)
+    note over leaveDb: PostgreSQL RLS verifies company_id matches user session
+    alt rejected by RLS
+        leaveDb --> absCtrl: 6 Permission denied
+        absCtrl -> absScreen: 7 Display error
+        absScreen --> client: 8 Operation not allowed
+    else successful
+        leaveDb --> absCtrl: 9 Row created successfully
+        absCtrl -> absScreen: 10 Display success status
+        absScreen --> client: 11 Absence recorded successfully
+        leaveDb -> real: 12 Trigger CDC (Change Data Capture)
+        real -> mgr: 13 Push real-time notification
+        note over mgr: Manager notified of new absence record
+    end
+end
+
+@enduml

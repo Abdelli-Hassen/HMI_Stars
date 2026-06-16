@@ -1,0 +1,138 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "Ecosystem Models" {
+  class Company {
+    + id: uuid
+    + companyName: String
+    + managerName: String
+    + description: String
+    + email: String
+    + status: String
+    + address: String
+    + phone: String
+    + logoUrl: String
+    + employeeCount: int
+    + sirenNumber: String
+    + siret: String
+    + legalForm: String
+    + vatNumber: String
+    + rcsNumber: String
+    + shareCapital: String
+    + apeCode: String
+    + createdAt: DateTime
+    + updatedAt: DateTime
+  }
+
+  class Employee {
+    + id: uuid
+    + companyId: uuid
+    + gender: String
+    + lastName: String
+    + firstName: String
+    + birthName: String
+    + socialSecurityNumber: String
+    + birthDate: DateTime
+    + birthPlace: String
+    + nationality: String
+    + postalAddress: String
+    + phone: String
+    + email: String
+    + hireDate: DateTime
+    + contractType: ContractType
+    + contractEndDate: DateTime
+    + jobTitle: String
+    + isArchived: boolean
+    + avatarUrl: String
+    + hasIdDocument: boolean
+    + hasSocialSecurityCard: boolean
+    + hasProofOfAddress: boolean
+    + hasSignedContract: boolean
+  }
+
+  class PlatformUser {
+    + id: uuid
+    + name: String
+    + email: String
+    + role: UserRole
+    + phone: String
+    + avatarUrl: String
+    + organization: String
+    + preferences: Map
+    + cin: String
+    + emailConfirme: boolean
+  }
+
+  class Message {
+    + id: uuid
+    + companyId: uuid
+    + content: String
+    + isSentByUser: boolean
+    + isFile: boolean
+    + fileUrl: String
+    + fileName: String
+    + documentType: DocumentType
+    + sentAt: DateTime
+    + isRead: boolean
+  }
+
+  class Attendance {
+    + id: uuid
+    + employeeId: uuid
+    + companyId: uuid
+    + date: DateTime
+    + isPresent: boolean
+    + note: String
+  }
+
+  class Leave {
+    + id: uuid
+    + employeeId: uuid
+    + companyId: uuid
+    + leaveType: String
+    + startDate: DateTime
+    + endDate: DateTime
+    + isHalfDay: boolean
+    + status: String
+    + comment: String
+  }
+
+  enum ContractType {
+    CDI
+    CDD
+    Apprenticeship
+    Internship
+  }
+
+  enum UserRole {
+    admin
+    moderator
+    secretary
+  }
+
+  enum DocumentType {
+    supplier
+    bank_statement
+    revenue
+    kbis
+    vat
+    siret
+    rib
+    bylaws
+    other
+  }
+}
+
+Company "1" -- "0..*" Employee : owns >
+Company "1" -- "0..*" Message : contains >
+Company "1" -- "0..*" Attendance : tracks >
+Company "1" -- "0..*" Leave : approves >
+
+Employee "1" -- "0..*" Attendance : performs >
+Employee "1" -- "0..*" Leave : requests >
+
+Employee ..> ContractType : uses
+PlatformUser ..> UserRole : uses
+Message ..> DocumentType : uses
+
+@enduml
