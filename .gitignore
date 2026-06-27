@@ -25,3 +25,37 @@ build/
 *.xccheckout
 *.xcscmblueprint
 *.xcuserstate
+
+# --- HMI Stars Security Patches ---
+# Google & Firebase service account private keys
+*-firebase-adminsdk-*.json
+*.service-account.json
+
+# Local configurations with sensitive credentials (serviceRoleKey, anonKey)
+supabase_config.dart
+**/supabase_config.dart
+
+# Gradle caches & build logs
+.gradle/
+**/.gradle/
+
+# Android local properties containing machine-specific SDK paths
+local.properties
+**/local.properties
+
+# Signing keys & Keystores
+*.keystore
+*.jks
+
+# Compilation/Build products
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# iOS/macOS build outputs and ephemeral configs
+ephemeral/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/macos/Flutter/ephemeral/

@@ -409,6 +409,7 @@ class AuthProvider extends ChangeNotifier {
       if (_utilisateur != null) {
         if (!_utilisateur!.estApprouve) {
           _status = AuthStatus.error;
+          _isPendingApproval = true;
           _errorMessage = _loc(
             'Votre compte est en attente d\'approbation par l\'administrateur.',
             'Your account is pending administrator approval.',
@@ -417,7 +418,7 @@ class AuthProvider extends ChangeNotifier {
           _utilisateur = null;
           await _authService.signOut();
           notifyListeners();
-          return false;
+          return true;
         }
         _status = AuthStatus.authenticated;
         _emailNonConfirme = false;

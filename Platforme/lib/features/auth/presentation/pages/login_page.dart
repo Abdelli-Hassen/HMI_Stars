@@ -217,7 +217,11 @@ class _LoginPageState extends State<LoginPage> {
 
                       if (success) {
                         Navigator.pop(ctx);
-                        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+                        if (auth.isPendingApproval) {
+                          _afficherDialogueAttenteApprobation();
+                        } else {
+                          Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+                        }
                       } else {
                         setState(() {
                           dialogError = auth.errorMessage ?? context.tr('Code invalide ou expiré.', 'Invalid or expired code.');

@@ -113,11 +113,23 @@ class _SignUpPageState extends State<SignUpPage> {
     setState(() => _loading = false);
 
     if (success) {
-      ToastUtils.show(
-        context,
-        context.tr("Compte vérifié avec succès !", "Account verified successfully!"),
-      );
-      Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+      if (auth.isPendingApproval) {
+        ToastUtils.show(
+          context,
+          context.tr(
+            "Votre adresse e-mail a été vérifiée avec succès, mais votre compte est en cours d'examen par un administrateur.",
+            "Your email address has been successfully verified, but your account is currently being reviewed by an administrator.",
+          ),
+          isError: false,
+        );
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      } else {
+        ToastUtils.show(
+          context,
+          context.tr("Compte vérifié avec succès !", "Account verified successfully!"),
+        );
+        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+      }
     } else {
       setState(() {
         _errorMessage = auth.errorMessage ?? context.tr("Code incorrect ou expiré.", "Incorrect or expired code.");
